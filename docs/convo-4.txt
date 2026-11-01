@@ -1,0 +1,341 @@
+================================================================================
+MASTER LOG & KONSOLIDASI TRANSISI MENUJU HARI KE-4 (01 NOVEMBER 2026)
+SISTEM INFORMASI DOKUMEN KERJA SAMA BERBASIS FINITE STATE MACHINE (SIMKERMA)
+UNIVERSITAS PARNA RAYA (UNIPAR) MANADO
+================================================================================
+
+Nama Peneliti  : Jordan Immanuel Pusung (NIM: 2355201011)
+Program Studi  : S1 Teknik Informatika, Universitas Parna Raya (UNIPAR) Manado
+Tahun Akademik : 2026
+Komisi Pembimbing:
+  1. Pembimbing I  : Victor B.C. Tuilan, S.Pd., M.Pd. (Kelembagaan, Kurikulum & IKU 6)
+  2. Pembimbing II : Franky G.C. Manoppo, ST., M.Kom. (RPL, FSM, Basis Data & Keamanan)
+Direktori Kerja: D:\CLI\Skripsi\convo-4 01 Nov 2026 continous (Internal Chat)
+
+================================================================================
+1. KONSOLIDASI CAPAIAN HARI KE-1 S.D. HARI KE-3 (29 OKTOBER - 31 OKTOBER 2026)
+================================================================================
+A. Fondasi Metodologis & Keputusan Akademis:
+   - Judul Skripsi Ditetapkan: "Rancang Bangun Sistem Informasi Dokumen Kerja
+     Sama Berbasis Finite State Machine di Universitas Parna Raya".
+     (FSM tetap di judul sebagai kontribusi teknik informatika/otomata, sedangkan
+     Contract Lifecycle Management / CLM menjadi domain masalah bisnis di Bab I & II).
+   - Eliminasi Total SHA-256: Seluruh klaim hash SHA-256 dihapus dari proposal karena
+     menimbulkan celah perdebatan forensik (avalanche effect scanner) pada dokumen
+     fisik bertanda tangan basah dan bermeterai 2 rangkap asli.
+   - Pengganti SHA-256: FSM Guard Condition (wajib unggah scan bertanda tangan basah
+     dan bermeterai sebelum status ACTIVE) dipadukan dengan Dynamic QR Code Registrasi
+     Dokumen yang terhubung langsung ke laman verifikasi publik resmi (/verify/{reg_id}).
+   - Dual-Track Workflow Faktual (Berdasarkan 12 Dokumen Riil UNIPAR):
+     * Jalur 1 (Kemitraan Bertahap): Draf MoU -> MoA -> IA secara berjenjang.
+     * Jalur 2 (Paket Terpadu Tridharma & PKM): Pengusulan serentak 1 paket berkas
+       MoU, MoA, IA yang telah ditandatangani basah di lokasi mitra tempat kerja
+       mahasiswa dengan masa berlaku 1 tahun dan multi-unit kolaborator IKU 6.
+   - Evaluasi Kuantitatif Skala Likert: Mengganti instrumen baku SUS dengan
+     Kuesioner Skala Likert 5 Poin (Sugiyono, 2019; Arikunto, 2013) dengan formula:
+     P = (SUM(X) / SUM(X_maks)) * 100%, terbagi dalam 3 dimensi evaluasi
+     (Usability, Efisiensi Interaksi FSM, Kepuasan Pengguna UX) untuk 4 kelompok aktor.
+
+B. Implementasi Perangkat Lunak Nyata (Laravel 11.57.1 + MySQL simkerma_db):
+   - Tanpa Mock / Simulasi: Seluruh data dipersistensikan secara nyata di MySQL.
+   - 7 Menu Institusional 100% Selesai:
+     1. Menu 01 (Dashboard): Distribusi real-time status FSM, sebaran kategori mitra, metrik IKU 6.
+     2. Menu 02 (Pengelolaan Data Mitra): Master Data Mitra berbasis tabel `partners` MySQL.
+        Dilengkapi tombol `+ Input Mitra Mandiri`, `Edit Data Mitra`, modal detail Profil & Riwayat,
+        filter pencarian multi-parameter cerdas, serta sinkronisasi kaskade 2 arah.
+     3. Menu 03 (Pengelolaan Dokumen): Repositori arsip naskah MoU, MoA/PKS, IA.
+     4. Menu 04 (Pengajuan & Persetujuan): Mesin FSM transisi 6 status, QR Code dinamis
+        terintegrasi di atas badge status, Guard Berkas Fisik, Checklist Telaah Mutu (MBKM/IKU 6),
+        penolakan bebas hambatan (zero-field reject), dan fitur hapus khusus status DRAFT.
+     5. Menu 05 (Pemantauan Pelaksanaan): Ambang peringatan dini H-90/H-60, panel adendum
+        perpanjangan memfasilitasi nomor surat pihak 1 & 2, serta pencatatan realisasi kegiatan.
+     6. Menu 06 (Evaluasi Pelaksanaan): Pencatatan evaluasi berkas dan instrumen Skala Likert 5 poin.
+     7. Menu 07 (Laporan & Audit Trail): Ekspor laporan dan Immutable Audit Trail berstempel waktu WITA.
+     8. Laman Publik: Verifikasi QR Code resmi (/verify/{reg_id}) dapat dipindai via smartphone.
+
+C. Kesiapan Berkas Naskah & Referensi:
+   - Master Asli: "Proposal - Main.docx" di folder convo-2 100% UTUH / TIDAK DIUBAH.
+   - Salinan Revisi Terkini: "Proposal - Main - Revisi.docx" di subfolder `convo-4/Proposal/`.
+   - Instrumen Evaluasi: "INSTRUMEN_EVALUASI_LIKERT.md" di folder `convo-4/`.
+   - Master Handover: "AI_HANDOVER_CONTEXT_LENGKAP.md" di folder `convo-4/`.
+   - Dokumen Artefak: "KESIMPULAN_DISKUSI_SKRIPSI_LENGKAP.md" telah disetujui (Approved).
+
+================================================================================
+2. AGENDA & TARGET KERJA HARI KE-4 (01 NOVEMBER 2026)
+================================================================================
+Target 1: Penyusunan Panduan Skenario Demonstrasi Sistem (Alur Demo Interaktif Bimbingan / Sidang)
+   - Menyusun skenario taktis berdurasi 7–10 menit lengkap dengan alur langkah demi langkah:
+     1. Babak 1: Input master mitra baru & pengajuan draf naskah (Jalur 1 & Jalur 2).
+     2. Babak 2: Penelaahan kelayakan mutu & substansi Tridharma/IKU 6 di meja pimpinan (status REVIEW).
+     3. Babak 3: Pengesahan aktif (ACTIVATE), pengujian Guard Condition berkas fisik, dan pemindaian QR Code via smartphone.
+     4. Babak 4: Simulasi peringatan masa kedaluwarsa H-90 dan penerbitan adendum perpanjangan dengan nomor pihak 1 & 2.
+     5. Babak 5: Pembuktian keaslian otomata via Immutable Audit Trail (Menu 07) dan pengisian evaluasi Likert (Menu 06).
+
+Target 2: Penyelarasan Naskah Proposal Word (Proposal - Main - Revisi.docx)
+   - Sinkronisasi Bab I (Batasan Masalah 5 poin).
+   - Sinkronisasi Bab II & Bab III (Formalisasi Matematis 6 status, 8 transisi legal, eliminasi SHA-256).
+   - Sinkronisasi Bab IV (Matriks Pengujian State Transition & Skala Likert Sugiyono).
+
+Target 3: Penyusunan Bahan Presentasi / Ringkasan Eksekutif Ujian Proposal
+   - Poin-poin kunci untuk mempertahankan kebaruan ilmiah FSM di hadapan komisi penguji.
+================================================================================
+
+
+================================================================================
+3. CAPAIAN FITUR TEMPLATE DRAF MOU & OTOMASI STEMPEL QR CODE (01 NOV 2026)
+================================================================================
+A. Penyediaan Berkas Template Naskah Draf MoU:
+   - Sumber Master: "Template MoU.docx" di folder convo-4.
+   - Lokasi Publik Web: "public/templates/Template_MoU_UNIPAR.docx".
+   - Integrasi UI: Kartu banner unduh template resmi draf (.docx) terpasang di Menu 04
+     tepat di atas pilihan Jalur 1 (Kemitraan Bertahap) dan Jalur 2 (Paket Terpadu PKM).
+
+B. Preservasi Presisi Ukuran & Posisi Stempel QR Code:
+   - Penempatan: Tabel tanpa garis (borderless table) kolom kiri di atas blok tanda tangan
+     Pihak Pertama (Rektor UNIPAR Dr. Rosdiana Simbolon, SE., S.Kom., M.Si - NIDN 0918078001).
+   - Relasi Dokumen: Embed ID rId9 -> `word/media/image2.png`.
+   - Ukuran: PERSIS cx="574040" cy="574040" EMUs (150x150 piksel), tidak diubah 1 milimeter pun
+     sesuai arahan Jordan Pusung.
+
+C. Mesin Otomasi Transisi FSM (SUBMIT -> REVIEW):
+   - Arsitektur: Didukung oleh `App\Services\DocxQrStampService` dan `App\Services\QRCode`.
+   - Alur Eksekusi Otomatis:
+     1. Unit pengusul mengklik tombol "Ajukan Naskah ke Meja Pemeriksaan (SUBMIT)".
+     2. Sistem menghasilkan gambar QR Code PNG 150x150 piksel menuju URL verifikasi unik
+        (http://127.0.0.1:8000/verify/{reg_id}).
+     3. Menggantikan berkas `word/media/image2.png` di dalam arsip ZIP OpenXML (.docx).
+     4. Menyelaraskan nomor naskah UNIPAR, nomor mitra, nama mitra, dan tanggal naskah.
+     5. Mengonversi naskah Word ber-QR Code menjadi berkas PDF telaah resmi via native
+        Microsoft Word COM (ExportAsFixedFormat).
+     6. Mempersimpan `docx_path`, `draft_file` (PDF), dan `qr_code_path` ke basis data MySQL.
+
+D. Akses Berkas & Portal Verifikasi Publik:
+   - Tombol Akses di Menu 04: "Naskah Word (.docx)", "Naskah PDF", dan "Cek QR Code".
+   - Portal Verifikasi Publik (/verify/{reg_id}): Menampilkan status keabsahan dokumen,
+     identitas para pihak, hierarki IKU 6, serta tombol unduh naskah Word & PDF resmi.
+   - Hasil Uji End-to-End: 7 skenario uji lulus 100% (test_full_draft_to_review_lifecycle.php).
+================================================================================
+
+================================================================================
+4. REVISI PENYEMPURNAAN: TEMPLATE DRAF BERSIH & STEMPEL OTOMATIS KE PDF (01 NOV 2026)
+================================================================================
+A. Template Baku Bersih (Tanpa QR Code):
+   - Berkas "public/templates/Template_MoU_UNIPAR.docx" telah dibersihkan secara total:
+     placeholder gambar QR code dihapus, relasi rId9 dihapus, dan hanya mempertahankan logo UNIPAR.
+   - Pengguna yang mengunduh template draf memperoleh naskah murni tanpa gambar QR code.
+
+B. Otomasi Injeksi Drawing XML QR Code Dinamis:
+   - "DocxQrStampService" disempurnakan: Jika naskah draf yang diunggah pengguna tidak memiliki
+     gambar QR code (seperti pada template bersih), sistem secara cerdas menemukan tabel tanda tangan
+     Pihak Pertama, mendeteksi baris di atas Dr. Rosdiana Simbolon, SE., S.Kom., M.Si, dan menginjeksikan
+     drawing XML dengan ukuran tepat cx="574040" cy="574040" (150x150 px) tanpa merusak margin.
+   - Layanan native Word COM (ExportAsFixedFormat) mengonversi dokumen Word ber-QR tersebut menjadi
+     berkas PDF resmi seketika saat event SUBMIT dieksekusi.
+
+C. Visualisasi & Akses Dokumen di Status REVIEW:
+   - Pada antarmuka status REVIEW (Menu 04), disematkan panel kartu hijau resmi:
+     "Berkas Naskah Draf Review (PDF Ber-QR Code Resmi)" dengan tombol utama "Buka Naskah PDF Ber-QR Code".
+   - Berkas PDF resmi menjadi berkas primer (draft_file) yang langsung terhubung ke dokumen.
+   - Dokumen riil Jordan "UNIPAR-2026-885" telah diperbaiki dan dilengkapi berkas PDF ber-QR Code (76.920 bytes).
+================================================================================
+
+================================================================================
+5. REVISI POSISI STEMPEL QR CODE: DI ATAS TULISAN " PIHAK PERTAMA\ (01 NOV 2026)
+================================================================================
+A. Koreksi Posisi Sesuai Arahan Jordan Immanuel Pusung:
+ - Posisi sebelumnya: QR Code berada di Row 2 (antara teks \Pihak Pertama\ dan nama Rektor \Dr. Rosdiana Simbolon\).
+ - Koreksi: Area Row 2 adalah zona bebas untuk penandatanganan fisik (tanda tangan basah) & cap stempel basah Rektor.
+ - Posisi Resmi Baru: QR Code ditempatkan tepat DI ATAS tulisan \Pihak Pertama\ (Row 0, Cell 1) dengan perataan tengah (w:jc w:val=\center\).
+
+B. Pembaruan Logika Engine DocxQrStampService:
+ - Sistem memetakan tabel tanda tangan:
+ * Row 0: Garis/Cell 1 diisi QR Code dinamis (150x150 px / 574040 EMU) tepat di atas Pihak Pertama.
+ * Row 1: Teks Pihak Pertama / Universitas Parna Raya Manado & Pihak Kedua.
+ * Row 2: Bersih 100% tanpa drawing (ruang lega untuk tanda tangan basah & cap stempel fisik).
+ * Row 3: Nama cetak terang Rektor (Dr. Rosdiana Simbolon, SE., S.Kom., M.Si).
+ - Injeksi XML dibersihkan dari atribut non-standar Office 2010 (wp14) untuk mencegah XML parsing warnings.
+
+C. Hasil Verifikasi & Uji Komprehensif:
+ - Dokumen percontohan riil Jordan (UNIPAR-2026-885) telah diperbarui dengan DOCX & PDF posisi baru.
+ - Uji siklus penuh (test_full_draft_to_review_lifecycle.php) lulus 100% dengan validasi otomatis posisi Row 0 = 1 drawing dan Row 2 = 0 drawing.
+================================================================================
+
+================================================================================
+6. PEMBARUAN TEMPLATE MOU BARU, RESOLUSI QR 500PX, DAN TOMBOL DINAMIS STATUS PDF (01 NOV 2026)
+================================================================================
+A. Template Baru Draf MoU UNIPAR:
+   - Sumber berkas: "Form Template\Template_MoU_UNIPAR.docx" (96.181 bytes).
+   - Telah disalin dan aktif sebagai template baku pengajuan di "public/templates/Template_MoU_UNIPAR.docx".
+   - Struktur naskah bersih murni (hanya memuat logo UNIPAR pada kop surat).
+
+B. Resolusi QR Code 500 Pixel & Dimensi XML 200:
+   - Resolusi gambar fisik ditingkatkan menjadi 500x500 px (kualitas ultra tajam).
+   - Dimensi XML Word disesuaikan menjadi cx="765387" cy="765387" (setara 200 / ~2,12 cm) tepat di atas tulisan "Pihak Pertama".
+
+C. Penyesuaian Kolom Tabel Status (Menu 04 Pengajuan & Persetujuan):
+   - Header kolom diubah dari "Status FSM & QR Code" menjadi "Status" saja.
+   - Tombol berkas PDF dipindahkan ke toolbar mikro tepat di sebelah tombol "Buka Lembar Verifikasi Publik"
+     dengan ukuran dan dimensi identik (btn-sm py-0 px-1, font-size: 0.62rem).
+   - Penyesuaian ikon dan warna dinamis untuk seluruh status FSM:
+     * Status DRAFT     : Tanpa tombol PDF jika naskah draf belum terbit/diunggah.
+     * Status REVIEW    : Tombol merah (btn-outline-danger) ikon PDF telaah ber-QR Code.
+     * Status ACTIVE    : Tombol hijau (btn-outline-success) ikon centang naskah resmi sah TTD.
+     * Status WARNING   : Tombol kuning (btn-outline-warning) naskah masa peringatan dini.
+     * Status EXPIRED   : Tombol abu-abu (btn-outline-secondary) naskah arsip kedaluwarsa.
+     * Status CANCELLED : Tombol abu gelap (btn-outline-dark) naskah dibatalkan.
+   - Seluruh berkas PDF dokumen aktif dan review telah digenerate lengkap dan terverifikasi 100%.
+================================================================================
+
+================================================================================
+7. ADAPTASI DESAIN TAMPILAN UI (COLOR SCHEME, TABLE & CONTAINER) SESUAI REFERENSI FIGMA (01 NOV 2026)
+================================================================================
+A. Skema Warna (Color Palette):
+   - Warna Utama (Brand Primary): Oranye Hangat (#ea580c / #f97316) pada tombol aksi, logo, & navigasi aktif.
+   - Sidebar: Dark Slate Elegan (#1e2430) menggantikan gradien lama, dilengkapi tombol aktif oranye ber-radius 8px.
+   - Latar Belakang Utama: Abu-abu terang bersih (#f8fafc) dengan kontras teks tajam (#334155).
+
+B. Desain Kontainer & Kartu (Cards):
+   - Latar belakang putih murni (#ffffff) dengan garis batas halus (#e2e8f0) dan border-radius 12px.
+   - Efek bayangan lembut (box-shadow: 0 1px 3px rgba(0,0,0,0.04)).
+   - Kartu metrik ringkasan menggunakan ikon melingkar pastel (biru, hijau, amber, biru terang, merah).
+
+C. Desain Tabel & Status Badges:
+   - Header tabel menggunakan latar #f8fafc, teks #475569 berbobot medium, dan padding sel yang lega (12-14px).
+   - Efek baris tabel hover halus (#fafbfc).
+   - Badges berformat rounded-pill dengan warna pastel lembut sesuai acuan UI_Reference.png:
+     * Berjalan / Selesai : #dcfce7 (teks #15803d)
+     * Belum Dimulai      : #fef3c7 (teks #b45309)
+     * Tertunda / Review  : #e0f2fe (teks #0369a1)
+     * Expired / Danger   : #fee2e2 (teks #dc2626)
+     * Draft              : #f1f5f9 (teks #475569)
+
+D. Integritas Sistem & Konten:
+   - Seluruh teks, elemen input, modal, tabel, relasi FSM, QR code, dan fungsi sistem 100% tetap utuh.
+================================================================================
+
+
+================================================================================
+8. SINKRONISASI REPOSITORI GITHUB (SIM-KERMA-UNIPAR) (01 NOV 2026)
+===============================================================================
+A. Status Inisialisasi Git:
+   - Root Repositori : D:\CLI\Skripsi\SIMKERMA_Laravel11
+   - Branch Aktif    : main
+   - Remote URL      : https://github.com/0dannn/SIM-KERMA-UNIPAR.git
+   - Initial Commit  : [06f71da] "feat: initial release of SIMKERMA UNIPAR with FSM workflow, dynamic QR stamping, and modern UI"
+   - Total Berkas    : 181 berkas (29.134 baris kode terstruktur)
+   - Dokumentasi     : Dilengkapi README.md lengkap standar skripsi, petunjuk instalasi, dan .env.example
+
+B. Kelengkapan Berkas dalam Repositori:
+   - Sumber kode murni Laravel 11 (App, Config, Database, Routes, Resources Blade).
+   - Seluruh Migration & Database Seeder (termasuk mitra, naskah kerja sama 6 status FSM).
+   - Engine DocxQrStampService & Template MoU Baru ("public/templates/Template_MoU_UNIPAR.docx").
+   - Aset Dokumentasi & Panduan ("docs/UI/UI_Reference.png" dan "docs/Form Template/").
+   - Berkas vendor, node_modules, dan .env telah diabaikan (.gitignore) untuk keamanan kredensial.
+
+C. Verifikasi Keberhasilan Sinkronisasi GitHub (01 Nov 2026 22:54 WITA):
+   - Status Branch    : main is up to date with 'origin/main'.
+   - Commit Terunggah : [06f71da] feat: initial release of SIMKERMA UNIPAR with FSM workflow, dynamic QR stamping, and modern UI
+   - URL Repositori   : https://github.com/0dannn/SIM-KERMA-UNIPAR
+   - Repositori GitHub telah terisi penuh secara publik dan siap digunakan untuk presentasi dan pengujian skripsi.
+================================================================================
+
+
+================================================================================
+9. RINGKASAN PENCAPAIAN AKHIR CONVO 4 (01 NOVEMBER 2026 - 22:56 WITA)
+================================================================================
+Status Keseluruhan Proyek: LENGKAP, STABIL, TERUJI, & TERSIMPAN DI GITHUB
+Aktor: Jordan Immanuel Pusung (NIM: 2355201011) - S1 Teknik Informatika UNIPAR Manado
+Pembimbing I: Victor B.C. Tuilan, S.Pd., M.Pd. | Pembimbing II: Franky G.C. Manoppo, ST., M.Kom.
+Judul Skripsi: "Rancang Bangun Sistem Informasi Dokumen Kerja Sama Berbasis Finite State Machine di Universitas Parna Raya"
+
+Rekapitulasi Capaian Utama Hari Ini:
+1. Template Draf MoU Baru:
+   - Berkas baku: "Form Template\Template_MoU_UNIPAR.docx" (96.181 bytes).
+   - Diaktifkan pada web: "public/templates/Template_MoU_UNIPAR.docx".
+   - Struktur murni bersih (hanya memuat logo UNIPAR pada kop surat).
+
+2. Engine Stempel QR Code Dinamis (DocxQrStampService.php):
+   - Resolusi fisik gambar: 500x500 px (ultra jernih untuk pemindaian).
+   - Dimensi XML Word: cx="765387" cy="765387" (setara 200 / ~2.12 cm).
+   - Posisi presisi: Tepat di atas teks "Pihak Pertama" (Row 0, Cell 1) dengan perataan tengah.
+   - Row 2 di atas nama Dr. Rosdiana Simbolon, SE., S.Kom., M.Si terjamin 100% bersih tanpa gambar,
+     memberikan ruang resmi yang lapang untuk tanda tangan basah dan cap stempel basah institusi.
+   - Konversi instan ke PDF ber-QR Code via native Word COM (ExportAsFixedFormat).
+
+3. Penyesuaian Kolom Tabel Menu 04 & Tombol Mikro PDF:
+   - Header tabel disederhanakan menjadi "Status".
+   - Tombol PDF mikro disandingkan tepat di samping tombol "Buka Lembar Verifikasi Publik".
+   - Dinamika tombol PDF 6 status FSM:
+     * DRAFT     : Tombol PDF tersembunyi (belum diajukan/diunggah).
+     * REVIEW    : Tombol merah outline (btn-outline-danger) membuka PDF telaah ber-QR Code.
+     * ACTIVE    : Tombol hijau outline (btn-outline-success) membuka PDF naskah sah TTD basah.
+     * WARNING   : Tombol kuning outline (btn-outline-warning) naskah masa peringatan dini.
+     * EXPIRED   : Tombol abu-abu outline (btn-outline-secondary) naskah arsip kedaluwarsa.
+     * CANCELLED : Tombol abu gelap outline (btn-outline-dark) naskah dibatalkan.
+
+4. Adaptasi Desain Tampilan UI Modern Sesuai Acuan Figma (UI_Reference.png):
+   - Warna Brand Primary: Oranye Hangat (#ea580c / #f97316).
+   - Sidebar: Dark Slate Elegan (#1e2430) dengan menu aktif ber-radius 8px.
+   - Latar Belakang: Light Neutral (#f8fafc) dengan kontras teks tajam (#334155).
+   - Kartu & Kontainer: Putih bersih, garis batas halus (#e2e8f0), border-radius 12px, soft shadow.
+   - Tabel: Header #f8fafc, padding sel lapang 12-14px, baris hover halus #fafbfc.
+   - Status Badges: Format rounded-pill dengan nuansa pastel lembut (#dcfce7, #fef3c7, #e0f2fe, #fee2e2, #f1f5f9).
+   - Seluruh teks naskah, form, modal, alur FSM, dan fungsi sistem 100% UTUH dan TIDAK ADA YANG DIUBAH.
+
+5. Repositori GitHub Berhasil Terpublikasi:
+   - URL Repositori: https://github.com/0dannn/SIM-KERMA-UNIPAR.git
+   - Branch: main (up to date dengan origin/main)
+   - Initial Commit: [06f71da] "feat: initial release of SIMKERMA UNIPAR with FSM workflow, dynamic QR stamping, and modern UI"
+   - Total berkas: 181 berkas (29.134 baris kode) dilengkapi README.md dan .env.example.
+================================================================================
+
+================================================================================
+10. MASTER HANDOVER & PANDUAN MELANJUTKAN DI PERANGKAT LAIN (CONVO 5)
+================================================================================
+A. Cara Setup di Komputer / Laptop Baru:
+   1. Clone Repositori dari GitHub:
+      git clone https://github.com/0dannn/SIM-KERMA-UNIPAR.git
+      cd SIM-KERMA-UNIPAR
+   2. Pasang Dependensi PHP / Composer:
+      composer install
+   3. Konfigurasi Environment:
+      copy .env.example .env
+      php artisan key:generate
+      (Pastikan DB_DATABASE=simkerma_db, DB_USERNAME=root, DB_PASSWORD= kosong pada XAMPP)
+   4. Jalankan Migrasi dan Database Seeder:
+      php artisan migrate:fresh --seed
+   5. Jalankan Server Lokal:
+      php artisan serve --host=127.0.0.1 --port=8000
+   6. Buka Peramban di http://127.0.0.1:8000
+
+B. Target Kerja Selanjutnya untuk Sesi Convo 5:
+   1. Penyusunan Skenario Demonstrasi Sistem (Alur Demo Interaktif Bimbingan / Sidang 7-10 Menit).
+   2. Penyelarasan Naskah Word Skripsi ("Proposal - Main - Revisi.docx"):
+      - Subbab 1.3: 5 Batasan Masalah Resmi.
+      - Subbab 2.3 & 3.4: Formalisasi Model FSM 6-Tuple, 8 Transisi, Guard Conditions, & Tanpa SHA-256.
+      - Bab IV: Matriks Pengujian State Transition & Skala Likert 5 Poin (Sugiyono, 2019).
+   3. Pembuatan Bahan Presentasi Ujian Proposal (Slide PowerPoint / Ringkasan Eksekutif).
+
+C. Template Prompt Sakti untuk Membuka Sesi AI Baru (Copy-Paste ke AI di Perangkat Lain):
+--------------------------------------------------------------------------------
+Halo AI, saya Jordan Immanuel Pusung (NIM: 2355201011), mahasiswa S1 Teknik Informatika Universitas Parna Raya (UNIPAR) Manado. Saya sedang menyelesaikan skripsi berjudul:
+"Rancang Bangun Sistem Informasi Dokumen Kerja Sama Berbasis Finite State Machine di Universitas Parna Raya".
+Pembimbing I: Victor B.C. Tuilan, S.Pd., M.Pd. | Pembimbing II: Franky G.C. Manoppo, ST., M.Kom.
+
+Seluruh kode sumber aplikasi nyata telah selesai dibangun menggunakan Laravel 11 + MySQL (simkerma_db) dan sudah tersimpan di repositori GitHub resmi saya:
+https://github.com/0dannn/SIM-KERMA-UNIPAR
+
+Konteks penting yang TIDAK BOLEH diubah atau dikurangi:
+1. FSM 6 Status Nyata di MySQL: DRAFT, REVIEW, ACTIVE, WARNING, EXPIRED, CANCELLED (bukan mock/simulasi).
+2. Guard Condition Berkas Fisik: Transisi ke status ACTIVE wajib unggah scan PDF naskah sah bertanda tangan basah dan bermeterai serta nomor surat mitra.
+3. Hashing SHA-256 telah 100% DIELIMINASI dan digantikan oleh FSM Guard + Dynamic QR Code Registrasi Dokumen ke portal /verify/{reg_id}.
+4. Dual-Track Workflow: Jalur 1 (Bertahap Draf -> MoU -> MoA -> IA) dan Jalur 2 (Paket Terpadu 1 Tahun PKM/Tridharma).
+5. Evaluasi Kuantitatif menggunakan Skala Likert 5 Poin (Sugiyono, 2019; Arikunto, 2013), bukan SUS.
+6. Engine QR Stamping (DocxQrStampService.php) menyematkan QR 500px (cx="765387" cy="765387" EMU) tepat di atas teks "Pihak Pertama" di template naskah baku "Template_MoU_UNIPAR.docx". Area di atas Dr. Rosdiana Simbolon, SE., S.Kom., M.Si harus 100% bersih untuk tanda tangan basah & cap stempel pimpinan.
+7. Desain UI telah diselaraskan dengan warna oranye (#ea580c), sidebar dark slate (#1e2430), container bersih, dan tabel modern.
+
+Sekarang kita berada di sesi lanjutan (Convo 5). Tolong baca master log di folder "convo-4 01 Nov 2026 continous (Internal Chat)/convo-4.txt" dan panduan handover "AI_HANDOVER_CONTEXT_LENGKAP.md", lalu bantu saya mengerjakan agenda selanjutnya.
+--------------------------------------------------------------------------------
+================================================================================
+AKHIR DARI LOG CONVO 4 — STATUS: SELESAI & AMAN TERSINKRONISASI
+================================================================================
