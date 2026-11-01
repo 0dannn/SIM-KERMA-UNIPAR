@@ -1,0 +1,219 @@
+<?php
+
+namespace App\Services;
+
+use App\Exceptions\IllegalTransitionException;
+use App\Models\Document;
+use App\Models\AuditTrail;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Service Utama FSM Engine (Finite State Machine) Laravel 11
+ * 
+ * Mengendalikan siklus hidup dokumen kerja sama (MoU, MoA, IA, Paket Terpadu),
+ * menegakkan Anti-Bypass Guard, Role-Based Access Control (RBAC),
+ * serta pencatatan jejak audit relasional di MySQL.
+ */
+class FSMWorkflowEngineService
+{
+    /**
+     * Matriks Transisi Status Formal FSM: 9 Status Diskret & 12 Aturan Transisi
+     * Menyimpan target status, wewenang peran (RBAC), label tombol, ikon, dan styling.
+     */
+    protected array $matrix = [
+        'DRAFT' => [
+            'SUBMIT_LEGAL_REVIEW' => [
+                'to' => 'LEGAL_REVIEW',
+                'roles' => ['UNIT', 'MASTER'],
+                'label' => 'Kirim ke Tim Telaah Legal',
+                'icon' => 'bi-send-fill',
+                'btn' => 'btn-dark'
+            ]
+        ],
+        'LEGAL_REVIEW' => [
+            'APPROVE_LEGAL' => [
+                'to' => 'APPROVED',
+                'roles' => ['LEGAL', 'MASTER'],
+                'label' => 'Setujui Draf & Kunci Teks (Freeze Text)',
+                'icon' => 'bi-check-circle-fill',
+                'btn' => 'btn-success'
+            ],
+            'REQUEST_REVISION' => [
+                'to' => 'REVISION',
+                'roles' => ['LEGAL', 'MASTER'],
+                'label' => 'Kembalikan untuk Perbaikan Klausul Hukum',
+                'icon' => 'bi-arrow-repeat',
+                'btn' => 'btn-warning text-dark'
+            ]
+        ],
+        'REVISION' => [
+            'RESUBMIT_DRAFT' => [
+                'to' => 'LEGAL_REVIEW',
+                'roles' => ['UNIT', 'MASTER'],
+                'label' => 'Ajukan Ulang Draf Hasil Perbaikan',
+                'icon' => 'bi-arrow-up-right',
+                'btn' => 'btn-primary'
+            ],
+            'TERMINATE_PROPOSAL' => [
+                'to' => 'CANCELLED',
+                'roles' => ['UNIT', 'LEGAL', 'MASTER'],
+                'label' => 'Batalkan Usulan Kerja Sama (Terminasi)',
+                'icon' => 'bi-x-octagon',
+                'btn' => 'btn-outline-danger'
+            ]
+        ],
+        'APPROVED' => [
+            'SIGN_AND_ACTIVATE' => [
+                'to' => 'ACTIVE',
+                'roles' => ['LEADER', 'MASTER'],
+                'label' => 'Unggah Scan TTD Fisik & Aktifkan Dokumen',
+                'icon' => 'bi-patch-check-fill',
+                'btn' => 'btn-dark'
+            ],
+            'LEADER_REJECT' => [
+                'to' => 'CANCELLED',
+                'roles' => ['LEADER', 'MASTER'],
+                'label' => 'Pimpinan Menolak Naskah Perjanjian',
+                'icon' => 'bi-x-circle',
+                'btn' => 'btn-outline-danger'
+            ]
+        ],
+        'ACTIVE' => [
+            'TRIGGER_WARN_EXPIRY' => [
+                'to' => 'WARNING_EXPIRY',
+                'roles' => ['SYSTEM', 'MASTER'],
+                'label' => 'Jalankan Pemeriksaan Masa Berlaku',
+                'icon' => 'bi-bell-fill',
+                'btn' => 'btn-warning text-dark'
+            ]
+        ],
+        'WARNING_EXPIRY' => [
+            'INITIATE_ADDENDUM' => [
+                'to' => 'ADDENDUM',
+                'roles' => ['UNIT', 'MASTER'],
+                'label' => 'Inisiasi Perpanjangan Naskah Adendum',
+                'icon' => 'bi-file-earmark-plus',
+                'btn' => 'btn-primary'
+            ],
+            'TRIGGER_EXPIRED' => [
+                'to' => 'EXPIRED',
+                'roles' => ['SYSTEM', 'MASTER'],
+                'label' => 'Catat Dokumen Telah Kedaluwarsa',
+                'icon' => 'bi-clock-history',
+                'btn' => 'btn-danger'
+            ]
+        ],
+        'EXPIRED' => [
+            'RENEW_ADDENDUM' => [
+                'to' => 'ADDENDUM',
+                'roles' => ['UNIT', 'MASTER'],
+                'label' => 'Pulihkan Dokumen dengan Adendum Baru',
+                'icon' => 'bi-arrow-clockwise',
+                'btn' => 'btn-dark'
+            ]
+        ],
+        'ADDENDUM' => [
+            'SUBMIT_ADDENDUM_REV' => [
+                'to' => 'LEGAL_REVIEW',
+                'roles' => ['UNIT', 'MASTER'],
+                'label' => 'Kirim Naskah Adendum ke Telaah Legal',
+                'icon' => 'bi-send-check',
+                'btn' => 'btn-success'
+            ]
+        ],
+        'CANCELLED' => []
+    ];
+
+    /**
+     * Dapatkan seluruh matriks transisi FSM (untuk keperluan visualisasi tabel/UI)
+     */
+    public function getFullMatrix(): array
+    {
+        return $this->matrix;
+    }
+
+    /**
+     * Dapatkan daftar event yang tersedia untuk status saat ini
+     */
+    public function getAvailableEvents(string $currentStatus): array
+    {
+        return $this->matrix[$currentStatus] ?? [];
+    }
+
+    /**
+     * Eksekusi Transisi Status FSM Formal
+     *
+     * @throws IllegalTransitionException
+     */
+    public function transition(Document $document, string $event, string $actorRole, string $actorName, ?string $notes = null, array $additionalData = []): Document
+    {
+        $currentStatus = $document->status;
+
+        // 1. Validasi Keabsahan Transisi Status (Anti-Bypass Guard)
+        if (!isset($this->matrix[$currentStatus][$event])) {
+            throw new IllegalTransitionException(
+                "Pelanggaran Alur FSM: Event [{$event}] tidak sah dieksekusi pada status [{$currentStatus}]!"
+            );
+        }
+
+        $conf = $this->matrix[$currentStatus][$event];
+        $newStatus = $conf['to'];
+        $allowedRoles = $conf['roles'];
+
+        // 2. Validasi Hak Akses Peran (RBAC Guard)
+        if ($actorRole !== 'MASTER' && !in_array($actorRole, $allowedRoles, true)) {
+            $allowedStr = implode(', ', $allowedRoles);
+            throw new IllegalTransitionException(
+                "Pelanggaran RBAC: Peran [{$actorRole}] tidak berwenang mengeksekusi event [{$event}]. Wewenang aksi ini: [{$allowedStr}]."
+            );
+        }
+
+        // 3. Eksekusi Perubahan Status & Pencatatan Audit Trail Relasional (Database Transaction)
+        return DB::transaction(function () use ($document, $event, $currentStatus, $newStatus, $actorRole, $actorName, $notes, $additionalData) {
+            $document->status = $newStatus;
+
+            // Simpan nomor pihak kedua (mitra) jika dikirimkan
+            if (!empty($additionalData['partner_doc_number'])) {
+                $document->partner_doc_number = $additionalData['partner_doc_number'];
+            }
+
+            // Jika APPROVED: kunci teks dan catat tanggal approval
+            if ($newStatus === 'APPROVED') {
+                $document->date_approved = now()->toDateString();
+            }
+
+            // Jika ACTIVE: set tanggal tanda tangan & catat scan fisik
+            if ($newStatus === 'ACTIVE') {
+                if (empty($document->date_signed)) {
+                    $document->date_signed = now()->toDateString();
+                }
+                if (empty($document->signed_file)) {
+                    $document->signed_file = 'signed_scan_' . strtolower(str_replace(' ', '_', $document->doc_id)) . '.pdf';
+                }
+            }
+
+            $document->save();
+
+            $auditNote = $notes;
+            if (!$auditNote && $newStatus === 'ACTIVE') {
+                $auditNote = 'Naskah sah bertanda tangan basah & bermeterai aktif. Nomor Pihak I (UNIPAR): ' . $document->doc_number . (!empty($document->partner_doc_number) ? ', Nomor Pihak II (Mitra): ' . $document->partner_doc_number : '');
+            } elseif (!$auditNote) {
+                $auditNote = 'Transisi status dieksekusi oleh pejabat berwenang';
+            }
+
+            // Catat ke tabel audit_trails
+            AuditTrail::create([
+                'document_id' => $document->id,
+                'actor' => $actorName,
+                'role' => $actorRole,
+                'event' => $event,
+                'from_status' => $currentStatus,
+                'to_status' => $newStatus,
+                'notes' => $auditNote,
+                'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
+            ]);
+
+            return $document;
+        });
+    }
+}
