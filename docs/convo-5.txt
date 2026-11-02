@@ -1,0 +1,96 @@
+================================================================================
+MASTER LOG & KONSOLIDASI TRANSISI HARI KE-5 (02 NOVEMBER 2026)
+SISTEM INFORMASI DOKUMEN KERJA SAMA BERBASIS FINITE STATE MACHINE (SIMKERMA)
+UNIVERSITAS PARNA RAYA (UNIPAR) MANADO
+================================================================================
+
+Nama Peneliti  : Jordan Immanuel Pusung (NIM: 2355201011)
+Program Studi  : S1 Teknik Informatika, Universitas Parna Raya (UNIPAR) Manado
+Tahun Akademik : 2026
+Komisi Pembimbing:
+  1. Pembimbing I  : Victor B.C. Tuilan, S.Pd., M.Pd. (Kelembagaan, Kurikulum & IKU 6)
+  2. Pembimbing II : Franky G.C. Manoppo, ST., M.Kom. (RPL, FSM, Basis Data & Keamanan)
+Repositori GitHub: https://github.com/0dannn/SIM-KERMA-UNIPAR.git
+Branch           : main
+
+================================================================================
+1. AKTIVITAS & CAPAIAN HARI KE-5 (02 NOVEMBER 2026)
+================================================================================
+
+A. Penarikan Repositori & Setup Lingkungan Komputer Lokal:
+   - Repositori GitHub resmi (https://github.com/0dannn/SIM-KERMA-UNIPAR.git) berhasil ditarik (git clone) ke folder kerja.
+   - Pemasangan dependensi PHP Composer (116 paket dependensi terpasang lengkap).
+   - Inisialisasi basis data MySQL MariaDB (XAMPP Port 3306, database: `simkerma_db`).
+   - Eksekusi migrasi tabel dan seeding naskah dokumen 6 status FSM (`php artisan migrate:fresh --seed`).
+   - Penghubungan symlink berkas publik storage (`php artisan storage:link`).
+   - Peladen web aplikasi berhasil dijalankan di latar belakang pada alamat `http://127.0.0.1:8000`.
+
+B. Analisis Mendalam Mengenai Pihak Kedua (Mitra Luar):
+   - Analisis posisi yuridis dan administratif pihak kedua (mitra luar) dalam skripsi.
+   - Penegasan kesesuaian dengan UU No. 10 Tahun 2020 tentang Bea Meterai: Penandatanganan sah dokumen kerja sama dilakukan secara fisik 2 rangkap asli dengan meterai tempel Rp10.000, di mana berkas hasil scan diunggah sebagai FSM Guard Condition sebelum status ACTIVE.
+   - Tiga titik sentuh mitra luar yang sudah aktif di sistem:
+     1. Dynamic QR Code Publik (/verify/{reg_id}): Mitra dapat memindai via smartphone tanpa perlu memiliki akun internal kampus.
+     2. Resiprokal Nomor Surat Pihak Kedua (`partner_doc_number`): Diinput saat pengesahan atau perpanjangan naskah.
+     3. Master Direktori Mitra (Menu 02): Pencatatan profil, narahubung PIC, dan riwayat dokumen mitra.
+
+C. Implementasi Sistem Role Admin & Autentikasi Pengguna Nyata:
+   - Migrasi Basis Data: Pembuatan migrasi `2026_11_02_133000_add_role_to_users_table.php` untuk menambahkan kolom `role`, `unit`, dan `phone` pada tabel `users`.
+   - Model Pengguna (`app/Models/User.php`): Pembaruan atribut `$fillable` dan penambahan helper wewenang peran (`isAdmin()`, `isUnit()`, `isLegal()`, `isLeader()`).
+   - Database Seeder (`UserSeeder.php`): Pembuatan 4 akun peran nyata terenkripsi bcrypt:
+     1. `ADMIN`  : admin@unipar.ac.id / admin123 (Administrator Sistem / Superuser)
+     2. `UNIT`   : unit@unipar.ac.id  / unit123  (Unit Pengusul - Prodi TI)
+     3. `LEGAL`  : legal@unipar.ac.id / legal123 (Tim Telaah Hukum & Biro Kerja Sama)
+     4. `LEADER` : rektor@unipar.ac.id / rektor123 (Pimpinan Rektorat - Dr. Rosdiana Simbolon)
+   - Controller Autentikasi (`AuthController.php`): Pengendali proses login, binding session peran aktif (`active_role`), dan logout pengguna.
+   - Rute Web (`routes/web.php`): Penambahan endpoint `/login`, `POST /login`, dan `/logout`.
+   - Integrasi Mesin FSM (`FSMWorkflowEngineService.php`): Pengakuan peran `ADMIN` memiliki hak bypass superuser identik dengan `MASTER`.
+
+D. Desain Antarmuka Portal Login Modern:
+   - Pembuatan view login baru (`resources/views/auth/login.blade.php`).
+   - Desain selaras dengan palet institusi UNIPAR: Oranye Hangat (#ea580c) dan Dark Slate (#1e2430).
+   - Fitur "Pilih Cepat Akun Demo": Kartu preset klik cepat untuk 4 peran yang secara instan mengisi email dan sandi tanpa perlu mengetik manual (sangat menghemat waktu saat demonstrasi sidang 7–10 menit).
+   - Integrasi profil akun pengguna aktif dan dropdown tombol Logout di top header serta footer sidebar (`resources/views/layouts/app.blade.php`).
+
+E. Pemolesan Antarmuka Pengguna (UI Polish):
+   - Penghapusan seluruh nomor badge (01, 02, dst.) pada setiap nama menu di sidebar navigasi untuk tampilan yang lebih bersih, profesional, dan elegan.
+   - Perampingan lebar sidebar sebesar 15% (dari 280px menjadi 238px) serta optimasi padding menu.
+   - Hasil: Area konten utama (tabel repositori, modal pengajuan, matriks FSM, dan kartu metrik) mendapatkan ruang horizontal tambahan sekitar ~42px sehingga lebih lapang dan bebas dari kesan terhimpit.
+
+F. Sinkronisasi Repositori GitHub:
+   - Seluruh perubahan kode, migrasi, seeder, controller, dan tampilan di-commit:
+     Commit: [ebf86b7] "feat: implement admin role authentication, portal login, and compact sidebar UI layout"
+   - Berhasil dipush ke repositori resmi GitHub: https://github.com/0dannn/SIM-KERMA-UNIPAR.git (Branch main).
+
+================================================================================
+2. PERBANDINGAN HAK AKSES LIMA PERAN FORMAL
+================================================================================
+
+1. UNIT (Unit Pengusul):
+   - Wewenang FSM: CREATE_DRAFT, SUBMIT, CANCEL, RENEW.
+   - Larangan: Tidak dapat mengesahkan naskah ke ACTIVE (mencegah conflict of interest).
+2. LEGAL (Tim Telaah Hukum & Biro Kerja Sama):
+   - Wewenang FSM: RETURN_TO_DRAFT, ACTIVATE.
+   - Tugas: Audit klausul hukum, hak & kewajiban, penjaminan mutu IKU 6.
+3. LEADER (Pimpinan Institusi / Rektorat):
+   - Wewenang FSM: ACTIVATE, RETURN_TO_DRAFT.
+   - Tugas: Otoritas penandatanganan berkas fisik bermeterai, eksekusi status aktif, pemantauan dashboard eksekutif IKU 6.
+4. SYSTEM (Automated Cron Worker):
+   - Wewenang FSM: TRIGGER_WARNING, EXPIRE.
+   - Tugas: Menghitung selisih masa berlaku secara otomatis (H-90/H-60 dan kedaluwarsa).
+5. ADMIN (Administrator SIMKERMA / Master):
+   - Wewenang FSM: Seluruh aksi FSM (Superuser Access).
+   - Tugas: Reset status dokumen untuk pengujian alur, pemeliharaan master data mitra, ekspor audit trail berstempel WITA.
+
+================================================================================
+3. AGENDA PRIORITAS SELANJUTNYA
+================================================================================
+
+1. Penyusunan Skenario Panduan Demonstrasi Sistem (Alur Demo Interaktif Sidang 7–10 Menit):
+   - Menyiapkan alur peragaan langkah demi langkah di depan Pak Victor Tuilan dan Pak Franky Manoppo menggunakan akun login yang baru saja dibuat.
+2. Penyelarasan Naskah Word Skripsi (`Proposal - Main - Revisi.docx`):
+   - Memastikan Bab I (Batasan Masalah 5 poin), Bab II & III (FSM 6 status, 8 transisi, eliminasi SHA-256), dan Bab IV (Matriks State Transition & Likert Sugiyono) selaras 100% dengan aplikasi terkini.
+3. Penyusunan Bahan Tayang Slide Presentasi Proposal (PowerPoint / Ringkasan Eksekutif).
+
+================================================================================
+AKHIR DARI LOG CONVO 5 — STATUS: SELESAI, TERUJI, & AMAN TERSINKRONISASI
+================================================================================

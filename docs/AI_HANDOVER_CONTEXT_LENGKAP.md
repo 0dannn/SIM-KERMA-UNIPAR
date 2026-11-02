@@ -2,8 +2,8 @@
 ## SISTEM INFORMASI DOKUMEN KERJA SAMA BERBASIS FINITE STATE MACHINE (SIMKERMA)
 ### UNIVERSITAS PARNA RAYA (UNIPAR) MANADO — TAHUN 2026
 
-> **CATATAN UNTUK AI PADA SESI / PERANGKAT LAIN (HANDOVER RESMI DARI CONVO 4 KE CONVO 5):**  
-> Dokumen ini memuat seluruh rekam jejak keputusan metodologis, arsitektur perangkat lunak, model matematis otomata, skema basis data, implementasi stempel QR Code OpenXML, adaptasi antarmuka pengguna (UI), dan repositori GitHub dari skripsi mahasiswa **Jordan Immanuel Pusung**. Gunakan seluruh konteks di bawah ini sebagai dasar utama untuk melanjutkan bimbingan, revisi naskah Word, penyusunan skenario demo, maupun pembuatan slide presentasi tanpa perlu bertanya ulang dari nol.
+> **CATATAN UNTUK AI PADA SESI / PERANGKAT LAIN (HANDOVER RESMI TERKINI CONVO 5 MENUJU CONVO 6):**  
+> Dokumen ini memuat seluruh rekam jejak keputusan metodologis, arsitektur perangkat lunak, model matematis otomata, skema basis data, implementasi stempel QR Code OpenXML, sistem autentikasi multi-peran, adaptasi antarmuka pengguna (UI), dan repositori GitHub dari skripsi mahasiswa **Jordan Immanuel Pusung**. Gunakan seluruh konteks di bawah ini sebagai dasar utama untuk melanjutkan bimbingan, revisi naskah Word, penyusunan skenario demo, maupun pembuatan slide presentasi tanpa perlu bertanya ulang dari nol.
 
 ---
 
@@ -74,20 +74,21 @@ $$M = (Q, \Sigma, \delta, q_0, F, G)$$
 ## 4. Arsitektur Perangkat Lunak & Spesifikasi Teknis
 
 * **Framework Backend:** Laravel 11.57.1
-* **Bahasa Pemrograman:** PHP 8.2.12
+* **Bahasa Pemrograman:** PHP 8.2 / 8.4
 * **Basis Data:** MySQL (`simkerma_db`) pada port default `3306`
 * **Antarmuka Frontend:** Blade Template, Bootstrap 5.3.3, Bootstrap Icons, Font *Public Sans*
-* **Repositori GitHub:** [https://github.com/0dannn/SIM-KERMA-UNIPAR.git](https://github.com/0dannn/SIM-KERMA-UNIPAR.git) (Branch `main`, Commit `06f71da`)
+* **Repositori GitHub:** [https://github.com/0dannn/SIM-KERMA-UNIPAR.git](https://github.com/0dannn/SIM-KERMA-UNIPAR.git) (Branch `main`, Commit `ebf86b7`)
 
 ### Skema Tabel Basis Data MySQL (`simkerma_db`):
-1. **`documents`:** Menyimpan naskah kerja sama (`id`, `doc_id`, `reg_id`, `doc_number`, `partner_doc_number`, `track`, `doc_type`, `parent_mou`, `unit`, `collab_unit`, `partner_name`, `partner_category`, `scope`, `validity`, `warning_threshold`, `status`, `date_approved`, `date_signed`, `draft_file`, `signed_file`, `docx_path`, `notes`, `timestamps`).
-2. **`partners`:** Master data direktori mitra (`id`, `name`, `category`, `scope_coverage`, `address`, `city`, `phone`, `email`, `pic_name`, `pic_title`, `pic_contact`, `profile_desc`, `status_verification`, `timestamps`).
-3. **`audit_trails`:** Rekam jejak matematis FSM tak terhapuskan (`id`, `document_id`, `actor`, `role`, `event`, `from_status`, `to_status`, `notes`, `timestamp_wita`, `timestamps`).
-4. **`activities`:** Pencatatan realisasi kegiatan kerja sama di lapangan (`id`, `document_id`, `activity_name`, `schedule_start`, `schedule_end`, `target_qty`, `realized_qty`, `parties_involved`, `outputs`, `budget_info`, `evidence_file`, `evidence_photos`, `execution_status`, `notes`, `timestamps`).
+1. **`users`:** Akun pengguna multi-peran (`id`, `name`, `email`, `role`, `unit`, `phone`, `password`, `timestamps`).
+2. **`documents`:** Menyimpan naskah kerja sama (`id`, `doc_id`, `reg_id`, `doc_number`, `partner_doc_number`, `track`, `doc_type`, `parent_mou`, `unit`, `collab_unit`, `partner_name`, `partner_category`, `scope`, `validity`, `warning_threshold`, `status`, `date_approved`, `date_signed`, `draft_file`, `signed_file`, `docx_path`, `notes`, `timestamps`).
+3. **`partners`:** Master data direktori mitra (`id`, `name`, `category`, `scope_coverage`, `address`, `city`, `phone`, `email`, `pic_name`, `pic_title`, `pic_contact`, `profile_desc`, `status_verification`, `timestamps`).
+4. **`audit_trails`:** Rekam jejak matematis FSM tak terhapuskan (`id`, `document_id`, `actor`, `role`, `event`, `from_status`, `to_status`, `notes`, `timestamp_wita`, `timestamps`).
+5. **`activities`:** Pencatatan realisasi kegiatan kerja sama di lapangan (`id`, `document_id`, `activity_name`, `schedule_start`, `schedule_end`, `target_qty`, `realized_qty`, `parties_involved`, `outputs`, `budget_info`, `evidence_file`, `evidence_photos`, `execution_status`, `notes`, `timestamps`).
 
 ---
 
-## 5. Fitur Mutakhir: Template Baru, Engine QR Stamping, & Desain UI
+## 5. Fitur Mutakhir: Autentikasi Role, QR Stamping, & Desain UI Ramping
 
 ### A. Template Baru Draf Naskah MoU
 * **Berkas Baku:** `Form Template/Template_MoU_UNIPAR.docx` (96.181 bytes).
@@ -101,23 +102,20 @@ $$M = (Q, \Sigma, \delta, q_0, F, G)$$
 * **Ruang Tanda Tangan Basah Rektor:** Baris di atas nama Rektor (**Dr. Rosdiana Simbolon, SE., S.Kom., M.Si**) dijamin 100% bersih tanpa gambar, memberikan ruang resmi untuk penandatanganan basah dan pembubuhan cap stempel institusi.
 * **Konversi Otomatis:** Sistem mengekspor dokumen Word ber-QR Code menjadi berkas PDF telaah resmi secara instan via Microsoft Word COM native (`ExportAsFixedFormat`).
 
-### C. Kolom Tabel Status & Tombol Dinamis PDF (Menu 04)
-* Header tabel disederhanakan menjadi **"Status"**.
-* Tombol PDF mikro disandingkan tepat di samping tombol **"Buka Lembar Verifikasi Publik"** (`btn-sm py-0 px-1`, `font-size: 0.62rem`).
-* Responsif terhadap seluruh 6 status FSM:
-  * `DRAFT`: Tombol PDF tidak ditampilkan jika draf belum diajukan/diunggah.
-  * `REVIEW`: Tombol merah outline (`btn-outline-danger`) membuka PDF telaah ber-QR Code.
-  * `ACTIVE`: Tombol hijau outline (`btn-outline-success`) membuka PDF naskah sah bertanda tangan basah.
-  * `WARNING`: Tombol kuning outline (`btn-outline-warning`) membuka PDF naskah masa peringatan dini.
-  * `EXPIRED`: Tombol abu-abu outline (`btn-outline-secondary`) membuka arsip naskah kedaluwarsa.
-  * `CANCELLED`: Tombol abu gelap outline (`btn-outline-dark`) membuka naskah yang dibatalkan.
+### C. Sistem Autentikasi Multi-Peran & Portal Login (`/login`)
+* **Endpoint Login Resmi:** `GET /login`, `POST /login`, `GET /logout`.
+* **Empat Akun Peran Terenkripsi Bcrypt:**
+  1. `admin@unipar.ac.id` / `admin123` *(ADMIN - Superuser)*
+  2. `unit@unipar.ac.id` / `unit123` *(UNIT - Prodi S1 TI)*
+  3. `legal@unipar.ac.id` / `legal123` *(LEGAL - Biro Hukum)*
+  4. `rektor@unipar.ac.id` / `rektor123` *(LEADER - Rektorat UNIPAR)*
+* **Tombol Cepat Akun Demo (Quick-Fill):** Mengisi kredensial secara instan dalam satu klik untuk kemudahan demonstrasi sidang tanpa harus mengetik manual.
+* **Profil Pengguna & Logout:** Dropdown profil aktif terpasang pada header atas dan kartu identitas pada footer sidebar.
 
-### D. Adaptasi Desain Tampilan UI Modern Sesuai Acuan Figma (`UI_Reference.png`)
-* **Palet Warna:** Oranye Hangat institusional (`#ea580c` / `#f97316`) sebagai brand primary, latar belakang bersih (`#f8fafc`), dan sidebar dark slate (`#1e2430`).
-* **Kontainer & Card:** Putih bersih, garis batas halus (`#e2e8f0`), rounded corner 12px, soft shadow (`0 1px 3px rgba(0,0,0,0.04)`).
-* **Desain Tabel:** Header `#f8fafc`, padding sel lapang 12–14px, baris hover halus `#fafbfc`.
-* **Status Badges:** Format rounded-pill dengan warna pastel lembut (`#dcfce7` hijau, `#fef3c7` kuning, `#e0f2fe` biru, `#fee2e2` merah, `#f1f5f9` abu-abu).
-* **Integritas Konten:** Seluruh teks asli naskah, form modal, alur FSM, dan fungsi sistem dipertahankan 100% tanpa ada yang diubah substansinya.
+### D. Optimasi Tata Letak Sidebar Ramping (Hemat 15% Ruang)
+* **Pembersihan Nomor Menu:** Seluruh badge angka (01, 02, dst.) pada navigasi sidebar telah dihilangkan sehingga tampilan menjadi lebih elegan dan profesional.
+* **Perampingan Lebar:** Lebar sidebar diperkecil 15% dari `280px` menjadi `238px`.
+* **Keuntungan:** Area konten utama (tabel arsip dokumen, form pengusulan, matriks FSM) mendapatkan ruang ekstra ~42px, mencegah tabel tampak terhimpit.
 
 ---
 
@@ -139,37 +137,36 @@ $$M = (Q, \Sigma, \delta, q_0, F, G)$$
 ## 7. Lokasi Berkas Fisik & Struktur Direktori
 
 ```
-D:\CLI\Skripsi\
-├── SIMKERMA_Laravel11\                              <-- Proyek Laravel 11 (Terkoneksi GitHub)
+Skripsi2/
+├── SIM-KERMA-UNIPAR/                                <-- Proyek Utama Laravel 11 (Terkoneksi GitHub)
 │   ├── app\Http\Controllers\SimkermaController.php  <-- Controller Utama (CRUD, FSM, Partner, Export)
+│   ├── app\Http\Controllers\AuthController.php      <-- Controller Autentikasi (Login & Logout)
 │   ├── app\Services\FSMWorkflowEngineService.php    <-- Core Mesin FSM & Guard Condition
 │   ├── app\Services\DocxQrStampService.php          <-- Engine Stempel QR 500px & Word COM Export PDF
+│   ├── app\Models\User.php                          <-- Model Akun Pengguna Multi-Role
 │   ├── app\Models\Document.php                      <-- Model Dokumen Naskah
 │   ├── app\Models\Partner.php                       <-- Model Master Data Mitra
 │   ├── app\Models\AuditTrail.php                    <-- Model Audit Trail FSM
 │   ├── app\Models\Activity.php                      <-- Model Kegiatan Pelaksanaan
-│   ├── database\migrations\                         <-- Berkas Migrasi MySQL
+│   ├── database\migrations\                         <-- Berkas Migrasi MySQL (Users, Documents, etc.)
+│   ├── database\seeders\UserSeeder.php              <-- Seeder Akun Resmi 4 Peran
 │   ├── public\templates\Template_MoU_UNIPAR.docx    <-- Berkas Draf Template MoU Baku Publik
-│   ├── resources\views\layouts\app.blade.php        <-- Layout Induk (Warna Oranye & Slate Sidebar)
+│   ├── resources\views\auth\login.blade.php         <-- Tampilan Portal Login Modern
+│   ├── resources\views\layouts\app.blade.php        <-- Layout Induk (Sidebar Ramping 238px & User Profile)
 │   ├── resources\views\simkerma\index.blade.php     <-- View Utama 7 Menu Modern
 │   ├── resources\views\simkerma\verify.blade.php    <-- View Publik Verifikasi QR Code
-│   ├── docs\UI\UI_Reference.png                     <-- Aset Gambar Referensi Desain
-│   ├── docs\Form Template\                          <-- Aset Master Template Draf Dokumen
+│   ├── docs\convo-4.txt                             <-- Master Log Convo 4
+│   ├── docs\convo-5.txt                             <-- Master Log Convo 5
 │   ├── README.md                                    <-- Panduan Proyek Komprehensif
 │   └── routes\web.php                               <-- Seluruh Rute HTTP Aplikasi
 │
-├── convo-4 01 Nov 2026 continous (Internal Chat)\
-│   ├── convo-4.txt                                  <-- Master Log Perkembangan Lengkap Convo 4
-│   ├── AI_HANDOVER_CONTEXT_LENGKAP.md               <-- Berkas Handover Ini
-│   ├── INSTRUMEN_EVALUASI_LIKERT.md                 <-- Instrumen Kuesioner Evaluasi Skripsi
-│   └── Proposal\
-│       ├── Proposal - Main.docx                     <-- MASTER ASLI (TIDAK BOLEH DIUBAH)
-│       └── Proposal - Main - Revisi.docx            <-- Salinan Revisi Terkini Siap Bimbingan
+├── convo-4 01 Nov 2026 continous (Internal Chat)\   <-- Arsip Sesi Convo 4
+└── convo-5 02 Nov 2026 continous (Internal Chat)\   <-- Berkas Catatan Sesi Convo 5
 ```
 
 ---
 
-## 8. Panduan Menjalankan Sistem di Komputer Baru / Perangkat Lain
+## 8. Panduan Menjalankan Sistem di Komputer Baru
 
 Jika berpindah ke komputer atau sesi AI yang baru:
 
@@ -196,33 +193,29 @@ Jika berpindah ke komputer atau sesi AI yang baru:
    php artisan migrate:fresh --seed
    ```
 
-5. **Nyalakan Server Pengembang Laravel:**
+5. **Nyalakan Peladen Web:**
    ```bash
-   php artisan serve --host=127.0.0.1 --port=8000
+   php -S 127.0.0.1:8000 -t public
    ```
 
 6. **Buka Aplikasi di Peramban:**
-   * URL Aplikasi: [http://127.0.0.1:8000](http://127.0.0.1:8000)
-   * Direktori Mitra (Menu 02): [http://127.0.0.1:8000/?menu=2](http://127.0.0.1:8000/?menu=2)
-   * Pengajuan FSM (Menu 04): [http://127.0.0.1:8000/?menu=4](http://127.0.0.1:8000/?menu=4)
+   * Portal Login: [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login)
+   * Beranda Aplikasi: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ---
 
-## 9. Agenda & Tugas Prioritas Menuju Sesi Berikutnya (Convo 5)
+## 9. Agenda & Tugas Prioritas Menuju Sesi Berikutnya (Convo 6)
 
 1. **Penyusunan Skenario Panduan Demonstrasi Sistem (Alur Demo Interaktif 7–10 Menit):**
-   * Menyusun panduan peragaan aplikasi di depan Pak Victor Tuilan dan Pak Franky Manoppo (alur pengajuan naskah baru, telaah mutu pimpinan, pengesahan berkas fisik ber-meterai, scan QR code via HP, deteksi peringatan kedaluwarsa H-90, dan pelacakan audit trail).
+   * Menyusun naskah peragaan langsung di hadapan dosen pembimbing (Pak Victor Tuilan dan Pak Franky Manoppo) dengan mensimulasikan login multi-peran (`UNIT` $\rightarrow$ `LEGAL` $\rightarrow$ `LEADER`).
 2. **Penyelarasan Naskah Word Skripsi (`Proposal - Main - Revisi.docx`):**
-   * Memastikan sinkronisasi 100% pada:
-     - Subbab 1.3: 5 butir batasan masalah resmi.
-     - Subbab 2.3 & 3.4: Formalisasi model FSM 6 status, 8 transisi, diagram *statechart*, dan eliminasi SHA-256.
-     - Bab IV: Matriks pengujian transisi (*State Transition Testing*) dan instrumen Likert Sugiyono.
+   * Memastikan sinkronisasi 100% pada Bab I (5 butir Batasan Masalah), Bab II & III (FSM 6 status, 8 transisi formal, diagram statechart, dan eliminasi SHA-256), serta Bab IV (Matriks State Transition Testing dan Skala Likert Sugiyono).
 3. **Penyusunan Bahan Paparan / Slide Presentasi Proposal:**
    * Menyiapkan poin ringkasan eksekutif untuk mempertahankan kebaruan ilmiah FSM di hadapan komisi penguji.
 
 ---
 
-## 10. Template Prompt Handover untuk AI di Perangkat Lain
+## 10. Template Prompt Handover untuk AI di Sesi Baru (Convo 6)
 
 > **Salin dan tempelkan teks berikut ke sesi chat AI yang baru:**
 ```text
@@ -234,13 +227,14 @@ Seluruh kode sumber aplikasi nyata telah selesai dibangun menggunakan Laravel 11
 https://github.com/0dannn/SIM-KERMA-UNIPAR
 
 Konteks penting yang TIDAK BOLEH diubah atau dikurangi:
-1. FSM 6 Status Nyata di MySQL: DRAFT, REVIEW, ACTIVE, WARNING, EXPIRED, CANCELLED (bukan mock/simulasi).
-2. Guard Condition Berkas Fisik: Transisi ke status ACTIVE mewajibkan unggah scan PDF naskah sah bertanda tangan basah dan bermeterai serta nomor surat mitra.
+1. FSM 6 Status Nyata di MySQL: DRAFT, REVIEW, ACTIVE, WARNING, EXPIRED, CANCELLED.
+2. Guard Condition Berkas Fisik: Transisi ke status ACTIVE mewajibkan unggah scan PDF naskah sah bertanda tangan basah dan bermeterai serta nomor surat mitra (UU No. 10 Tahun 2020 Bea Meterai).
 3. Hashing SHA-256 telah 100% DIELIMINASI dan digantikan oleh FSM Guard + Dynamic QR Code Registrasi Dokumen ke portal /verify/{reg_id}.
 4. Dual-Track Workflow: Jalur 1 (Bertahap Draf -> MoU -> MoA -> IA) dan Jalur 2 (Paket Terpadu 1 Tahun PKM/Tridharma).
 5. Evaluasi Kuantitatif menggunakan Skala Likert 5 Poin (Sugiyono, 2019; Arikunto, 2013), bukan SUS.
-6. Engine QR Stamping (DocxQrStampService.php) menyematkan QR 500px (cx="765387" cy="765387" EMU) tepat di atas teks "Pihak Pertama" di template naskah baku "Template_MoU_UNIPAR.docx". Area di atas Dr. Rosdiana Simbolon, SE., S.Kom., M.Si harus 100% bersih untuk tanda tangan basah & cap stempel pimpinan.
-7. Desain UI telah diselaraskan dengan warna oranye (#ea580c), sidebar dark slate (#1e2430), container bersih, dan tabel modern.
+6. Engine QR Stamping (DocxQrStampService.php) menyematkan QR 500px tepat di atas teks "Pihak Pertama". Ruang di atas nama Rektor (Dr. Rosdiana Simbolon) 100% bersih untuk tanda tangan basah & stempel institusi.
+7. Sistem Autentikasi Multi-Peran: Halaman /login dengan 4 akun resmi (ADMIN, UNIT, LEGAL, LEADER) dan tombol quick-fill akun demo.
+8. Sidebar Ramping (238px): Telah bersih dari penomoran menu dan memberikan ruang ekstra ~42px bagi konten utama.
 
-Sekarang kita berada di sesi lanjutan (Convo 5). Tolong baca master log di folder "convo-4 01 Nov 2026 continous (Internal Chat)/convo-4.txt" dan panduan handover "AI_HANDOVER_CONTEXT_LENGKAP.md", lalu bantu saya mengerjakan agenda selanjutnya.
+Sekarang kita berada di sesi lanjutan (Convo 6). Tolong baca master log di folder "SIM-KERMA-UNIPAR/docs/convo-5.txt" dan panduan handover "AI_HANDOVER_CONTEXT_LENGKAP.md", lalu bantu saya mengerjakan agenda selanjutnya.
 ```
