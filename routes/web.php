@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SimkermaController;
+use App\Http\Controllers\AuthController;
+
+// Rute Autentikasi Pengguna
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Rute Utama Aplikasi SIMKERMA (Mendukung Menu 1 s.d. 7)
 Route::get('/', [SimkermaController::class, 'index'])->name('simkerma.index');

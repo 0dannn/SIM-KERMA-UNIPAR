@@ -34,8 +34,11 @@ class SimkermaController extends Controller
             $activeMenu = 4;
         }
 
-        // Ambil peran aktif dari session (default: MASTER)
-        $activeRole = session('active_role', 'MASTER');
+        // Ambil peran aktif dari auth atau session (default: ADMIN / MASTER)
+        if (auth()->check() && !session()->has('active_role')) {
+            session(['active_role' => auth()->user()->role]);
+        }
+        $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'ADMIN');
 
         // Data untuk Menu 4 (Pengajuan dan Persetujuan Kerja Sama)
         $documents = Document::with(['auditTrails', 'activities'])->orderBy('id', 'desc')->get();
@@ -263,8 +266,8 @@ class SimkermaController extends Controller
      */
     public function changeRole(Request $request)
     {
-        $allowed = ['UNIT', 'LEGAL', 'LEADER', 'SYSTEM', 'MASTER'];
-        $role = $request->input('role', 'MASTER');
+        $allowed = ['UNIT', 'LEGAL', 'LEADER', 'SYSTEM', 'MASTER', 'ADMIN'];
+        $role = $request->input('role', 'ADMIN');
         if (in_array($role, $allowed, true)) {
             session(['active_role' => $role]);
         }

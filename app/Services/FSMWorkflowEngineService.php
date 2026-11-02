@@ -128,7 +128,7 @@ class FSMWorkflowEngineService
         $allowedRoles = $conf['roles'];
 
         // 2. Validasi Hak Akses Peran (RBAC Guard)
-        if ($actorRole !== 'MASTER' && !in_array($actorRole, $allowedRoles, true)) {
+        if ($actorRole !== 'MASTER' && $actorRole !== 'ADMIN' && !in_array($actorRole, $allowedRoles, true)) {
             $allowedStr = implode(', ', $allowedRoles);
             throw new IllegalTransitionException(
                 "Pelanggaran RBAC: Peran [{$actorRole}] tidak berwenang mengeksekusi event [{$event}]. Wewenang aksi ini: [{$allowedStr}]."

@@ -1064,8 +1064,8 @@
                                 <button type="submit" name="role" value="SYSTEM" class="btn btn-sm {{ $activeRole === 'SYSTEM' ? 'btn-dark text-white fw-bold' : 'btn-outline-dark' }}" title="Scheduler Otomasi Sistem (Cron Worker)">
                                     SYSTEM
                                 </button>
-                                <button type="submit" name="role" value="MASTER" class="btn btn-sm {{ $activeRole === 'MASTER' ? 'btn-danger text-white fw-bold' : 'btn-outline-danger' }}" title="Role Master (Super Admin / Akses Bypass Semua Langkah)">
-                                    <i class="bi bi-star-fill me-1"></i> MASTER
+                                <button type="submit" name="role" value="ADMIN" class="btn btn-sm {{ in_array($activeRole, ['ADMIN', 'MASTER'], true) ? 'btn-danger text-white fw-bold' : 'btn-outline-danger' }}" title="Role Admin / Master (Super Admin / Akses Bypass Semua Langkah)">
+                                    <i class="bi bi-star-fill me-1"></i> ADMIN
                                 </button>
                             </div>
                         </form>

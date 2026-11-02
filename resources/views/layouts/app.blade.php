@@ -41,9 +41,9 @@
             letter-spacing: -0.01em;
         }
         
-        /* Layout Sidebar (Sesuai UI_Reference: #1e2430, Flat Dark Slate Elegan) */
+        /* Layout Sidebar (Sesuai UI_Reference: #1e2430, Flat Dark Slate Elegan - Ramping 238px / 15% lebih hemat ruang) */
         .sidebar-container {
-            width: 280px;
+            width: 238px;
             min-height: 100vh;
             background-color: var(--brand-navy) !important;
             background-image: none !important;
@@ -59,10 +59,10 @@
         /* Navigasi Sidebar */
         .sidebar-nav .nav-link {
             color: #94a3b8;
-            padding: 10px 14px;
+            padding: 9px 12px;
             border-radius: 8px;
             margin-bottom: 3px;
-            font-size: 0.85rem;
+            font-size: 0.83rem;
             font-weight: 500;
             display: flex;
             align-items: center;
@@ -78,19 +78,6 @@
             background-color: var(--brand-primary) !important;
             font-weight: 600;
             box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
-        }
-        .sidebar-nav .nav-link.active .badge-num {
-            background-color: #ffffff !important;
-            color: var(--brand-primary) !important;
-        }
-        .sidebar-nav .nav-link .badge-num {
-            font-size: 0.72rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-right: 10px;
-            font-weight: 700;
-            background-color: rgba(255, 255, 255, 0.12);
-            color: #cbd5e1;
         }
         
         /* Brand Icon Box (Oranye Sesuai UI_Reference) */
@@ -336,42 +323,39 @@
 <div class="d-flex flex-column flex-lg-row">
 
     <!-- ========================================================================================= -->
-    <!-- SIDEBAR NAVIGASI RESMI (HANYA MEMUAT 7 FITUR DARI FILE DOKUMEN RESMI)                      -->
+    <!-- SIDEBAR NAVIGASI RESMI                                                                    -->
     <!-- ========================================================================================= -->
-    <div class="sidebar-container text-white d-flex flex-column justify-content-between p-3 flex-shrink-0">
+    <div class="sidebar-container text-white d-flex flex-column justify-content-between p-2 p-md-3 flex-shrink-0">
         <div>
             <!-- LOGO & BRAND -->
             <div class="d-flex align-items-center pb-3 mb-3 border-bottom border-secondary">
-                <div class="brand-icon-box fw-bold rounded-3 d-flex align-items-center justify-content-center me-2" style="width: 38px; height: 38px; font-size: 1.15rem;">
+                <div class="brand-icon-box fw-bold rounded-3 d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; font-size: 1.1rem;">
                     <i class="bi bi-mortarboard-fill"></i>
                 </div>
                 <div>
-                    <h6 class="mb-0 fw-bold text-uppercase text-white letter-spacing-1">SIM KERJA SAMA PT</h6>
-                    <small class="text-secondary" style="font-size: 0.72rem;">Universitas Parna Raya</small>
+                    <h6 class="mb-0 fw-bold text-uppercase text-white letter-spacing-1" style="font-size: 0.88rem;">SIM KERJA SAMA</h6>
+                    <small class="text-secondary" style="font-size: 0.7rem;">Universitas Parna Raya</small>
                 </div>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-                <span class="text-uppercase text-secondary fw-bold" style="font-size: 0.7rem; letter-spacing: 0.8px;">
-                    SIDEBAR 7 FITUR UTAMA
+                <span class="text-uppercase text-secondary fw-bold" style="font-size: 0.67rem; letter-spacing: 0.8px;">
+                    MENU UTAMA
                 </span>
-                <span class="tag-wireframe bg-dark text-white-50 border-secondary" style="font-size: 0.65rem;">
+                <span class="tag-wireframe bg-dark text-white-50 border-secondary" style="font-size: 0.62rem;">
                     UNIPAR
                 </span>
             </div>
 
-            <!-- DAFTAR MENU 1 s/d 7 -->
+            <!-- DAFTAR MENU UTAMA -->
             <nav class="sidebar-nav">
                 @foreach ($features as $fId => $f)
                     @php $isActive = ($activeMenu === $fId); @endphp
-                    <a href="{{ route('simkerma.index', ['menu' => $fId]) }}" class="nav-link {{ $isActive ? 'active' : '' }}">
-                        <span class="badge-num {{ $isActive ? 'bg-dark text-white' : 'bg-secondary text-light' }}">
-                            {{ sprintf('%02d', $fId) }}
-                        </span>
-                        <i class="bi {{ $f['icon'] }} me-2"></i>
+                    <a href="{{ route('simkerma.index', ['menu' => $fId]) }}" class="nav-link {{ $isActive ? 'active' : '' }}" title="{{ $f['title'] }}">
+                        <i class="bi {{ $f['icon'] }} me-2 fs-6"></i>
                         <span class="flex-grow-1 text-truncate">{{ $f['title'] }}</span>
                         @if ($isActive)
-                            <i class="bi bi-chevron-right ms-1 text-white small"></i>
+                            <i class="bi bi-chevron-right ms-1 text-white small" style="font-size: 0.68rem;"></i>
                         @endif
                     </a>
                 @endforeach
@@ -380,6 +364,30 @@
 
         <!-- FOOTER SIDEBAR -->
         <div class="pt-3 mt-4 border-top border-secondary text-secondary" style="font-size: 0.75rem;">
+            @if (auth()->check())
+                <div class="bg-dark p-2 rounded mb-2 border border-secondary">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2 overflow-hidden">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <div class="text-white text-truncate fw-semibold" style="font-size: 0.73rem;">{{ auth()->user()->name }}</div>
+                                <span class="badge bg-danger text-white px-2 py-0" style="font-size: 0.62rem;">{{ auth()->user()->role }}</span>
+                            </div>
+                        </div>
+                        <a href="{{ route('logout') }}" class="text-white-50 hover-text-white ms-1" title="Logout">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            @else
+                <div class="mb-2">
+                    <a href="{{ route('login') }}" class="btn btn-sm btn-outline-light w-100 py-1" style="font-size: 0.73rem;">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Login Pengguna
+                    </a>
+                </div>
+            @endif
             <div class="text-white-50 fw-semibold">Jordan Immanuel Pusung</div>
             <div class="small">NIM: 2355201011 &bull; TI UNIPAR</div>
             <div class="text-white-50 small mt-1">Laravel 11 &bull; MySQL Relasional</div>
@@ -407,9 +415,31 @@
                         <button type="button" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm" onclick="showQrModal('REG-UNIPAR-2026-042', '341/UNIPAR/MoU/X/2026', 'PKS Program Magang Industri AI', 'PT Industri Inovasi Digital', 'APPROVED', '30 Oktober 2026')">
                             <i class="bi bi-qr-code-scan me-1 text-primary"></i> Cek QR Registrasi
                         </button>
-                        <span class="badge bg-white text-dark border px-3 py-2 fw-semibold shadow-sm">
-                            <i class="bi bi-mortarboard-fill me-1 text-warning"></i> Universitas Parna Raya
-                        </span>
+                        @if (auth()->check())
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1 shadow-sm bg-white" type="button" data-bs-toggle="dropdown">
+                                    <span class="badge bg-danger text-white rounded-pill px-2" style="font-size: 0.65rem;">{{ auth()->user()->role }}</span>
+                                    <span class="fw-semibold small text-dark d-none d-md-inline">{{ auth()->user()->name }}</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" style="min-width: 220px;">
+                                    <li class="px-3 py-1">
+                                        <div class="fw-bold text-dark small">{{ auth()->user()->name }}</div>
+                                        <div class="text-muted" style="font-size: 0.72rem;">{{ auth()->user()->email }}</div>
+                                        <div class="badge bg-primary text-white mt-1" style="font-size: 0.65rem;">Unit: {{ auth()->user()->unit ?? '-' }}</div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger small d-flex align-items-center gap-2" href="{{ route('logout') }}">
+                                            <i class="bi bi-box-arrow-right"></i> Keluar (Logout)
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        @else
+                            <a href="{{ route('login') }}" class="btn btn-sm btn-primary shadow-sm">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Login Akun
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

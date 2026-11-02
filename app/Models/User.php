@@ -19,6 +19,9 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'role',
+        'unit',
+        'phone',
         'password',
     ];
 
@@ -43,5 +46,28 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Helper wewenang peran (Role Access)
+     */
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['ADMIN', 'MASTER'], true);
+    }
+
+    public function isUnit(): bool
+    {
+        return $this->role === 'UNIT';
+    }
+
+    public function isLegal(): bool
+    {
+        return $this->role === 'LEGAL';
+    }
+
+    public function isLeader(): bool
+    {
+        return $this->role === 'LEADER';
     }
 }
