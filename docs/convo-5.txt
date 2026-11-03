@@ -86,6 +86,12 @@ G. Implementasi Status VERIFIED (Evolusi Model Formal FSM 7-Status - 03 November
    - Pengujian Otomatis:
      Seluruh uji transisi status, anti-bypass guard, dan RBAC guard lulus 100%.
 
+H. Pembersihan Data Sampel untuk Tahap Eksplorasi Bersih (Clean Slate Testing):
+   - Atas instruksi eksplisit pengguna, seluruh 12 naskah sampel dokumen kerja sama, 52 riwayat audit trail, dan 90 berkas fisik sampel di `public/uploads/documents/` telah dibersihkan secara aman melalui script `scripts/clear_documents_and_activities.php`.
+   - 4 Akun pengguna resmi multi-peran (`admin@unipar.ac.id`, `unit@unipar.ac.id`, `legal@unipar.ac.id`, `rektor@unipar.ac.id`) tetap dipertahankan utuh.
+   - Database kini dalam status bersih (0 documents) sehingga pengguna dapat dengan leluasa menguji input naskah baru dari awal.
+   - Fitur pemulihan cepat (seeding) tetap tersedia kapan saja via `php artisan db:seed --class=DocumentSeeder`.
+
 ================================================================================
 2. PERBANDINGAN HAK AKSES LIMA PERAN FORMAL
 ================================================================================
