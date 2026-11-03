@@ -186,4 +186,30 @@ class VerticalSubmissionFormTest extends TestCase
         $this->assertStringContainsString('<wp:positionH relativeFrom="margin"><wp:align>right</wp:align></wp:positionH>', $xmlA4);
         $this->assertStringContainsString('<wp:positionV relativeFrom="margin"><wp:align>bottom</wp:align></wp:positionV>', $xmlA4);
     }
+
+    /**
+     * Test pengajuan MoA / PKS dengan parent_mou kosong (null) tidak boleh menyebabkan error database.
+     */
+    public function test_moa_submission_with_empty_parent_mou_defaults_safely(): void
+    {
+        $payload = [
+            'title' => 'Kerja Sama MoA Tanpa Dokumen Induk (Mandiri)',
+            'partner_name' => 'PT Mitra Tanpa Induk',
+            'doc_type' => 'MoA / PKS',
+            'paper_size' => 'A4',
+            'parent_mou' => '', // string kosong yang dikonversi middleware ke null
+            'scope' => 'Pelaksanaan kegiatan magang mandiri',
+            'start_date' => '2026-11-03',
+            'end_date' => '2027-11-03',
+        ];
+
+        $response = $this->post(route('simkerma.store-jalur1'), $payload);
+        $response->assertStatus(302);
+
+        $doc = Document::where('partner_name', 'PT Mitra Tanpa Induk')->first();
+        $this->assertNotNull($doc, 'Dokumen harus berhasil dibuat tanpa error Integrity constraint violation.');
+        $this->assertEquals('-', $doc->parent_mou, 'parent_mou harus default ke tanda strip -');
+        $this->assertEquals('MoA / PKS', $doc->doc_type);
+        $this->assertEquals('A4', $doc->paper_size);
+    }
 }
