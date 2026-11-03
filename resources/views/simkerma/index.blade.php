@@ -1140,7 +1140,7 @@
                                         Template Dokumen Naskah Draf MoU Resmi (.docx) &mdash; Format Bersih (Tanpa QR Code)
                                     </h6>
                                     <p class="text-muted small mb-0">
-                                        Unduh template naskah Word resmi ini untuk menyusun draf kerja sama. Area tanda tangan telah disiapkan bersih tanpa gambar QR Code. Ketika draf naskah diajukan ke meja pemeriksaan (<strong>SUBMIT &rarr; REVIEW</strong>), sistem secara otomatis memasangkan stempel QR Code dokumen ke naskah Word tepat di atas tulisan <strong>Pihak Pertama</strong> (Universitas Parna Raya Manado) dengan ukuran 150&times;150 px tetap presisi, membiarkan area di atas nama Rektor tetap leluasa untuk tanda tangan fisik, serta menerbitkan berkas PDF resmi.
+                                        Unduh template naskah Word resmi ini untuk menyusun draf kerja sama. Area tabel tanda tangan disiapkan bersih untuk tanda tangan fisik (wet signature). Ketika draf naskah diajukan ke meja pemeriksaan (<strong>SUBMIT &rarr; REVIEW</strong>), sistem secara otomatis menyematkan stempel QR Code dokumen ke naskah Word pada <strong>bagian ujung kanan bawah halaman terakhir dokumen</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>), serta menerbitkan berkas PDF resmi.
                                     </p>
                                 </div>
                             </div>
@@ -1218,6 +1218,22 @@
                                                 <option value="{{ $mouItem->doc_number }}">
                                             @endforeach
                                         </datalist>
+                                    </div>
+                                </div>
+
+                                <!-- UKURAN KERTAS DOKUMEN (A4 / F4) -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Ukuran Kertas Dokumen : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih format kertas naskah: A4 (210 x 297 mm) atau F4 / Folio (215 x 330 mm). Sistem menempatkan QR Code di ujung kanan bawah halaman terakhir sesuai ukuran kertas yang dipilih." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="paper_size" class="form-select" required>
+                                                <option value="A4" selected>Kertas A4 (210 &times; 297 mm) &mdash; Standar</option>
+                                                <option value="F4">Kertas F4 / Folio (215 &times; 330 mm)</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1484,6 +1500,22 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Digitalisasi UMKM dan Pemberdayaan Komunitas Nelayan Pesisir Manado" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
                                             <input type="text" name="topic" class="form-control" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- UKURAN KERTAS DOKUMEN (A4 / F4) -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Ukuran Kertas Dokumen : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih format kertas naskah: A4 (210 x 297 mm) atau F4 / Folio (215 x 330 mm). Sistem menempatkan QR Code di ujung kanan bawah halaman terakhir sesuai ukuran kertas yang dipilih." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="paper_size" class="form-select" required>
+                                                <option value="A4" selected>Kertas A4 (210 &times; 297 mm) &mdash; Standar</option>
+                                                <option value="F4">Kertas F4 / Folio (215 &times; 330 mm)</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -2217,6 +2249,8 @@
                                                                 <div><strong>Kolaborator:</strong> {{ $doc->collab_unit }}</div>
                                                             @endif
                                                             <div><strong>Dokumen Induk:</strong> {{ $doc->parent_mou ?: '-' }}</div>
+                                                            <div><strong>Format Kertas:</strong> <span class="badge bg-secondary-subtle text-secondary-emphasis border">{{ $doc->paper_size ?: 'A4' }} ({{ ($doc->paper_size ?: 'A4') === 'F4' ? '215 &times; 330 mm' : '210 &times; 297 mm' }})</span></div>
+                                                            <div><strong>Posisi QR Code:</strong> <span class="text-success fw-bold"><i class="bi bi-qr-code me-1"></i>Ujung Kanan Bawah Hal. Akhir</span></div>
                                                         </div>
                                                     </div>
                                                     <div class="col-sm-6">
@@ -2308,9 +2342,21 @@
                                                                     </div>
                                                                     <p class="text-muted mb-2" style="font-size: 0.73rem;">
                                                                         Ketika Anda menekan tombol <strong>Ajukan Naskah ke Meja Pemeriksaan (SUBMIT)</strong>:
-                                                                        <br>&bull; Sistem secara otomatis menyematkan stempel QR Code dokumen ke berkas Word pada tabel tanda tangan tanpa garis tepat di atas tulisan <strong>Pihak Pertama</strong> (Universitas Parna Raya Manado) dengan ukuran 150&times;150 px tetap presisi dan tidak bergeser.
+                                                                        <br>&bull; Sistem secara otomatis menyematkan stempel QR Code resmi ke berkas Word pada <strong>bagian ujung kanan bawah halaman terakhir dokumen</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>) tanpa mengganggu tata letak tanda tangan basah.
                                                                         <br>&bull; Berkas Word tersebut otomatis dikonversi menjadi dokumen PDF resmi untuk ditelaah oleh pimpinan.
                                                                     </p>
+                                                                    <div class="mb-2">
+                                                                        <label class="form-label fw-bold text-dark d-block mb-1" style="font-size: 0.73rem;">
+                                                                            <i class="bi bi-aspect-ratio text-primary me-1"></i> Format Ukuran Kertas Dokumen:
+                                                                        </label>
+                                                                        <select name="paper_size" class="form-select form-select-sm">
+                                                                            <option value="A4" {{ ($doc->paper_size ?? 'A4') === 'A4' ? 'selected' : '' }}>Kertas A4 (210 &times; 297 mm) &mdash; Standar</option>
+                                                                            <option value="F4" {{ ($doc->paper_size ?? 'A4') === 'F4' ? 'selected' : '' }}>Kertas F4 / Folio (215 &times; 330 mm)</option>
+                                                                        </select>
+                                                                        <small class="text-muted d-block mt-1" style="font-size: 0.68rem;">
+                                                                            Penempatan QR Code disesuaikan secara dinamis di pojok kanan bawah halaman terakhir sesuai ukuran kertas yang dipilih.
+                                                                        </small>
+                                                                    </div>
                                                                     <div>
                                                                         <label class="form-label fw-bold text-dark d-block mb-1" style="font-size: 0.73rem;">
                                                                             <i class="bi bi-file-earmark-word text-primary me-1"></i> Unggah Naskah Word (.docx) Revisi Pengusul (Opsional):
@@ -2333,7 +2379,7 @@
                                                                         <div>
                                                                             <div class="fw-bold text-dark" style="font-size: 0.85rem;">Berkas Naskah Draf Telaah Legal (PDF Ber-QR Code)</div>
                                                                             <div class="text-muted" style="font-size: 0.72rem;">
-                                                                                Stempel QR Code dokumen telah dipasangkan pada naskah Word di atas kolom penandatanganan Rektor UNIPAR. Tim Legal menelaah kelayakan substansi sebelum verifikasi.
+                                                                                Stempel QR Code dokumen telah dipasangkan di bagian ujung kanan bawah halaman terakhir dokumen (format {{ $doc->paper_size ?: 'A4' }}). Tim Legal menelaah kelayakan substansi sebelum verifikasi.
                                                                             </div>
                                                                         </div>
                                                                     </div>

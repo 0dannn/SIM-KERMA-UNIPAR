@@ -119,4 +119,71 @@ class VerticalSubmissionFormTest extends TestCase
         $this->assertEquals('Dekan Fakultas Ilmu Komputer', $doc->first_party_signer);
         $this->assertEquals('Ketua Koperasi Nelayan Bahari', $doc->second_party_signer);
     }
+
+    /**
+     * Test penempatan QR Code di bagian ujung kanan bawah halaman terakhir dokumen
+     * serta dukungan ukuran kertas A4 dan F4 (Folio).
+     */
+    public function test_qr_code_placement_and_paper_size_a4_and_f4(): void
+    {
+        $payloadF4 = [
+            'title' => 'Pengujian Kerja Sama Format Kertas F4 (Folio)',
+            'doc_type' => 'MoU',
+            'paper_size' => 'F4',
+            'parent_mou' => '-',
+            'unit' => 'Program Studi Teknik Informatika',
+            'partner_name' => 'PT Mitra Pengujian F4',
+            'category' => 'DUDI / Swasta',
+            'scope' => 'Uji coba penempatan QR Code pada kertas F4',
+            'validity' => '1 Tahun',
+        ];
+
+        $response = $this->post(route('simkerma.store-jalur1'), $payloadF4);
+        $response->assertStatus(302);
+
+        $doc = Document::where('partner_name', 'PT Mitra Pengujian F4')->first();
+        $this->assertNotNull($doc);
+        $this->assertEquals('F4', $doc->paper_size);
+
+        $stampService = app(\App\Services\DocxQrStampService::class);
+
+        // 1. Uji Stempel pada Kertas F4
+        $resF4 = $stampService->stampMoU($doc, null, 'F4');
+        $this->assertTrue($resF4['success']);
+        $this->assertEquals('F4', $resF4['paper_size']);
+        $this->assertFileExists(public_path($resF4['docx_path']));
+
+        // Periksa OpenXML berkas Word F4
+        $zipF4 = new \ZipArchive();
+        $this->assertTrue($zipF4->open(public_path($resF4['docx_path'])));
+        $xmlF4 = $zipF4->getFromName('word/document.xml');
+        $zipF4->close();
+
+        // Verifikasi dimensi kertas F4 (12189 x 18708 dxa)
+        $this->assertStringContainsString('w:w="12189"', $xmlF4);
+        $this->assertStringContainsString('w:h="18708"', $xmlF4);
+
+        // Verifikasi penempatan QR Code di ujung kanan bawah (relativeFrom="margin", align right & bottom)
+        $this->assertStringContainsString('<wp:positionH relativeFrom="margin"><wp:align>right</wp:align></wp:positionH>', $xmlF4);
+        $this->assertStringContainsString('<wp:positionV relativeFrom="margin"><wp:align>bottom</wp:align></wp:positionV>', $xmlF4);
+
+        // 2. Uji Stempel pada Kertas A4
+        $resA4 = $stampService->stampMoU($doc, null, 'A4');
+        $this->assertTrue($resA4['success']);
+        $this->assertEquals('A4', $resA4['paper_size']);
+        $this->assertFileExists(public_path($resA4['docx_path']));
+
+        $zipA4 = new \ZipArchive();
+        $this->assertTrue($zipA4->open(public_path($resA4['docx_path'])));
+        $xmlA4 = $zipA4->getFromName('word/document.xml');
+        $zipA4->close();
+
+        // Verifikasi dimensi kertas A4 (11906 x 16838 dxa)
+        $this->assertStringContainsString('w:w="11906"', $xmlA4);
+        $this->assertStringContainsString('w:h="16838"', $xmlA4);
+
+        // Verifikasi penempatan QR Code di ujung kanan bawah
+        $this->assertStringContainsString('<wp:positionH relativeFrom="margin"><wp:align>right</wp:align></wp:positionH>', $xmlA4);
+        $this->assertStringContainsString('<wp:positionV relativeFrom="margin"><wp:align>bottom</wp:align></wp:positionV>', $xmlA4);
+    }
 }

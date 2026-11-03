@@ -386,6 +386,7 @@ class SimkermaController extends Controller
                 'pic_first_party' => $picFirstParty,
                 'pic_second_party' => $picSecondParty,
                 'doc_type' => $docType,
+                'paper_size' => $request->input('paper_size', 'A4'),
                 'parent_mou' => $parentMou,
                 'scope' => $request->input('scope', 'Kerja sama kemitraan Tridharma'),
                 'description' => $description,
@@ -508,6 +509,7 @@ class SimkermaController extends Controller
                 'pic_first_party' => $picFirstParty,
                 'pic_second_party' => $picSecondParty,
                 'doc_type' => 'Paket Terpadu (MoU + MoA + IA)',
+                'paper_size' => $request->input('paper_size', 'A4'),
                 'parent_mou' => '-',
                 'scope' => 'Paket Terpadu 1 Pintu: ' . $topic,
                 'description' => $description,
@@ -639,8 +641,8 @@ class SimkermaController extends Controller
             $this->fsmService->transition($document, $event, $activeRole, $actorTitle, $notes, $additionalData);
 
             // Jika transisi SUBMIT (Pengajuan Draf ke Meja Pemeriksaan REVIEW Pimpinan):
-            // Pasangkan stempel QR Code dokumen ke naskah Word (.docx) pada tabel tanda tangan tanpa garis
-            // di atas tanda tangan Pihak I Rektor Dr. Rosdiana Simbolon (ukuran 150x150 px tetap presisi dan tidak bergeser),
+            // Pasangkan stempel QR Code dokumen ke naskah Word (.docx) di bagian ujung kanan bawah
+            // halaman terakhir dokumen (mendukung format kertas A4 dan F4),
             // kemudian konversi secara otomatis ke berkas PDF resmi.
             $stampSuccessMsg = '';
             if ($event === 'SUBMIT') {
@@ -651,10 +653,12 @@ class SimkermaController extends Controller
                 } elseif (!empty($document->docx_path) && file_exists(public_path($document->docx_path))) {
                     $customDocxPath = public_path($document->docx_path);
                 }
+
+                $paperSize = $request->input('paper_size', $document->paper_size ?: 'A4');
                 
                 try {
-                    $stampResult = $this->docxStampService->stampMoU($document, $customDocxPath);
-                    $stampSuccessMsg = " Stempel QR Code dinamis (150x150 px) telah dipasangkan ke naskah Word pada kolom tanda tangan Rektor UNIPAR dan berkas PDF resmi telah diterbitkan.";
+                    $stampResult = $this->docxStampService->stampMoU($document, $customDocxPath, $paperSize);
+                    $stampSuccessMsg = " Stempel QR Code dinamis resmi SIMKERMA UNIPAR telah disematkan di bagian ujung kanan bawah halaman terakhir dokumen (kertas {$paperSize}) dan berkas PDF resmi telah diterbitkan.";
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error("Gagal stempel QR Code docx: " . $e->getMessage());
                 }
