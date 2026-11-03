@@ -49,24 +49,27 @@
 Sistem dimodelkan secara matematis sebagai 6-Tuple:
 $$M = (Q, \Sigma, \delta, q_0, F, G)$$
 
-* **$Q$ (Himpunan Status Diskret Operasional MySQL):**
-  $$Q = \{\text{DRAFT}, \text{REVIEW}, \text{ACTIVE}, \text{WARNING}, \text{EXPIRED}, \text{CANCELLED}\}$$
-* **$\Sigma$ (Himpunan Simbol Masukan / Event Pemicu):**
-  $$\Sigma = \{\text{SUBMIT}, \text{CANCEL}, \text{RETURN\_TO\_DRAFT}, \text{ACTIVATE}, \text{TRIGGER\_WARNING}, \text{RENEW}, \text{EXPIRE}\}$$
+* **$Q$ (Himpunan Status Diskret Operasional MySQL - 7 Status):**
+  $$Q = \{\text{DRAFT}, \text{REVIEW}, \text{VERIFIED}, \text{ACTIVE}, \text{WARNING}, \text{EXPIRED}, \text{CANCELLED}\}$$
+* **$\Sigma$ (Himpunan Simbol Masukan / Event Pemicu - 8 Event):**
+  $$\Sigma = \{\text{SUBMIT}, \text{CANCEL}, \text{VERIFY}, \text{RETURN\_TO\_DRAFT}, \text{ACTIVATE}, \text{TRIGGER\_WARNING}, \text{RENEW}, \text{EXPIRE}\}$$
 * **$q_0$ (Status Awal):** $\text{DRAFT}$
 * **$F$ (Status Akhir / Terminal State):** $\{\text{EXPIRED}, \text{CANCELLED}\}$
-* **$\delta$ (Matriks 8 Transisi Legal Formal):**
-  1. $\delta(\text{DRAFT}, \text{SUBMIT}) = \text{REVIEW}$
-  2. $\delta(\text{DRAFT}, \text{CANCEL}) = \text{CANCELLED}$
-  3. $\delta(\text{REVIEW}, \text{RETURN\_TO\_DRAFT}) = \text{DRAFT}$
-  4. $\delta(\text{REVIEW}, \text{ACTIVATE}) = \text{ACTIVE}$
-  5. $\delta(\text{ACTIVE}, \text{TRIGGER\_WARNING}) = \text{WARNING}$ (Otomatis saat ambang H-90 / H-60)
-  6. $\delta(\text{WARNING}, \text{RENEW}) = \text{ACTIVE}$
-  7. $\delta(\text{WARNING}, \text{EXPIRE}) = \text{EXPIRED}$
-  8. $\delta(\text{EXPIRED}, \text{RENEW}) = \text{ACTIVE}$
+* **$\delta$ (Matriks 10 Aturan Transisi Legal Formal):**
+  1. $\delta(\text{DRAFT}, \text{SUBMIT}) = \text{REVIEW}$ *(Peran: UNIT, ADMIN, MASTER)*
+  2. $\delta(\text{DRAFT}, \text{CANCEL}) = \text{CANCELLED}$ *(Peran: UNIT, ADMIN, MASTER)*
+  3. $\delta(\text{REVIEW}, \text{VERIFY}) = \text{VERIFIED}$ *(Peran: LEGAL, ADMIN, MASTER)*
+  4. $\delta(\text{REVIEW}, \text{RETURN\_TO\_DRAFT}) = \text{DRAFT}$ *(Peran: LEGAL, LEADER, ADMIN, MASTER)*
+  5. $\delta(\text{VERIFIED}, \text{ACTIVATE}) = \text{ACTIVE}$ *(Peran: LEADER, ADMIN, MASTER)*
+  6. $\delta(\text{VERIFIED}, \text{RETURN\_TO\_DRAFT}) = \text{DRAFT}$ *(Peran: LEADER, LEGAL, ADMIN, MASTER)*
+  7. $\delta(\text{ACTIVE}, \text{TRIGGER\_WARNING}) = \text{WARNING}$ *(Peran: SYSTEM, ADMIN, MASTER - Otomatis saat ambang H-90 / H-60)*
+  8. $\delta(\text{WARNING}, \text{RENEW}) = \text{ACTIVE}$ *(Peran: UNIT, LEADER, LEGAL, ADMIN, MASTER)*
+  9. $\delta(\text{WARNING}, \text{EXPIRE}) = \text{EXPIRED}$ *(Peran: SYSTEM, ADMIN, MASTER)*
+  10. $\delta(\text{EXPIRED}, \text{RENEW}) = \text{ACTIVE}$ *(Peran: UNIT, LEADER, LEGAL, ADMIN, MASTER)*
 * **$G$ (Guard Conditions & Anti-Bypass Rules):**
-  * Transisi $\text{REVIEW} \rightarrow \text{ACTIVE}$ mewajibkan: input Nomor Surat Pihak Mitra (`partner_doc_number`) dan unggah scan PDF berkas sah bertanda tangan basah dan bermeterai (`signed_scan_file`).
-  * Penolakan naskah $\text{REVIEW} \rightarrow \text{DRAFT}$ bersifat *Zero-Field Reject* (tidak mengunci field nomor mitra atau scan).
+  * Transisi $\text{REVIEW} \rightarrow \text{VERIFIED}$ (*Telaah Legal*): Tim Legal memeriksa kepatuhan kurikulum MBKM, keadilan hak & kewajiban hukum, serta proyeksi IKU 6. Naskah lolos verifikasi dibekukan teksnya (*Freeze Text*) dan siap dicetak untuk tanda tangan fisik.
+  * Transisi $\text{VERIFIED} \rightarrow \text{ACTIVE}$ (*Pengesahan Pimpinan*): Mewajibkan pengunggahan pindaian (scan PDF) naskah fisik asli yang telah bertanda tangan basah oleh Rektor dan mitra serta dibubuhi bea meterai Rp10.000 (UU No. 10 Tahun 2020) beserta nomor surat mitra (`partner_doc_number`).
+  * Penolakan naskah ($\text{REVIEW} \rightarrow \text{DRAFT}$ atau $\text{VERIFIED} \rightarrow \text{DRAFT}$) bersifat *Zero-Field Reject* (tidak mengunci atau mewajibkan upload scan).
   * Penghapusan berkas naskah HANYA diizinkan pada status $\text{DRAFT}$. Naskah berstatus selain draf dikunci permanen demi integritas rekam jejak (*Immutable Audit Trail*).
 
 ---
@@ -227,8 +230,10 @@ Seluruh kode sumber aplikasi nyata telah selesai dibangun menggunakan Laravel 11
 https://github.com/0dannn/SIM-KERMA-UNIPAR
 
 Konteks penting yang TIDAK BOLEH diubah atau dikurangi:
-1. FSM 6 Status Nyata di MySQL: DRAFT, REVIEW, ACTIVE, WARNING, EXPIRED, CANCELLED.
-2. Guard Condition Berkas Fisik: Transisi ke status ACTIVE mewajibkan unggah scan PDF naskah sah bertanda tangan basah dan bermeterai serta nomor surat mitra (UU No. 10 Tahun 2020 Bea Meterai).
+1. FSM 7 Status Nyata di MySQL: DRAFT, REVIEW, VERIFIED, ACTIVE, WARNING, EXPIRED, CANCELLED.
+2. Pemisahan Wewenang (Separation of Duties):
+   - Tim LEGAL memverifikasi draf di meja REVIEW -> event VERIFY -> status VERIFIED (membekukan teks naskah / Freeze Text & menyiapkan PDF ber-QR resmi).
+   - LEADER (Rektor) mengesahkan naskah fisik bertanda tangan basah & bermeterai Rp10.000 -> upload scan PDF & input nomor mitra -> event ACTIVATE -> status ACTIVE.
 3. Hashing SHA-256 telah 100% DIELIMINASI dan digantikan oleh FSM Guard + Dynamic QR Code Registrasi Dokumen ke portal /verify/{reg_id}.
 4. Dual-Track Workflow: Jalur 1 (Bertahap Draf -> MoU -> MoA -> IA) dan Jalur 2 (Paket Terpadu 1 Tahun PKM/Tridharma).
 5. Evaluasi Kuantitatif menggunakan Skala Likert 5 Poin (Sugiyono, 2019; Arikunto, 2013), bukan SUS.

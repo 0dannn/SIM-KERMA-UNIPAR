@@ -20,7 +20,7 @@
         @php
             $totalDocs = $documents->count();
             $activeDocs = $documents->where('status', 'ACTIVE')->count();
-            $processDocs = $documents->where('status', 'REVIEW')->count();
+            $processDocs = $documents->whereIn('status', ['REVIEW', 'VERIFIED'])->count();
             $expiredDocs = $documents->where('status', 'EXPIRED')->count();
             $warningDocs = $documents->where('status', 'WARNING')->count();
 
@@ -745,6 +745,7 @@
                                                     $docBadge = match($doc->status) {
                                                         'DRAFT' => 'bg-secondary text-white',
                                                         'REVIEW' => 'bg-info text-dark',
+                                                        'VERIFIED' => 'bg-primary text-white',
                                                         'ACTIVE' => 'bg-success text-white',
                                                         'WARNING' => 'bg-warning text-dark',
                                                         'EXPIRED' => 'bg-danger text-white',
@@ -914,6 +915,7 @@
                                 $statusBadgeClass = match($doc->status) {
                                     'DRAFT' => 'bg-secondary text-white',
                                     'REVIEW' => 'bg-info text-dark',
+                                    'VERIFIED' => 'bg-primary text-white',
                                     'ACTIVE' => 'bg-success text-white',
                                     'WARNING' => 'bg-warning text-dark',
                                     'EXPIRED' => 'bg-danger text-white',
@@ -1073,22 +1075,23 @@
                 </div>
             </div>
 
-            <!-- PITA STEPPER 6 STATUS SIKLUS HIDUP FSM -->
+            <!-- PITA STEPPER 7 STATUS SIKLUS HIDUP FSM -->
             <div class="card-footer bg-light border-top p-2 px-3">
                 <div class="d-flex align-items-center justify-content-between overflow-x-auto py-1" style="min-width: 720px; font-size: 0.72rem;">
                     @php
                         $stepperList = [
-                            'DRAFT' => ['1. DRAFT', 'bg-secondary'],
+                            'DRAFT' => ['1. DRAFT', 'bg-secondary text-white'],
                             'REVIEW' => ['2. REVIEW', 'bg-info text-dark'],
-                            'ACTIVE' => ['3. ACTIVE', 'bg-success'],
-                            'WARNING' => ['4. WARNING', 'bg-warning text-dark'],
-                            'EXPIRED' => ['5. EXPIRED', 'bg-danger'],
-                            'CANCELLED' => ['6. CANCELLED', 'bg-dark']
+                            'VERIFIED' => ['3. VERIFIED', 'bg-primary text-white'],
+                            'ACTIVE' => ['4. ACTIVE', 'bg-success text-white'],
+                            'WARNING' => ['5. WARNING', 'bg-warning text-dark'],
+                            'EXPIRED' => ['6. EXPIRED', 'bg-danger text-white'],
+                            'CANCELLED' => ['7. CANCELLED', 'bg-dark text-white']
                         ];
                     @endphp
                     @foreach ($stepperList as $stKey => $stMeta)
                         <div class="d-flex align-items-center gap-1">
-                            <span class="badge bg-light text-dark border" style="font-size: 0.68rem;">
+                            <span class="badge {{ ($currentDoc && $currentDoc->status === $stKey) ? $stMeta[1] : 'bg-light text-dark border' }}" style="font-size: 0.68rem;">
                                 {{ $stMeta[0] }}
                             </span>
                             @if (!$loop->last)
@@ -1402,13 +1405,14 @@
                         </div>
                         <div class="col-md-3">
                             <select id="tableStatusFilter" class="form-select form-select-sm" onchange="filterDocumentsTable()">
-                                <option value="">-- Semua Status FSM (6 Status) --</option>
+                                <option value="">-- Semua Status FSM (7 Status) --</option>
                                 <option value="DRAFT">1. DRAFT (Konsep Awal)</option>
-                                <option value="REVIEW">2. REVIEW (Pemeriksaan Pimpinan)</option>
-                                <option value="ACTIVE">3. ACTIVE (Berlaku Sah)</option>
-                                <option value="WARNING">4. WARNING (Peringatan Dini H-90)</option>
-                                <option value="EXPIRED">5. EXPIRED (Kedaluwarsa)</option>
-                                <option value="CANCELLED">6. CANCELLED (Dibatalkan)</option>
+                                <option value="REVIEW">2. REVIEW (Pemeriksaan Legal)</option>
+                                <option value="VERIFIED">3. VERIFIED (Lolos Verifikasi Legal)</option>
+                                <option value="ACTIVE">4. ACTIVE (Berlaku Sah / Teken Basah)</option>
+                                <option value="WARNING">5. WARNING (Peringatan Dini H-90)</option>
+                                <option value="EXPIRED">6. EXPIRED (Kedaluwarsa)</option>
+                                <option value="CANCELLED">7. CANCELLED (Dibatalkan)</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -1447,6 +1451,7 @@
                                     $stBadge = match($doc->status) {
                                         'DRAFT' => 'bg-secondary text-white',
                                         'REVIEW' => 'bg-info text-dark',
+                                        'VERIFIED' => 'bg-primary text-white',
                                         'ACTIVE' => 'bg-success text-white',
                                         'WARNING' => 'bg-warning text-dark',
                                         'EXPIRED' => 'bg-danger text-white',
@@ -1543,6 +1548,18 @@
                                                         $pdfTitle = 'Buka Dokumen PDF Telaah Review (Ber-QR Code)';
                                                         $pdfBtnClass = 'btn-outline-danger';
                                                         $pdfIcon = 'bi bi-file-earmark-pdf-fill text-danger';
+                                                    }
+                                                }
+                                            } elseif ($doc->status === 'VERIFIED') {
+                                                // Status VERIFIED: dokumen PDF telaah ber-QR Code yang siap dicetak & ditandatangani fisik
+                                                $rawPdf = $doc->signed_file ?: $doc->draft_file;
+                                                if (!empty($rawPdf)) {
+                                                    $fPath = str_starts_with($rawPdf, 'uploads/') ? $rawPdf : 'uploads/documents/' . $rawPdf;
+                                                    if (file_exists(public_path($fPath))) {
+                                                        $pdfUrl = asset($fPath);
+                                                        $pdfTitle = 'Buka Naskah Terverifikasi (Siap Cetak & Teken Basah)';
+                                                        $pdfBtnClass = 'btn-outline-primary text-primary';
+                                                        $pdfIcon = 'bi bi-file-earmark-lock-fill text-primary';
                                                     }
                                                 }
                                             } elseif ($doc->status === 'ACTIVE') {
@@ -1803,15 +1820,15 @@
 
                                                             @if ($doc->status === 'REVIEW')
                                                                 <!-- KOTAK PRATINJAU & UNDUH BERKAS NASKAH REVIEW (PDF BER-QR CODE) -->
-                                                                <div class="alert alert-success border-success p-3 rounded-3 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                                                                <div class="alert alert-info border-info p-3 rounded-3 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
                                                                     <div class="d-flex align-items-center">
-                                                                        <div class="bg-danger text-white p-2 rounded-3 me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; min-width: 44px;">
-                                                                            <i class="bi bi-file-earmark-pdf-fill fs-3"></i>
+                                                                        <div class="bg-info text-dark p-2 rounded-3 me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; min-width: 44px;">
+                                                                            <i class="bi bi-file-earmark-pdf-fill fs-3 text-white"></i>
                                                                         </div>
                                                                         <div>
-                                                                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">Berkas Naskah Draf Review (PDF Ber-QR Code Resmi)</div>
+                                                                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">Berkas Naskah Draf Telaah Legal (PDF Ber-QR Code)</div>
                                                                             <div class="text-muted" style="font-size: 0.72rem;">
-                                                                                Stempel QR Code dokumen telah dipasangkan secara presisi tepat di atas tulisan Pihak Pertama (UNIPAR). Kolom di atas nama Rektor tetap leluasa untuk penandatanganan fisik. Berkas PDF telaah resmi siap ditinjau atau dicetak.
+                                                                                Stempel QR Code dokumen telah dipasangkan pada naskah Word di atas kolom penandatanganan Rektor UNIPAR. Tim Legal menelaah kelayakan substansi sebelum verifikasi.
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -1833,14 +1850,14 @@
                                                                 <div class="mb-3 p-3 bg-white rounded border border-primary-subtle shadow-sm small">
                                                                     <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                                                                         <span class="fw-bold text-primary">
-                                                                            <i class="bi bi-clipboard2-check-fill me-1"></i> Penelaahan Substansi &amp; Manfaat Kerja Sama
+                                                                            <i class="bi bi-clipboard2-check-fill me-1"></i> Penelaahan Substansi &amp; Mutu Hukum (Tim Legal)
                                                                         </span>
                                                                         <span class="badge bg-primary-subtle text-primary border border-primary" style="font-size: 0.65rem;">
                                                                             Evaluasi Mutu &amp; IKU 6
                                                                         </span>
                                                                     </div>
                                                                     <div class="text-muted mb-2" style="font-size: 0.72rem;">
-                                                                        Pimpinan / Tim Penelaah menelaah kesesuaian Tridharma, keadilan klausul hukum, dan proyeksi manfaat sebelum pengesahan:
+                                                                        Tim Legal menelaah kesesuaian Tridharma, keadilan klausul hukum, dan proyeksi manfaat. Jika lolos telaah, klik <strong>Verifikasi Kelayakan Draf (VERIFY)</strong> untuk membekukan naskah dan beralih ke status <strong>VERIFIED</strong>.
                                                                     </div>
                                                                     <div class="list-group list-group-flush border rounded mb-2">
                                                                         <label class="list-group-item d-flex align-items-start gap-2 py-2 px-3 bg-light-subtle">
@@ -1866,18 +1883,50 @@
                                                                         </label>
                                                                     </div>
                                                                     <small class="text-muted d-block" style="font-size: 0.68rem;">
-                                                                        <i class="bi bi-info-circle text-primary me-1"></i> Centang telaah ini menjadi pertimbangan pejabat untuk mengesahkan (ACTIVATE) atau mengembalikan draf untuk diperbaiki (RETURN TO DRAFT).
+                                                                        <i class="bi bi-info-circle text-primary me-1"></i> Verifikasi ini akan membekukan teks (Freeze Text). Penandatanganan fisik &amp; meterai dilakukan pada status VERIFIED.
                                                                     </small>
                                                                 </div>
+                                                            @endif
 
-                                                                <!-- 2. PENGESAHAN NASKAH FISIK & NOMOR PIHAK KEDUA (OPSIONAL / TIDAK WAJIB JIKA DITOLAK) -->
-                                                                <div class="mb-3 p-3 bg-light rounded border small">
+                                                            @if ($doc->status === 'VERIFIED')
+                                                                <!-- KOTAK STATUS VERIFIED: DOKUMEN SIAP DICETAK & DITANDATANGANI FISIK -->
+                                                                <div class="alert alert-primary border-primary p-3 rounded-3 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                                                                    <div class="d-flex align-items-center">
+                                                                        <div class="bg-primary text-white p-2 rounded-3 me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; min-width: 44px;">
+                                                                            <i class="bi bi-patch-check-fill fs-3"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">Naskah Lolos Verifikasi Legal (Siap Cetak &amp; Penandatanganan Fisik)</div>
+                                                                            <div class="text-muted" style="font-size: 0.72rem;">
+                                                                                Teks naskah telah terkunci (Freeze Text). Silakan unduh/cetak berkas PDF ber-QR Code resmi berikut untuk ditandatangani basah oleh Rektor dan dibubuhi meterai fisik Rp10.000.
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="d-flex flex-wrap gap-2 text-nowrap">
+                                                                        @php
+                                                                            $rawVerifiedPdf = $doc->signed_file ?: $doc->draft_file;
+                                                                        @endphp
+                                                                        @if (!empty($rawVerifiedPdf))
+                                                                            @php
+                                                                                $vfPath = str_starts_with($rawVerifiedPdf, 'uploads/') ? $rawVerifiedPdf : 'uploads/documents/' . $rawVerifiedPdf;
+                                                                            @endphp
+                                                                            @if (file_exists(public_path($vfPath)))
+                                                                                <a href="{{ asset($vfPath) }}" target="_blank" class="btn btn-danger btn-sm fw-bold px-3 py-2 shadow-sm">
+                                                                                    <i class="bi bi-printer-fill me-1"></i> Buka / Cetak PDF Ber-QR
+                                                                                </a>
+                                                                            @endif
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- FORM PENGESAHAN OLEH PIMPINAN (LEADER): UPLOAD SCAN HASIL TEKEN BASAH + NOMOR MITRA -->
+                                                                <div class="mb-3 p-3 bg-light rounded border border-success-subtle shadow-sm small">
                                                                     <div class="fw-bold text-dark mb-1 d-flex justify-content-between align-items-center">
-                                                                        <span><i class="bi bi-pen-fill text-primary me-1"></i> Pengesahan Naskah Fisik &amp; Nomor Pihak Kedua (Mitra):</span>
-                                                                        <span class="badge bg-secondary-subtle text-secondary border" style="font-size: 0.65rem;">Diisi jika disahkan (ACTIVATE)</span>
+                                                                        <span class="text-success"><i class="bi bi-pen-fill me-1"></i> Pengesahan Naskah Fisik &amp; Aktivasi (Pimpinan Rektorat):</span>
+                                                                        <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.65rem;">Diisi untuk Pengesahan (ACTIVATE)</span>
                                                                     </div>
                                                                     <div class="text-muted mb-2" style="font-size: 0.7rem;">
-                                                                        <em>* Catatan: Jika menolak atau mengembalikan draf ke pengusul (RETURN TO DRAFT), bagian nomor dan upload berkas ini tidak perlu diisi.</em>
+                                                                        Setelah proses tanda tangan basah &amp; bea meterai Rp10.000 selesai, input nomor naskah mitra dan unggah pindaian (scan) berkas PDF untuk mengaktifkan dokumen menjadi status <strong>ACTIVE</strong>.
                                                                     </div>
                                                                     <div class="row g-2 mb-2">
                                                                         <div class="col-sm-6">
@@ -1886,15 +1935,24 @@
                                                                         </div>
                                                                         <div class="col-sm-6">
                                                                             <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">Nomor Naskah Pihak II (Mitra):</label>
-                                                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->partner_doc_number }}" placeholder="Nomor resmi mitra (diisi jika disahkan)">
+                                                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->partner_doc_number }}" placeholder="Nomor resmi dari pihak mitra">
                                                                         </div>
                                                                     </div>
-                                                                    <label class="form-label fw-bold text-dark d-block" style="font-size: 0.75rem;">
-                                                                        <i class="bi bi-file-earmark-check text-primary me-1"></i>
-                                                                        Unggah Berkas Scan Bertanda Tangan &amp; Bermeterai (PDF):
-                                                                    </label>
-                                                                    <input type="file" name="signed_scan_file" class="form-control form-control-sm mb-1" accept=".pdf">
-                                                                    <small class="text-muted" style="font-size: 0.68rem;">Opsional untuk pengembalian draf; diunggah saat pengesahan aktif jika berkas fisik telah selesai ditandatangani.</small>
+                                                                    <div class="row g-2 mb-2">
+                                                                        <div class="col-sm-6">
+                                                                            <label class="form-label fw-bold text-dark d-block" style="font-size: 0.75rem;">
+                                                                                <i class="bi bi-calendar-check text-primary me-1"></i> Tanggal Penandatanganan Fisik:
+                                                                            </label>
+                                                                            <input type="date" name="date_signed" class="form-control form-control-sm bg-white" value="{{ $doc->date_signed ? $doc->date_signed->format('Y-m-d') : date('Y-m-d') }}">
+                                                                        </div>
+                                                                        <div class="col-sm-6">
+                                                                            <label class="form-label fw-bold text-dark d-block" style="font-size: 0.75rem;">
+                                                                                <i class="bi bi-file-earmark-check text-success me-1"></i> Unggah Scan Naskah Bertanda Tangan Basah &amp; Bermeterai (PDF):
+                                                                            </label>
+                                                                            <input type="file" name="signed_scan_file" class="form-control form-control-sm" accept=".pdf">
+                                                                        </div>
+                                                                    </div>
+                                                                    <small class="text-muted" style="font-size: 0.68rem;">* Jika pimpinan membatalkan verifikasi atau meminta revisi, gunakan opsi <strong>Kembalikan ke Draf</strong> tanpa perlu mengunggah berkas.</small>
                                                                 </div>
                                                             @endif
 
@@ -1968,12 +2026,14 @@
                                                                                 $confirmJs = '';
                                                                                 if ($evKey === 'SUBMIT') {
                                                                                     $confirmJs = "return confirm('KONFIRMASI PENGAJUAN KE MEJA PEMERIKSAAN (REVIEW):\\n\\nDokumen: " . $doc->doc_id . " - " . addslashes($doc->partner_name) . "\\nJenis: " . $doc->doc_type . "\\nUnit Pengusul: " . addslashes($doc->unit) . "\\n\\nPastikan seluruh draf naskah dan data kemitraan telah diperiksa dengan cermat sebelum diajukan ke pimpinan/tim verifikator.\\n\\nApakah Anda yakin ingin mengajukan naskah ini ke meja pemeriksaan?');";
+                                                                                } elseif ($evKey === 'VERIFY') {
+                                                                                    $confirmJs = "return confirm('KONFIRMASI VERIFIKASI KELAYAKAN DRAF (VERIFY):\\n\\nDokumen: " . $doc->doc_id . " - " . addslashes($doc->partner_name) . "\\nJenis: " . $doc->doc_type . "\\n\\nNaskah telah memenuhi telaah mutu, substansi kurikulum MBKM, dan klausul hukum.\\n\\nApakah Anda yakin ingin MEMVERIFIKASI naskah ini sehingga status menjadi VERIFIED (Terkunci untuk penandatanganan fisik)?');";
                                                                                 } elseif ($evKey === 'CANCEL') {
                                                                                     $confirmJs = "return confirm('KONFIRMASI PEMBATALAN PENGAJUAN (CANCEL):\\n\\nDokumen: " . $doc->doc_id . " - " . addslashes($doc->partner_name) . "\\n\\nPERINGATAN: Naskah kerja sama ini akan dialihkan ke status CANCELLED secara permanen dan tidak dapat diproses lebih lanjut.\\n\\nApakah Anda benar-benar yakin ingin membatalkan usulan ini?');";
                                                                                 } elseif ($evKey === 'ACTIVATE') {
-                                                                                    $confirmJs = "return confirm('KONFIRMASI PENGESAHAN KERJA SAMA (ACTIVATE):\\n\\nDokumen: " . $doc->doc_id . " - " . addslashes($doc->partner_name) . "\\nJenis: " . $doc->doc_type . "\\n\\nNaskah telah memenuhi telaah kelayakan substansi & manfaat.\\n\\nApakah Anda yakin ingin MENGESAHKAN dokumen ini menjadi status ACTIVE (Berlaku Sah)?');";
+                                                                                    $confirmJs = "return confirm('KONFIRMASI PENGESAHAN KERJA SAMA (ACTIVATE):\\n\\nDokumen: " . $doc->doc_id . " - " . addslashes($doc->partner_name) . "\\nJenis: " . $doc->doc_type . "\\n\\nNaskah fisik telah ditandatangani basah oleh Rektor dan mitra serta dibubuhi meterai Rp10.000.\\n\\nApakah Anda yakin ingin MENGESAHKAN dokumen ini menjadi status ACTIVE (Berlaku Sah)?');";
                                                                                 } elseif ($evKey === 'RETURN_TO_DRAFT') {
-                                                                                    $confirmJs = "return confirm('KONFIRMASI PENGEMBALIAN KE DRAF PENGUSUL (RETURN TO DRAFT):\\n\\nDokumen: " . $doc->doc_id . " - " . addslashes($doc->partner_name) . "\\n\\nNaskah akan dikembalikan ke Unit Pengusul untuk direvisi (tidak perlu mengisi nomor dokumen mitra atau scan berkas).\\n\\nApakah Anda yakin ingin mengembalikan naskah ini ke status DRAFT?');";
+                                                                                    $confirmJs = "return confirm('KONFIRMASI PENGEMBALIAN KE DRAF PENGUSUL (RETURN TO DRAFT):\\n\\nDokumen: " . $doc->doc_id . " - " . addslashes($doc->partner_name) . "\\n\\nNaskah akan dikembalikan ke Unit Pengusul untuk direvisi.\\n\\nApakah Anda yakin ingin mengembalikan naskah ini ke status DRAFT?');";
                                                                                 }
                                                                             @endphp
                                                                             <button type="submit" name="event" value="{{ $evKey }}" class="btn btn-sm {{ $evData['btn'] }} py-2 text-start d-flex justify-content-between align-items-center shadow-sm" {{ $isRoleAllowed ? '' : 'disabled' }} {!! $confirmJs ? 'onclick="'.$confirmJs.'"' : '' !!}>
@@ -2273,6 +2333,7 @@
                                 $statusBadgeClass = match($doc->status ?? '') {
                                     'DRAFT' => 'bg-secondary text-white',
                                     'REVIEW' => 'bg-info text-dark',
+                                    'VERIFIED' => 'bg-primary text-white',
                                     'ACTIVE' => 'bg-success text-white',
                                     'WARNING' => 'bg-warning text-dark',
                                     'EXPIRED' => 'bg-danger text-white',
@@ -2798,6 +2859,7 @@
             $warningCount = $documents->where('status', 'WARNING')->count();
             $expiredCount = $documents->whereIn('status', ['EXPIRED', 'CANCELLED'])->count();
             $reviewCount = $documents->where('status', 'REVIEW')->count();
+            $verifiedCount = $documents->where('status', 'VERIFIED')->count();
 
             $totalActs = $activities->count();
             $doneActs = $activities->where('execution_status', 'SELESAI')->count();
@@ -2887,9 +2949,13 @@
                                 <span>Kerja Sama Tidak Aktif / Berakhir:</span>
                                 <strong class="text-danger">{{ $expiredCount }} Dokumen ({{ $totalAllDocs > 0 ? round(($expiredCount / $totalAllDocs) * 100, 1) : 0 }}%)</strong>
                             </div>
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between mb-1">
                                 <span>Kerja Sama Dalam Pemeriksaan (Review):</span>
-                                <strong class="text-primary">{{ $reviewCount }} Dokumen ({{ $totalAllDocs > 0 ? round(($reviewCount / $totalAllDocs) * 100, 1) : 0 }}%)</strong>
+                                <strong class="text-info">{{ $reviewCount }} Dokumen ({{ $totalAllDocs > 0 ? round(($reviewCount / $totalAllDocs) * 100, 1) : 0 }}%)</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Kerja Sama Terverifikasi Legal (Verified):</span>
+                                <strong class="text-primary">{{ $verifiedCount }} Dokumen ({{ $totalAllDocs > 0 ? round(($verifiedCount / $totalAllDocs) * 100, 1) : 0 }}%)</strong>
                             </div>
                         </div>
                     </div>
@@ -2996,6 +3062,8 @@
                                         <span class="badge bg-warning text-dark border">Peringatan H-90</span>
                                     @elseif ($doc->status === 'EXPIRED')
                                         <span class="badge bg-danger">Kedaluwarsa</span>
+                                    @elseif ($doc->status === 'VERIFIED')
+                                        <span class="badge bg-primary text-white">Terverifikasi Legal</span>
                                     @elseif ($doc->status === 'REVIEW')
                                         <span class="badge bg-info text-dark">Pemeriksaan (Review)</span>
                                     @elseif ($doc->status === 'DRAFT')

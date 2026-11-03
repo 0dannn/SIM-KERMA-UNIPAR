@@ -61,6 +61,31 @@ F. Sinkronisasi Repositori GitHub:
      Commit: [ebf86b7] "feat: implement admin role authentication, portal login, and compact sidebar UI layout"
    - Berhasil dipush ke repositori resmi GitHub: https://github.com/0dannn/SIM-KERMA-UNIPAR.git (Branch main).
 
+G. Implementasi Status VERIFIED (Evolusi Model Formal FSM 7-Status - 03 November 2026):
+   - Latar Belakang & Urgensi Metodologis:
+     Pemisahan tanggung jawab yuridis (*Separation of Concerns*):
+     Tahap telaah naskah oleh Tim Legal (kepatuhan klausul, MBKM, IKU 6) berbeda dengan tahap penandatanganan fisik basah + meterai Rp10.000 oleh Rektor & Pimpinan Mitra.
+     Oleh karena itu, ditambahkan status perantara formal `VERIFIED` antara `REVIEW` dan `ACTIVE`.
+   - Formalisasi Matematis 7-Status:
+     Q = {DRAFT, REVIEW, VERIFIED, ACTIVE, WARNING, EXPIRED, CANCELLED}
+     Σ = {SUBMIT, CANCEL, VERIFY, RETURN_TO_DRAFT, ACTIVATE, TRIGGER_WARNING, RENEW, EXPIRE}
+     Alur Utama: DRAFT -(SUBMIT)-> REVIEW -(VERIFY)-> VERIFIED -(ACTIVATE)-> ACTIVE -(TRIGGER_WARNING)-> WARNING -(EXPIRE)-> EXPIRED.
+   - Migrasi Basis Data:
+     `2026_11_03_101500_update_status_column_and_add_verified_to_documents_table.php` dieksekusi sukses. Kolom `status` dimutakhirkan menjadi VARCHAR(50) dan data eksisting diselaraskan (`APPROVED` -> `VERIFIED`).
+   - Penegakan Mesin FSM & Guard Condition (`FSMWorkflowEngineService.php`):
+     1. Event `VERIFY`: Diotorisasi untuk peran `LEGAL`, `ADMIN`, `MASTER`. Mengunci draf (*Freeze Text*) dan mencatat `date_approved`.
+     2. Event `ACTIVATE`: Diotorisasi untuk peran `LEADER`, `ADMIN`, `MASTER`. Menegakkan kewajiban upload scan berkas sah bermeterai (`signed_scan_file`), input nomor surat mitra (`partner_doc_number`), dan mencatat `date_signed`.
+     3. Anti-Bypass Guard & RBAC Guard: Memastikan peran `UNIT` tidak dapat memverifikasi atau mengaktifkan naskah, serta mencegah lompatan status dari DRAFT langsung ke ACTIVE.
+   - Pembaruan UI Komprehensif:
+     1. Stepper 7 Status di Menu 04 dengan penyorotan status aktif real-time.
+     2. Dropdown Filter 7 Status pada repositori naskah.
+     3. Modal Disposisi FSM: Checklist telaah mutu legal pada `REVIEW`, dan form unggah scan fisik bertanda tangan basah pada `VERIFIED`.
+     4. Tombol Pratinjau PDF Ber-QR khusus status `VERIFIED`.
+     5. Sinkronisasi tampilan lembar verifikasi publik (`/verify/{reg_id}`) dan modal registrasi QR.
+     6. Sinkronisasi rekapitulasi analitik Menu 07 (Laporan & Analitik).
+   - Pengujian Otomatis:
+     Seluruh uji transisi status, anti-bypass guard, dan RBAC guard lulus 100%.
+
 ================================================================================
 2. PERBANDINGAN HAK AKSES LIMA PERAN FORMAL
 ================================================================================
@@ -69,11 +94,11 @@ F. Sinkronisasi Repositori GitHub:
    - Wewenang FSM: CREATE_DRAFT, SUBMIT, CANCEL, RENEW.
    - Larangan: Tidak dapat mengesahkan naskah ke ACTIVE (mencegah conflict of interest).
 2. LEGAL (Tim Telaah Hukum & Biro Kerja Sama):
-   - Wewenang FSM: RETURN_TO_DRAFT, ACTIVATE.
-   - Tugas: Audit klausul hukum, hak & kewajiban, penjaminan mutu IKU 6.
+   - Wewenang FSM: VERIFY, RETURN_TO_DRAFT.
+   - Tugas: Audit klausul hukum, hak & kewajiban berimbang, penjaminan mutu kurikulum MBKM & IKU 6, serta mengunci draf naskah (Freeze Text) dan menerbitkan PDF siap cetak.
 3. LEADER (Pimpinan Institusi / Rektorat):
    - Wewenang FSM: ACTIVATE, RETURN_TO_DRAFT.
-   - Tugas: Otoritas penandatanganan berkas fisik bermeterai, eksekusi status aktif, pemantauan dashboard eksekutif IKU 6.
+   - Tugas: Otoritas penandatanganan berkas fisik bermeterai Rp10.000, pengesahan status aktif (ACTIVE) dengan kewajiban upload scan berkas sah dan nomor surat mitra, serta pemantauan dashboard eksekutif IKU 6.
 4. SYSTEM (Automated Cron Worker):
    - Wewenang FSM: TRIGGER_WARNING, EXPIRE.
    - Tugas: Menghitung selisih masa berlaku secara otomatis (H-90/H-60 dan kedaluwarsa).

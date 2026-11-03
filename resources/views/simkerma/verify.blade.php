@@ -42,8 +42,18 @@
             'alert_heading' => 'Naskah Memerlukan Perbaikan Redaksional',
             'alert_desc' => 'Tim Legal telah mengembalikan naskah kepada Unit Pengusul dengan catatan telaah klausul hukum. Naskah wajib diajukan ulang setelah perbaikan selesai.'
         ],
+        'VERIFIED' => [
+            'badge_text' => 'TERVERIFIKASI LEGAL (SIAP PENANDATANGANAN FISIK)',
+            'badge_class' => 'bg-primary text-white',
+            'header_title' => 'DRAF RESMI TELAH DIVERIFIKASI (FREEZE TEXT)',
+            'icon' => 'bi-file-earmark-check-fill',
+            'color' => '#2563eb',
+            'alert_class' => 'alert-primary',
+            'alert_heading' => 'Naskah Draf Lolos Verifikasi & Teks Dikunci',
+            'alert_desc' => 'Pemeriksaan hukum & telaah kelayakan telah disetujui oleh Tim Legal. Teks naskah telah dibekukan (Freeze Text). Naskah fisik cetak ber-QR code ini siap ditandatangani basah dan dibubuhi meterai Rp10.000 oleh Rektor dan Pimpinan Mitra.'
+        ],
         'APPROVED' => [
-            'badge_text' => 'APPROVED (DRAF DISETUJUI — MENUNGGU TTD FISIK)',
+            'badge_text' => 'TERVERIFIKASI LEGAL (SIAP PENANDATANGANAN FISIK)',
             'badge_class' => 'bg-primary text-white',
             'header_title' => 'DRAF RESMI TELAH DISETUJUI (FREEZE TEXT)',
             'icon' => 'bi-file-earmark-check-fill',
@@ -61,6 +71,16 @@
             'alert_class' => 'alert-success',
             'alert_heading' => 'Dokumen Sah Berlaku Secara Legal',
             'alert_desc' => 'Eksemplar fisik asli bertanda tangan basah dan bermeterai sah telah diverifikasi keabsahannya serta tersimpan resmi dalam pangkalan data SIMKERMA Universitas Parna Raya.'
+        ],
+        'WARNING' => [
+            'badge_text' => 'PERINGATAN MASA BERLAKU (' . strtoupper($document->warning_threshold ?? 'H-90 HARI') . ')',
+            'badge_class' => 'bg-warning text-dark',
+            'header_title' => 'PERINGATAN DINI: MASA BERLAKU HAMPIR HABIS (' . ($document->warning_threshold ?? 'H-90 HARI') . ')',
+            'icon' => 'bi-exclamation-triangle-fill',
+            'color' => '#ea580c',
+            'alert_class' => 'alert-warning',
+            'alert_heading' => 'Peringatan Masa Berlaku Kemitraan',
+            'alert_desc' => 'Kerja sama masih aktif berlaku sah, namun sisa masa berlaku telah memasuki ambang batas peringatan dini (' . ($document->warning_threshold ?? 'H-90 Hari / 3 Bulan') . '). Diimbau segera mengambil keputusan perpanjangan, pengubahan, atau penghentian sesuai perjanjian.'
         ],
         'WARNING_EXPIRY' => [
             'badge_text' => 'PERINGATAN MASA BERLAKU (' . strtoupper($document->warning_threshold ?? 'H-90 HARI') . ')',
@@ -239,8 +259,10 @@
                             <div class="field-val">
                                 @if ($document->status === 'ACTIVE')
                                     <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Sah, Bertanda Tangan Basah &amp; Bermeterai</span>
-                                @elseif ($document->status === 'APPROVED')
-                                    <span class="text-primary"><i class="bi bi-clock-fill me-1"></i> Draf Disetujui (Menunggu TTD Basah Para Pihak)</span>
+                                @elseif ($document->status === 'VERIFIED' || $document->status === 'APPROVED')
+                                    <span class="text-primary"><i class="bi bi-patch-check-fill me-1"></i> Lolos Verifikasi Legal (Menunggu TTD Basah &amp; Meterai Fisik)</span>
+                                @elseif ($document->status === 'WARNING')
+                                    <span class="text-warning-emphasis"><i class="bi bi-exclamation-triangle-fill me-1"></i> Sah Aktif (Peringatan Dini Masa Berlaku)</span>
                                 @elseif ($document->status === 'EXPIRED')
                                     <span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i> Kedaluwarsa (Masa Berlaku Habis)</span>
                                 @elseif ($document->status === 'DRAFT')

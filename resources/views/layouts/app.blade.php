@@ -412,7 +412,7 @@
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm" onclick="showQrModal('REG-UNIPAR-2026-042', '341/UNIPAR/MoU/X/2026', 'PKS Program Magang Industri AI', 'PT Industri Inovasi Digital', 'APPROVED', '30 Oktober 2026')">
+                        <button type="button" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm" onclick="showQrModal('REG-UNIPAR-2026-042', '341/UNIPAR/MoU/X/2026', 'PKS Program Magang Industri AI', 'PT Industri Inovasi Digital', 'VERIFIED', '30 Oktober 2026')">
                             <i class="bi bi-qr-code-scan me-1 text-primary"></i> Cek QR Registrasi
                         </button>
                         @if (auth()->check())
@@ -503,7 +503,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded border">
                     <div>
                         <span class="text-muted small fw-bold">STATUS SIKLUS:</span>
-                        <span id="qrModalStatusBadge" class="badge bg-primary ms-1">APPROVED (Terkunci Bebas Bypass)</span>
+                        <span id="qrModalStatusBadge" class="badge bg-primary ms-1">VERIFIED (Lolos Verifikasi Legal)</span>
                     </div>
                     <span id="qrModalRegBadge" class="badge bg-dark">REG-UNIPAR-2026-042</span>
                 </div>
@@ -546,7 +546,7 @@
                 <div id="qrModalAlertBox" class="alert alert-primary py-2 px-3 small border-0 bg-primary-subtle text-dark d-flex align-items-start gap-2 mb-0">
                     <i id="qrModalAlertIcon" class="bi bi-lock-fill text-primary mt-1"></i>
                     <div id="qrModalAlertText" style="font-size: 0.78rem;">
-                        <strong>Mekanisme Fisik &amp; Digital:</strong> Draf naskah berstatus <em>APPROVED</em> telah terkunci (<em>Freeze Text</em>). QR Code ini disematkan otomatis pada margin bawah naskah PDF resmi yang dicetak untuk ditandatangani basah dan ditempeli meterai di hadapan mitra.
+                        <strong>Mekanisme Fisik &amp; Digital:</strong> Draf naskah berstatus <em>VERIFIED</em> telah lolos telaah mutu legal dan terkunci (<em>Freeze Text</em>). QR Code ini disematkan otomatis pada naskah PDF resmi yang dicetak untuk ditandatangani basah dan ditempeli meterai fisik Rp10.000 di hadapan pimpinan kedua belah pihak.
                     </div>
                 </div>
 
@@ -614,8 +614,24 @@ function showQrModal(regId, docNum, title, partner, status, date, partnerDocNum)
             badgeText: 'REVIEW (Pemeriksaan & Telaah)',
             alertBoxClass: 'alert alert-info py-2 px-3 small border-0 bg-info-subtle text-dark d-flex align-items-start gap-2 mb-0',
             alertIconClass: 'bi bi-hourglass-split text-info mt-1',
-            alertText: '<strong>Tahap Pemeriksaan Naskah:</strong> Draf naskah kerja sama sedang ditelaah oleh pimpinan / staf kerja sama UNIPAR. Jika disetujui dapat disahkan menjadi AKTIF, atau dikembalikan ke DRAFT jika perlu perbaikan.',
+            alertText: '<strong>Tahap Pemeriksaan Naskah:</strong> Draf naskah kerja sama sedang ditelaah oleh Tim Legal UNIPAR. Jika lolos verifikasi substansi, status beralih ke VERIFIED, atau dikembalikan ke DRAFT jika perlu perbaikan.',
             dateLabel: 'TANGGAL PENGAJUAN TELAAH:'
+        },
+        'VERIFIED': {
+            badgeClass: 'badge bg-primary text-white ms-1',
+            badgeText: 'VERIFIED (Lolos Verifikasi Legal)',
+            alertBoxClass: 'alert alert-primary py-2 px-3 small border-0 bg-primary-subtle text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bi bi-patch-check-fill text-primary mt-1',
+            alertText: '<strong>Naskah Terverifikasi Legal:</strong> Draf telah lolos telaah mutu dan hukum oleh Tim Legal. Teks naskah dibekukan (Freeze Text) dan siap dicetak untuk penandatanganan fisik (tanda tangan basah & bea meterai Rp10.000).',
+            dateLabel: 'TANGGAL VERIFIKASI LEGAL:'
+        },
+        'APPROVED': {
+            badgeClass: 'badge bg-primary text-white ms-1',
+            badgeText: 'VERIFIED (Lolos Verifikasi Legal)',
+            alertBoxClass: 'alert alert-primary py-2 px-3 small border-0 bg-primary-subtle text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bi bi-patch-check-fill text-primary mt-1',
+            alertText: '<strong>Naskah Terverifikasi Legal:</strong> Draf telah lolos telaah mutu dan hukum oleh Tim Legal. Teks naskah dibekukan (Freeze Text) dan siap dicetak untuk penandatanganan fisik.',
+            dateLabel: 'TANGGAL VERIFIKASI LEGAL:'
         },
         'ACTIVE': {
             badgeClass: 'badge bg-success text-white ms-1',

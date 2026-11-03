@@ -18,46 +18,62 @@ use Illuminate\Support\Facades\DB;
 class FSMWorkflowEngineService
 {
     /**
-     * Matriks Transisi Status Formal FSM: 6 Status Diskret & 8 Aturan Transisi
+     * Matriks Transisi Status Formal FSM: 7 Status Diskret & 9 Aturan Transisi
      * Menyimpan target status, wewenang peran (RBAC), label tombol, ikon, dan styling.
      */
     protected array $matrix = [
         'DRAFT' => [
             'SUBMIT' => [
                 'to' => 'REVIEW',
-                'roles' => ['UNIT', 'MASTER'],
+                'roles' => ['UNIT', 'ADMIN', 'MASTER'],
                 'label' => 'Ajukan Naskah ke Meja Pemeriksaan (SUBMIT)',
                 'icon' => 'bi-send-fill',
                 'btn' => 'btn-dark'
             ],
             'CANCEL' => [
                 'to' => 'CANCELLED',
-                'roles' => ['UNIT', 'MASTER'],
+                'roles' => ['UNIT', 'ADMIN', 'MASTER'],
                 'label' => 'Batalkan Pengusulan Naskah (CANCEL)',
                 'icon' => 'bi-x-octagon',
                 'btn' => 'btn-outline-danger'
             ]
         ],
         'REVIEW' => [
+            'VERIFY' => [
+                'to' => 'VERIFIED',
+                'roles' => ['LEGAL', 'ADMIN', 'MASTER'],
+                'label' => 'Verifikasi Kelayakan Draf (Lolos Telaah Mutu)',
+                'icon' => 'bi-check2-circle',
+                'btn' => 'btn-info text-white'
+            ],
+            'RETURN_TO_DRAFT' => [
+                'to' => 'DRAFT',
+                'roles' => ['LEGAL', 'LEADER', 'ADMIN', 'MASTER'],
+                'label' => 'Kembalikan ke Pengusul (Ditolak / Perlu Perbaikan)',
+                'icon' => 'bi-arrow-return-left',
+                'btn' => 'btn-warning text-dark'
+            ]
+        ],
+        'VERIFIED' => [
             'ACTIVATE' => [
                 'to' => 'ACTIVE',
-                'roles' => ['LEADER', 'LEGAL', 'MASTER'],
+                'roles' => ['LEADER', 'ADMIN', 'MASTER'],
                 'label' => 'Sahkan Naskah & Aktifkan (Teken Basah + Scan)',
                 'icon' => 'bi-patch-check-fill',
                 'btn' => 'btn-success'
             ],
             'RETURN_TO_DRAFT' => [
                 'to' => 'DRAFT',
-                'roles' => ['LEADER', 'LEGAL', 'MASTER'],
-                'label' => 'Kembalikan ke Pengusul (Ditolak / Perlu Perbaikan)',
-                'icon' => 'bi-arrow-return-left',
-                'btn' => 'btn-warning text-dark'
+                'roles' => ['LEADER', 'LEGAL', 'ADMIN', 'MASTER'],
+                'label' => 'Batalkan Verifikasi & Kembalikan ke Draf',
+                'icon' => 'bi-outline-warning text-dark',
+                'btn' => 'btn-outline-warning text-dark'
             ]
         ],
         'ACTIVE' => [
             'TRIGGER_WARNING' => [
                 'to' => 'WARNING',
-                'roles' => ['SYSTEM', 'MASTER'],
+                'roles' => ['SYSTEM', 'ADMIN', 'MASTER'],
                 'label' => 'Picu Peringatan Dini Masa Berlaku (H-90)',
                 'icon' => 'bi-bell-fill',
                 'btn' => 'btn-warning text-dark'
@@ -66,14 +82,14 @@ class FSMWorkflowEngineService
         'WARNING' => [
             'RENEW' => [
                 'to' => 'ACTIVE',
-                'roles' => ['UNIT', 'LEADER', 'LEGAL', 'MASTER'],
+                'roles' => ['UNIT', 'LEADER', 'LEGAL', 'ADMIN', 'MASTER'],
                 'label' => 'Perpanjang Naskah (Inisiasi Adendum)',
                 'icon' => 'bi-arrow-clockwise',
                 'btn' => 'btn-primary'
             ],
             'EXPIRE' => [
                 'to' => 'EXPIRED',
-                'roles' => ['SYSTEM', 'MASTER'],
+                'roles' => ['SYSTEM', 'ADMIN', 'MASTER'],
                 'label' => 'Catat Naskah Telah Kedaluwarsa',
                 'icon' => 'bi-clock-history',
                 'btn' => 'btn-danger'
@@ -82,7 +98,7 @@ class FSMWorkflowEngineService
         'EXPIRED' => [
             'RENEW' => [
                 'to' => 'ACTIVE',
-                'roles' => ['UNIT', 'LEADER', 'LEGAL', 'MASTER'],
+                'roles' => ['UNIT', 'LEADER', 'LEGAL', 'ADMIN', 'MASTER'],
                 'label' => 'Reaktivasi Naskah Kedaluwarsa',
                 'icon' => 'bi-arrow-clockwise',
                 'btn' => 'btn-dark'
@@ -159,6 +175,13 @@ class FSMWorkflowEngineService
                 $document->validity = $additionalData['validity'];
             }
 
+            // Jika masuk status VERIFIED: set tanggal verifikasi hukum & bekukan teks
+            if ($newStatus === 'VERIFIED') {
+                if (empty($document->date_approved)) {
+                    $document->date_approved = now()->toDateString();
+                }
+            }
+
             // Jika masuk status ACTIVE: set tanggal tanda tangan & catat scan fisik
             if ($newStatus === 'ACTIVE') {
                 if (empty($document->date_approved)) {
@@ -179,10 +202,12 @@ class FSMWorkflowEngineService
             if (!$auditNote) {
                 if ($newStatus === 'ACTIVE') {
                     $auditNote = 'Naskah sah bertanda tangan basah & bermeterai aktif. Nomor Pihak I (UNIPAR): ' . ($document->doc_number ?: $document->doc_id) . (!empty($document->partner_doc_number) ? ', Nomor Pihak II (Mitra): ' . $document->partner_doc_number : '');
+                } elseif ($newStatus === 'VERIFIED') {
+                    $auditNote = 'Naskah lolos telaah mutu & verifikasi legal oleh Tim Legal. Teks naskah dibekukan (Freeze Text) dan siap dicetak untuk penandatanganan fisik.';
                 } elseif ($newStatus === 'REVIEW') {
-                    $auditNote = 'Naskah diajukan ke meja pemeriksaan pimpinan / biro kerja sama';
+                    $auditNote = 'Naskah diajukan ke meja pemeriksaan legal / pimpinan';
                 } elseif ($newStatus === 'DRAFT' && $event === 'RETURN_TO_DRAFT') {
-                    $auditNote = 'Naskah dikembalikan oleh pimpinan ke status DRAFT untuk diperbaiki klausulnya';
+                    $auditNote = 'Naskah dikembalikan ke status DRAFT untuk perbaikan klausul/substansi';
                 } elseif ($newStatus === 'CANCELLED') {
                     $auditNote = 'Pengusulan naskah dibatalkan secara permanen oleh pengusul';
                 } elseif ($newStatus === 'WARNING') {

@@ -527,6 +527,7 @@ class SimkermaController extends Controller
             'LEADER' => 'Pimpinan Rektorat',
             'SYSTEM' => 'Scheduler Otomasi',
             'MASTER' => 'Role Master (Super Admin)',
+            'ADMIN' => 'Administrator SIMKERMA',
             default => 'Unit Pengusul (' . $document->unit . ')',
         };
 
@@ -867,25 +868,7 @@ class SimkermaController extends Controller
             // Catat ke Audit Trail dokumen terkait
             $activeRole = session('active_role', 'MASTER');
             foreach ($affectedDocs as $doc) {
-                // Handle Berkas Upload Draf Pengusul (PDF / DOCX)
-            if ($request->hasFile('draft_file')) {
-                $uploadedDraft = $request->file('draft_file');
-                $ext = strtolower($uploadedDraft->getClientOriginalExtension());
-                $dest = public_path('uploads/documents');
-                if (!file_exists($dest)) {
-                    mkdir($dest, 0777, true);
-                }
-                $filename = 'draf_' . strtolower(str_replace([' ', '/', '-'], '_', $newId)) . '_' . time() . '.' . $ext;
-                $uploadedDraft->move($dest, $filename);
-                if ($ext === 'docx') {
-                    $document->docx_path = 'uploads/documents/' . $filename;
-                } else {
-                    $document->draft_file = 'uploads/documents/' . $filename;
-                }
-                $document->save();
-            }
-
-            AuditTrail::create([
+                AuditTrail::create([
                     'document_id' => $doc->id,
                     'actor' => 'Pengelola Data Mitra (' . $activeRole . ')',
                     'role' => $activeRole,
