@@ -1178,8 +1178,10 @@
                                         Judul / Nama Kerja Sama : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="title" class="form-control" placeholder="Contoh: Perjanjian Kerja Sama Penyelenggaraan Program Merdeka Belajar Kampus Merdeka dan Penguatan Tridharma..." required>
-                                        <div class="form-text text-muted">Tuliskan nama atau judul resmi naskah kerja sama yang diajukan.</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Perjanjian Kerja Sama Penyelenggaraan Program Merdeka Belajar Kampus Merdeka dan Penguatan Tridharma Perguruan Tinggi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="title" class="form-control" required>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1189,11 +1191,14 @@
                                         Jenis Dokumen : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="doc_type" id="inputDocType" class="form-select" onchange="handleDocTypeChange(this.value)" required>
-                                            <option value="MoU" {{ ($prefillDeriveType === 'MoU') ? 'selected' : '' }}>MoU (Nota Kesepahaman Induk)</option>
-                                            <option value="MoA / PKS" {{ ($prefillDeriveType === 'MoA' || $prefillDeriveType === 'MoA / PKS') ? 'selected' : '' }}>MoA / PKS (Perjanjian Kerja Sama)</option>
-                                            <option value="IA" {{ ($prefillDeriveType === 'IA') ? 'selected' : '' }}>IA (Implementation Arrangement)</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih jenis naskah: MoU (Nota Kesepahaman Induk), MoA/PKS (Perjanjian Kerja Sama), atau IA (Implementation Arrangement)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="doc_type" id="inputDocType" class="form-select" onchange="handleDocTypeChange(this.value)" required>
+                                                <option value="MoU" {{ ($prefillDeriveType === 'MoU') ? 'selected' : '' }}>MoU (Nota Kesepahaman Induk)</option>
+                                                <option value="MoA / PKS" {{ ($prefillDeriveType === 'MoA' || $prefillDeriveType === 'MoA / PKS') ? 'selected' : '' }}>MoA / PKS (Perjanjian Kerja Sama)</option>
+                                                <option value="IA" {{ ($prefillDeriveType === 'IA') ? 'selected' : '' }}>IA (Implementation Arrangement)</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1203,14 +1208,16 @@
                                         Dokumen Induk Rujukan :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="parent_mou" id="inputParentMou" class="form-control" value="{{ $prefillParentDocNumber ?: '-' }}" list="registeredMouList" placeholder="Pilih nomor dokumen MoU rujukan atau ketik '-' jika MoU mandiri">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 001/UNIPAR/MoU/X/2026 atau ketik '-' jika dokumen berdiri sendiri tanpa MoU induk" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="parent_mou" id="inputParentMou" class="form-control" value="{{ $prefillParentDocNumber ?: '-' }}" list="registeredMouList">
+                                        </div>
                                         <datalist id="registeredMouList">
                                             <option value="-">
                                             @foreach ($registeredMous as $mouItem)
                                                 <option value="{{ $mouItem->doc_number }}">
                                             @endforeach
                                         </datalist>
-                                        <div class="form-text text-muted">Untuk dokumen MoA atau IA, pilih naskah MoU payung yang menjadi dasar hukumnya.</div>
                                     </div>
                                 </div>
 
@@ -1220,14 +1227,17 @@
                                         Unit Pengusul (Pihak I) : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="unit" class="form-select">
-                                            <option>Program Studi Teknik Informatika</option>
-                                            <option>Fakultas Ilmu Komputer</option>
-                                            <option>Fakultas Ekonomi dan Bisnis</option>
-                                            <option>LPPM Universitas Parna Raya</option>
-                                            <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
-                                            <option>Rektorat Universitas Parna Raya</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Program Studi Teknik Informatika, Fakultas Ilmu Komputer, atau LPPM UNIPAR" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="unit" class="form-select">
+                                                <option>Program Studi Teknik Informatika</option>
+                                                <option>Fakultas Ilmu Komputer</option>
+                                                <option>Fakultas Ekonomi dan Bisnis</option>
+                                                <option>LPPM Universitas Parna Raya</option>
+                                                <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
+                                                <option>Rektorat Universitas Parna Raya</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1236,7 +1246,10 @@
                                         Penandatangan Pihak I :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="first_party_signer" class="form-control" placeholder="Contoh: Rektor Universitas Parna Raya / Dekan Fakultas Ilmu Komputer">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Rektor Universitas Parna Raya / Dekan Fakultas Ilmu Komputer" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="first_party_signer" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1246,7 +1259,10 @@
                                         Nama Mitra (Pihak II) : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="partner_name" class="form-control" value="{{ $prefillPartnerName }}" list="partnerDatalist" placeholder="Pilih mitra terdaftar atau ketik instansi baru..." required>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: PT Telekomunikasi Indonesia Tbk / RS Siloam Manado / Dinas Kominfo Provinsi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="partner_name" class="form-control" value="{{ $prefillPartnerName }}" list="partnerDatalist" required>
+                                        </div>
                                         <datalist id="partnerDatalist">
                                             @foreach ($partners as $p)
                                                 <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
@@ -1260,15 +1276,18 @@
                                         Kategori / Sektor Mitra :
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="category" class="form-select">
-                                            <option {{ $prefillCategory === 'DUDI / Swasta' ? 'selected' : '' }}>DUDI / Swasta</option>
-                                            <option {{ $prefillCategory === 'BUMN' ? 'selected' : '' }}>BUMN</option>
-                                            <option {{ $prefillCategory === 'Instansi Pemerintah' ? 'selected' : '' }}>Instansi Pemerintah</option>
-                                            <option {{ $prefillCategory === 'Perguruan Tinggi' ? 'selected' : '' }}>Perguruan Tinggi</option>
-                                            <option {{ $prefillCategory === 'Lembaga Keagamaan / Komunitas' ? 'selected' : '' }}>Lembaga Keagamaan / Komunitas</option>
-                                            <option {{ $prefillCategory === 'Kesehatan' ? 'selected' : '' }}>Kesehatan</option>
-                                            <option>Lainnya</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih kategori sektor mitra: DUDI / Swasta, BUMN, Instansi Pemerintah, Perguruan Tinggi, dll." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="category" class="form-select">
+                                                <option {{ $prefillCategory === 'DUDI / Swasta' ? 'selected' : '' }}>DUDI / Swasta</option>
+                                                <option {{ $prefillCategory === 'BUMN' ? 'selected' : '' }}>BUMN</option>
+                                                <option {{ $prefillCategory === 'Instansi Pemerintah' ? 'selected' : '' }}>Instansi Pemerintah</option>
+                                                <option {{ $prefillCategory === 'Perguruan Tinggi' ? 'selected' : '' }}>Perguruan Tinggi</option>
+                                                <option {{ $prefillCategory === 'Lembaga Keagamaan / Komunitas' ? 'selected' : '' }}>Lembaga Keagamaan / Komunitas</option>
+                                                <option {{ $prefillCategory === 'Kesehatan' ? 'selected' : '' }}>Kesehatan</option>
+                                                <option>Lainnya</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1277,7 +1296,10 @@
                                         Penandatangan Pihak II :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="second_party_signer" class="form-control" placeholder="Contoh: Direktur Utama PT ... / Kepala Balai ... / Dekan ...">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Direktur Utama PT Telkom Indonesia / Kepala Kantor Wilayah / Dekan Fakultas" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="second_party_signer" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1286,7 +1308,10 @@
                                         Nomor Naskah Mitra :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="partner_doc_number" class="form-control" placeholder="Nomor resmi dari instansi mitra (jika sudah ada)">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 088/TELKOM/DIR/X/2026 (kosongkan jika belum diterbitkan nomor resmi dari pihak mitra)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="partner_doc_number" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1296,7 +1321,10 @@
                                         Ruang Lingkup / Kegiatan : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <textarea name="scope" class="form-control" rows="3" placeholder="Rincikan bentuk kerja sama atau lingkup kegiatan konkret (misalnya: pertukaran mahasiswa, magang industri MBKM, penelitian kolaboratif, pengabdian masyarakat, dsb.)..." required></textarea>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Pertukaran mahasiswa, magang industri MBKM, penelitian kolaboratif, pengabdian masyarakat, dan dosen praktisi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <textarea name="scope" class="form-control" rows="3" required></textarea>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1306,8 +1334,10 @@
                                         Upload Draft Dokumen :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="file" name="draft_file" class="form-control" accept=".docx,.pdf,.doc">
-                                        <div class="form-text text-muted">Format berkas didukung: .docx (disarankan menggunakan template resmi) atau .pdf. QR Code akan disematkan otomatis saat naskah diajukan.</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Naskah draf format Word (.docx) atau scan (.pdf). Stempel QR Code akan disematkan otomatis saat diajukan ke telaah" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="file" name="draft_file" class="form-control" accept=".docx,.pdf,.doc">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1317,7 +1347,10 @@
                                         Tanggal Mulai Berlaku :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="date" name="start_date" id="inputStartDate" class="form-control" value="{{ date('Y-m-d') }}" onchange="calculateDuration()">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Tanggal dimulainya perjanjian kerja sama secara resmi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="date" name="start_date" id="inputStartDate" class="form-control" value="{{ date('Y-m-d') }}" onchange="calculateDuration()">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1326,7 +1359,10 @@
                                         Tanggal Berakhir :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="date" name="end_date" id="inputEndDate" class="form-control" value="{{ date('Y-m-d', strtotime('+1 year')) }}" onchange="calculateDuration()">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Tanggal masa berlaku perjanjian kerja sama berakhir" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="date" name="end_date" id="inputEndDate" class="form-control" value="{{ date('Y-m-d', strtotime('+1 year')) }}" onchange="calculateDuration()">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1335,7 +1371,10 @@
                                         Masa Berlaku Perjanjian :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="validity" id="inputValidity" class="form-control" value="1 Tahun" placeholder="Contoh: 1 Tahun, 3 Tahun, 5 Tahun">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 1 Tahun, 2 Tahun, 3 Tahun, atau 5 Tahun (dihitung otomatis dari tanggal mulai &amp; berakhir)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="validity" id="inputValidity" class="form-control" value="1 Tahun">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1344,11 +1383,14 @@
                                         Ambang Batas Peringatan :
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="warning_threshold" class="form-select">
-                                            <option value="H-90 Hari (3 Bulan)" selected>H-90 Hari (3 Bulan) &mdash; Sesuai Klausul MoU Baku UNIPAR</option>
-                                            <option value="H-60 Hari (2 Bulan)">H-60 Hari (2 Bulan) &mdash; Standar Kemendikbudristek</option>
-                                            <option value="H-30 Hari (1 Bulan)">H-30 Hari (1 Bulan) &mdash; Kemitraan Singkat</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilihan batas peringatan dini sebelum naskah kedaluwarsa: H-90 Hari (3 Bulan), H-60 Hari (2 Bulan), atau H-30 Hari" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="warning_threshold" class="form-select">
+                                                <option value="H-90 Hari (3 Bulan)" selected>H-90 Hari (3 Bulan) &mdash; Sesuai Klausul MoU Baku UNIPAR</option>
+                                                <option value="H-60 Hari (2 Bulan)">H-60 Hari (2 Bulan) &mdash; Standar Kemendikbudristek</option>
+                                                <option value="H-30 Hari (1 Bulan)">H-30 Hari (1 Bulan) &mdash; Kemitraan Singkat</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1358,7 +1400,10 @@
                                         PIC Pihak Pertama (UNIPAR) :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="pic_first_party" class="form-control" placeholder="Contoh: Dr. Ir. John Doe, M.Kom. (0812-44xx-xxxx / john@unipar.ac.id)">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Dr. Ir. John Doe, M.Kom. (0812-4400-5500 / john@unipar.ac.id)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="pic_first_party" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1367,7 +1412,10 @@
                                         PIC Pihak Kedua (Mitra) :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="pic_second_party" class="form-control" placeholder="Contoh: Jane Smith, S.T. - Kepala Divisi HR (0813-55xx-xxxx / hr@mitra.co.id)">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Jane Smith, S.T. - Kepala Divisi HR (0813-5500-6600 / hr@mitra.co.id)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="pic_second_party" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1377,8 +1425,10 @@
                                         Nilai / Nominal Dana (Jika Ada) :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="nominal_value" class="form-control" placeholder="Contoh: Rp 50.000.000 / Non-finansial (In-kind) / Hibah Riset">
-                                        <div class="form-text text-muted">Cantumkan komitmen pendanaan kerja sama, kontribusi fasilitas (in-kind), atau kosongkan jika tidak ada dana.</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Rp 50.000.000 / Non-finansial (In-kind) / Hibah Riset (kosongkan jika tanpa dana)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="nominal_value" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1388,7 +1438,10 @@
                                         Deskripsi / Ringkasan :
                                     </label>
                                     <div class="col-md-9">
-                                        <textarea name="description" class="form-control" rows="3" placeholder="Tuliskan ringkasan singkat latar belakang pengajuan, tujuan strategis, dan urgensi kerja sama kemitraan ini..."></textarea>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Ringkasan singkat latar belakang pengajuan, target luaran strategis, serta urgensi kerja sama kemitraan ini" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <textarea name="description" class="form-control" rows="3"></textarea>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1415,7 +1468,10 @@
                                         Judul / Nama Program PKM : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="title" class="form-control" placeholder="Contoh: Paket Terpadu Pengabdian Kepada Masyarakat & Kemitraan MBKM..." required>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Paket Terpadu Pengabdian Kepada Masyarakat &amp; Kemitraan MBKM" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="title" class="form-control" required>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1425,7 +1481,10 @@
                                         Nama Kegiatan / Topik PKM : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="topic" class="form-control" placeholder="Contoh: Digitalisasi UMKM dan Pemberdayaan Komunitas Pesisir..." required>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Digitalisasi UMKM dan Pemberdayaan Komunitas Nelayan Pesisir Manado" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="topic" class="form-control" required>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1435,12 +1494,15 @@
                                         Unit Pengusul Utama (Pihak I) : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="unit_main" class="form-select">
-                                            <option>Program Studi Teknik Informatika</option>
-                                            <option selected>Fakultas Ilmu Komputer</option>
-                                            <option>Fakultas Ekonomi dan Bisnis</option>
-                                            <option>LPPM Universitas Parna Raya</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Fakultas Ilmu Komputer / Program Studi Teknik Informatika" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="unit_main" class="form-select">
+                                                <option>Program Studi Teknik Informatika</option>
+                                                <option selected>Fakultas Ilmu Komputer</option>
+                                                <option>Fakultas Ekonomi dan Bisnis</option>
+                                                <option>LPPM Universitas Parna Raya</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1449,13 +1511,16 @@
                                         Unit Kolaborator Internal :
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="unit_collab" class="form-select">
-                                            <option>-</option>
-                                            <option>Fakultas Ilmu Komputer</option>
-                                            <option selected>Fakultas Ekonomi dan Bisnis</option>
-                                            <option>LPPM Universitas Parna Raya</option>
-                                            <option>Program Studi Teknik Informatika</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Fakultas Ekonomi dan Bisnis (pilih '-' jika tidak ada unit kolaborator)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="unit_collab" class="form-select">
+                                                <option>-</option>
+                                                <option>Fakultas Ilmu Komputer</option>
+                                                <option selected>Fakultas Ekonomi dan Bisnis</option>
+                                                <option>LPPM Universitas Parna Raya</option>
+                                                <option>Program Studi Teknik Informatika</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1464,7 +1529,10 @@
                                         Penandatangan Pihak I :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="first_party_signer" class="form-control" placeholder="Contoh: Dekan Fakultas Ilmu Komputer / Ketua LPPM">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Dekan Fakultas Ilmu Komputer / Ketua LPPM UNIPAR" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="first_party_signer" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1474,7 +1542,10 @@
                                         Nama Instansi / Mitra (Pihak II) : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="partner_name" class="form-control" list="partnerDatalist" placeholder="Pilih mitra terdaftar atau ketik baru..." required>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Koperasi Nelayan Bahari Manado / PT Bank SulutGo" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="partner_name" class="form-control" list="partnerDatalist" required>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1483,13 +1554,16 @@
                                         Kategori / Sektor Mitra :
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="category" class="form-select">
-                                            <option selected>DUDI / Swasta</option>
-                                            <option>BUMN</option>
-                                            <option>Instansi Pemerintah</option>
-                                            <option>Lembaga Keagamaan / Komunitas</option>
-                                            <option>Kesehatan</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih sektor kategori mitra kemitraan PKM" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="category" class="form-select">
+                                                <option selected>DUDI / Swasta</option>
+                                                <option>BUMN</option>
+                                                <option>Instansi Pemerintah</option>
+                                                <option>Lembaga Keagamaan / Komunitas</option>
+                                                <option>Kesehatan</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1498,7 +1572,10 @@
                                         Penandatangan Pihak II :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="second_party_signer" class="form-control" placeholder="Contoh: Kepala Desa / Pimpinan Yayasan / Direktur">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Kepala Desa / Ketua Koperasi / Direktur Utama" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="second_party_signer" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1507,7 +1584,10 @@
                                         Nomor Naskah Resmi Mitra :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="partner_doc_number" class="form-control" placeholder="Nomor resmi dari instansi mitra (jika sudah ada)">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 012/KNB/PKM/XI/2026 (kosongkan jika belum ada nomor resmi mitra)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="partner_doc_number" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1517,7 +1597,10 @@
                                         Tanggal Mulai PKM :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="date" name="start_date" id="inputPkmStartDate" class="form-control" value="{{ date('Y-m-d') }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Tanggal dimulainya pelaksanaan program kegiatan PKM" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="date" name="start_date" id="inputPkmStartDate" class="form-control" value="{{ date('Y-m-d') }}">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1526,7 +1609,10 @@
                                         Tanggal Berakhir PKM :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="date" name="end_date" id="inputPkmEndDate" class="form-control" value="{{ date('Y-m-d', strtotime('+1 year')) }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Tanggal berakhirnya pelaksanaan program kegiatan PKM" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="date" name="end_date" id="inputPkmEndDate" class="form-control" value="{{ date('Y-m-d', strtotime('+1 year')) }}">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1535,12 +1621,15 @@
                                         Jangka Waktu PKM :
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="duration" class="form-select">
-                                            <option selected>1 Tahun</option>
-                                            <option>6 Bulan</option>
-                                            <option>2 Tahun</option>
-                                            <option>3 Tahun</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilihan durasi siklus program PKM (6 Bulan, 1 Tahun, 2 Tahun)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="duration" class="form-select">
+                                                <option selected>1 Tahun</option>
+                                                <option>6 Bulan</option>
+                                                <option>2 Tahun</option>
+                                                <option>3 Tahun</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1549,11 +1638,14 @@
                                         Ambang Batas Peringatan :
                                     </label>
                                     <div class="col-md-9">
-                                        <select name="warning_threshold" class="form-select">
-                                            <option value="H-90 Hari (3 Bulan)" selected>H-90 Hari (3 Bulan) &mdash; Sesuai Klausul MoU Baku</option>
-                                            <option value="H-60 Hari (2 Bulan)">H-60 Hari (2 Bulan) &mdash; Standar Kemendikbudristek</option>
-                                            <option value="H-30 Hari (1 Bulan)">H-30 Hari (1 Bulan) &mdash; Kemitraan Singkat</option>
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilihan ambang batas peringatan dini sebelum masa berlaku PKM berakhir" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <select name="warning_threshold" class="form-select">
+                                                <option value="H-90 Hari (3 Bulan)" selected>H-90 Hari (3 Bulan) &mdash; Sesuai Klausul MoU Baku</option>
+                                                <option value="H-60 Hari (2 Bulan)">H-60 Hari (2 Bulan) &mdash; Standar Kemendikbudristek</option>
+                                                <option value="H-30 Hari (1 Bulan)">H-30 Hari (1 Bulan) &mdash; Kemitraan Singkat</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1563,7 +1655,10 @@
                                         PIC Pihak Pertama (UNIPAR) :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="pic_first_party" class="form-control" placeholder="Contoh: Ketua Tim Pengabdi / Dosen Pembimbing (0812-xxxx-xxxx)">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Ketua Tim Dosen Pengabdi / Dosen Pembimbing (0812-4400-5500)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="pic_first_party" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1572,7 +1667,10 @@
                                         PIC Pihak Kedua (Mitra) :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="pic_second_party" class="form-control" placeholder="Contoh: Narahubung Komunitas / Mitra Lapangan (0813-xxxx-xxxx)">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Narahubung Komunitas / Koordinator Lapangan Mitra (0813-5500-6600)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="pic_second_party" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1582,7 +1680,10 @@
                                         Data Mahasiswa / Peserta : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
-                                        <textarea name="students_data" class="form-control" rows="2" placeholder="Nama mahasiswa, NIM, dan program studi yang diterjunkan dalam program..." required></textarea>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 10 Mahasiswa Prodi Teknik Informatika (Angkatan 2023) peserta PKM Terpadu" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <textarea name="students_data" class="form-control" rows="2" required></textarea>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1592,7 +1693,10 @@
                                         Nilai / Nominal Dana (Jika Ada) :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="text" name="nominal_value" class="form-control" placeholder="Contoh: Rp 25.000.000 (Hibah Internal PKM LPPM) / Non-finansial">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Rp 25.000.000 (Hibah Internal PKM LPPM) / Non-finansial" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="text" name="nominal_value" class="form-control">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1602,7 +1706,10 @@
                                         Deskripsi / Ringkasan :
                                     </label>
                                     <div class="col-md-9">
-                                        <textarea name="description" class="form-control" rows="3" placeholder="Ringkasan target luaran, skema kegiatan Tridharma, dan manfaat bagi mitra sasaran..."></textarea>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Ringkasan target luaran, skema kegiatan Tridharma, dan manfaat bagi masyarakat mitra sasaran" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <textarea name="description" class="form-control" rows="3"></textarea>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1612,8 +1719,10 @@
                                         Upload Berkas Draf Paket :
                                     </label>
                                     <div class="col-md-9">
-                                        <input type="file" name="draft_file" class="form-control" accept=".docx,.pdf,.doc">
-                                        <div class="form-text text-muted">Unggah naskah draf terpadu yang memuat kesepakatan Tridharma &amp; PKM bersama.</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah naskah draf terpadu yang memuat kesepakatan Tridharma &amp; PKM bersama format Word (.docx) atau PDF" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="file" name="draft_file" class="form-control" accept=".docx,.pdf,.doc">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1678,6 +1787,14 @@
                 const docTypeEl = document.getElementById('inputDocType');
                 if (docTypeEl) {
                     handleDocTypeChange(docTypeEl.value);
+                }
+
+                // Inisialisasi Tooltip Bootstrap 5 untuk seluruh icon petunjuk (?)
+                if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
                 }
             });
             </script>
