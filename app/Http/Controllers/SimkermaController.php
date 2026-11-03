@@ -328,7 +328,44 @@ class SimkermaController extends Controller
         $parentMou = ($docType === 'MoU') ? '-' : $request->input('parent_mou', '-');
         $activeRole = session('active_role', 'MASTER');
 
-        $doc = DB::transaction(function () use ($request, $newId, $regId, $typePrefix, $docType, $partnerName, $partnerDocNumber, $parentMou, $activeRole) {
+        $title = $request->input('title', 'Kerja Sama ' . $docType . ' dengan ' . $partnerName);
+        $firstPartySigner = $request->input('first_party_signer');
+        $secondPartySigner = $request->input('second_party_signer');
+        $picFirstParty = $request->input('pic_first_party');
+        $picSecondParty = $request->input('pic_second_party');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $nominalValue = $request->input('nominal_value');
+        $description = $request->input('description');
+
+        $validity = $request->input('validity');
+        if (empty($validity)) {
+            if ($startDate && $endDate) {
+                try {
+                    $start = \Carbon\Carbon::parse($startDate);
+                    $end = \Carbon\Carbon::parse($endDate);
+                    $years = $start->diffInYears($end);
+                    if ($years >= 1) {
+                        $validity = $years . ' Tahun';
+                    } else {
+                        $months = $start->diffInMonths($end);
+                        $validity = ($months > 0 ? $months : 1) . ' Bulan';
+                    }
+                } catch (\Exception $e) {
+                    $validity = '1 Tahun';
+                }
+            } else {
+                $validity = '1 Tahun';
+            }
+        }
+
+        $doc = DB::transaction(function () use (
+            $request, $newId, $regId, $typePrefix, $docType, $partnerName,
+            $partnerDocNumber, $parentMou, $activeRole, $title,
+            $firstPartySigner, $secondPartySigner, $picFirstParty,
+            $picSecondParty, $startDate, $endDate, $nominalValue,
+            $description, $validity
+        ) {
             do {
                 $docNumber = sprintf('%03d/UNIPAR/%s/X/2026', rand(360, 499), $typePrefix);
             } while (Document::where('doc_number', $docNumber)->exists());
@@ -339,14 +376,23 @@ class SimkermaController extends Controller
                 'doc_number' => $docNumber,
                 'partner_doc_number' => $partnerDocNumber,
                 'track' => 'Jalur 1: Kemitraan Bertahap',
+                'title' => $title,
                 'unit' => $request->input('unit', 'Program Studi Teknik Informatika'),
+                'first_party_signer' => $firstPartySigner,
                 'collab_unit' => null,
                 'partner_name' => $partnerName,
                 'partner_category' => $request->input('category', 'DUDI / Swasta'),
+                'second_party_signer' => $secondPartySigner,
+                'pic_first_party' => $picFirstParty,
+                'pic_second_party' => $picSecondParty,
                 'doc_type' => $docType,
                 'parent_mou' => $parentMou,
                 'scope' => $request->input('scope', 'Kerja sama kemitraan Tridharma'),
-                'validity' => $request->input('validity', '1 Tahun'),
+                'description' => $description,
+                'validity' => $validity,
+                'start_date' => $startDate ?: null,
+                'end_date' => $endDate ?: null,
+                'nominal_value' => $nominalValue,
                 'warning_threshold' => $request->input('warning_threshold', 'H-90 Hari (3 Bulan)'),
                 'status' => 'DRAFT',
                 'draft_file' => 'draf_' . strtolower(str_replace(' ', '_', $newId)) . '.pdf',
@@ -392,7 +438,7 @@ class SimkermaController extends Controller
                     'address' => 'Kawasan Bisnis & Industri Perwakilan Sulawesi Utara, Kota Manado',
                     'phone' => '(0431) 880-1234',
                     'email' => 'kemitraan@' . (Str::slug($partnerName) ?: 'mitra') . '.co.id',
-                    'pic_name' => 'Narahubung Kemitraan',
+                    'pic_name' => $picSecondParty ?: 'Narahubung Kemitraan',
                     'pic_title' => 'Divisi Kerja Sama',
                     'pic_contact' => '0812-4400-5500',
                     'profile_desc' => 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR dengan ruang lingkup: ' . $request->input('scope', 'Kerja sama kemitraan Tridharma'),
@@ -426,7 +472,22 @@ class SimkermaController extends Controller
         $duration = $request->input('duration', '1 Tahun');
         $activeRole = session('active_role', 'MASTER');
 
-        $doc = DB::transaction(function () use ($request, $newId, $regId, $partnerName, $partnerDocNumber, $unitMain, $unitCollab, $topic, $duration, $activeRole) {
+        $title = $request->input('title', 'Paket Terpadu PKM: ' . $topic);
+        $firstPartySigner = $request->input('first_party_signer');
+        $secondPartySigner = $request->input('second_party_signer');
+        $picFirstParty = $request->input('pic_first_party');
+        $picSecondParty = $request->input('pic_second_party');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $nominalValue = $request->input('nominal_value');
+        $description = $request->input('description');
+
+        $doc = DB::transaction(function () use (
+            $request, $newId, $regId, $partnerName, $partnerDocNumber,
+            $unitMain, $unitCollab, $topic, $duration, $activeRole,
+            $title, $firstPartySigner, $secondPartySigner, $picFirstParty,
+            $picSecondParty, $startDate, $endDate, $nominalValue, $description
+        ) {
             do {
                 $docNumber = sprintf('%03d/UNIPAR/PKM/X/2026', rand(360, 499));
             } while (Document::where('doc_number', $docNumber)->exists());
@@ -435,16 +496,26 @@ class SimkermaController extends Controller
                 'doc_id' => $newId,
                 'reg_id' => $regId,
                 'doc_number' => $docNumber,
+                'partner_doc_number' => $partnerDocNumber,
                 'track' => 'Jalur 2: Paket Terpadu PKM',
+                'title' => $title,
                 'unit' => $unitMain,
+                'first_party_signer' => $firstPartySigner,
                 'collab_unit' => $unitCollab,
                 'partner_name' => $partnerName,
                 'partner_category' => $request->input('category', 'DUDI / Swasta'),
+                'second_party_signer' => $secondPartySigner,
+                'pic_first_party' => $picFirstParty,
+                'pic_second_party' => $picSecondParty,
                 'doc_type' => 'Paket Terpadu (MoU + MoA + IA)',
                 'parent_mou' => '-',
                 'scope' => 'Paket Terpadu 1 Pintu: ' . $topic,
+                'description' => $description,
                 'students_data' => $request->input('students_data', 'Mahasiswa Peserta PKM UNIPAR'),
                 'validity' => $duration . ' (Siklus PKM)',
+                'start_date' => $startDate ?: null,
+                'end_date' => $endDate ?: null,
+                'nominal_value' => $nominalValue,
                 'warning_threshold' => $request->input('warning_threshold', 'H-90 Hari (3 Bulan)'),
                 'status' => 'DRAFT',
                 'draft_file' => 'paket_pkm_' . strtolower(str_replace(' ', '_', $newId)) . '.pdf',
@@ -490,7 +561,7 @@ class SimkermaController extends Controller
                     'address' => 'Kawasan Bisnis & Industri Perwakilan Sulawesi Utara, Kota Manado',
                     'phone' => '(0431) 880-1234',
                     'email' => 'kemitraan@' . (Str::slug($partnerName) ?: 'mitra') . '.co.id',
-                    'pic_name' => 'Narahubung Kemitraan',
+                    'pic_name' => $picSecondParty ?: 'Narahubung Kemitraan',
                     'pic_title' => 'Divisi Kerja Sama',
                     'pic_contact' => '0812-4400-5500',
                     'profile_desc' => 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR dengan ruang lingkup: ' . $topic,

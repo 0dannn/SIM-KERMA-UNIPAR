@@ -194,11 +194,17 @@
                 <!-- Data Rincian Dokumen Resmi Termasuk Dokumen Induk Rujukan -->
                 <div class="bg-light p-3 p-md-4 rounded border mb-4">
                     <div class="row g-3 small">
-                        <div class="col-sm-6">
+                        @if (!empty($document->title))
+                        <div class="col-12">
+                            <div class="field-label">Judul / Nama Kerja Sama:</div>
+                            <div class="field-val fs-6 text-primary fw-bold">{{ $document->title }}</div>
+                        </div>
+                        @endif
+                        <div class="col-sm-6 {{ !empty($document->title) ? 'border-top pt-2' : '' }}">
                             <div class="field-label">Nomor Registrasi Sistem:</div>
                             <div class="field-val fs-6 text-primary">{{ $document->reg_id }}</div>
                         </div>
-                        <div class="col-sm-6">
+                        <div class="col-sm-6 {{ !empty($document->title) ? 'border-top pt-2' : '' }}">
                             <div class="field-label">Nomor Surat Pihak I (UNIPAR):</div>
                             <div class="field-val">{{ $document->doc_number ?: 'Dalam Proses Registrasi' }}</div>
                         </div>
@@ -232,26 +238,56 @@
                         </div>
                         <div class="col-sm-6 border-top pt-2">
                             <div class="field-label">Masa Berlaku Perjanjian:</div>
-                            <div class="field-val">{{ $document->validity ?: 'Belum Ditetapkan' }}</div>
+                            <div class="field-val">
+                                @if (!empty($document->start_date) && !empty($document->end_date))
+                                    {{ $document->start_date->format('d M Y') }} s/d {{ $document->end_date->format('d M Y') }} ({{ $document->validity }})
+                                @else
+                                    {{ $document->validity ?: 'Belum Ditetapkan' }}
+                                @endif
+                            </div>
                         </div>
                         <div class="col-sm-6 border-top pt-2">
                             <div class="field-label">Ambang Batas Peringatan Dini:</div>
                             <div class="field-val text-warning text-dark"><i class="bi bi-bell-fill me-1"></i>{{ $document->warning_threshold ?: 'H-90 Hari (3 Bulan)' }}</div>
                         </div>
+                        @if (!empty($document->nominal_value))
+                        <div class="col-12 border-top pt-2">
+                            <div class="field-label">Nilai / Nominal Dana Kerja Sama:</div>
+                            <div class="field-val text-success fw-bold">{{ $document->nominal_value }}</div>
+                        </div>
+                        @endif
                         <div class="col-12 border-top pt-2">
                             <div class="field-label">Ruang Lingkup / Perihal:</div>
                             <div class="field-val fs-6 text-dark">{{ $document->scope }}</div>
                         </div>
+                        @if (!empty($document->description))
+                        <div class="col-12 border-top pt-2">
+                            <div class="field-label">Deskripsi / Ringkasan:</div>
+                            <div class="field-val text-secondary">{{ $document->description }}</div>
+                        </div>
+                        @endif
                         <div class="col-sm-6 border-top pt-2">
-                            <div class="field-label">Nama Instansi / Mitra:</div>
-                            <div class="field-val">{{ $document->partner_name }}</div>
+                            <div class="field-label">Nama Instansi / Mitra (Pihak II):</div>
+                            <div class="field-val fw-bold text-dark">{{ $document->partner_name }}</div>
                             <div class="text-muted" style="font-size: 0.74rem;">{{ $document->partner_category }}</div>
+                            @if (!empty($document->second_party_signer))
+                                <div class="text-secondary small mt-1">Penandatangan: {{ $document->second_party_signer }}</div>
+                            @endif
+                            @if (!empty($document->pic_second_party))
+                                <div class="text-muted small">PIC: {{ $document->pic_second_party }}</div>
+                            @endif
                         </div>
                         <div class="col-sm-6 border-top pt-2">
-                            <div class="field-label">Unit Pengusul Kampus:</div>
-                            <div class="field-val">{{ $document->unit }}</div>
+                            <div class="field-label">Unit Pengusul Kampus (Pihak I):</div>
+                            <div class="field-val fw-bold text-dark">{{ $document->unit }}</div>
                             @if (!empty($document->collab_unit))
                                 <div class="text-muted" style="font-size: 0.74rem;">Kolaborator: {{ $document->collab_unit }}</div>
+                            @endif
+                            @if (!empty($document->first_party_signer))
+                                <div class="text-secondary small mt-1">Penandatangan: {{ $document->first_party_signer }}</div>
+                            @endif
+                            @if (!empty($document->pic_first_party))
+                                <div class="text-muted small">PIC: {{ $document->pic_first_party }}</div>
                             @endif
                         </div>
                         <div class="col-12 border-top pt-2">

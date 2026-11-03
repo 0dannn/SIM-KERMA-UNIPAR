@@ -16,6 +16,8 @@ class Document extends Model
     protected $casts = [
         'date_approved' => 'date',
         'date_signed' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     /**
