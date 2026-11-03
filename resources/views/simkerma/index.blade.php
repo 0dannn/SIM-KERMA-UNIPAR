@@ -1140,7 +1140,7 @@
                                         Template Dokumen Naskah Draf MoU Resmi (.docx) &mdash; Format Bersih (Tanpa QR Code)
                                     </h6>
                                     <p class="text-muted small mb-0">
-                                        Unduh template naskah Word resmi ini untuk menyusun draf kerja sama. Area tabel tanda tangan disiapkan bersih untuk tanda tangan fisik (wet signature). Ketika draf naskah diajukan ke meja pemeriksaan (<strong>SUBMIT &rarr; REVIEW</strong>), sistem secara otomatis menyematkan stempel QR Code dokumen ke naskah Word pada <strong>bagian ujung kanan bawah halaman terakhir dokumen</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>), serta menerbitkan berkas PDF resmi.
+                                        Unduh template naskah Word resmi ini sebagai acuan penyusunan draf kerja sama, lalu simpan naskah draf final Anda dalam format <strong>PDF</strong>. Ketika draf naskah diajukan ke meja pemeriksaan (<strong>SUBMIT &rarr; REVIEW</strong>), sistem secara otomatis menyematkan stempel QR Code resmi langsung ke naskah PDF yang Anda unggah pada <strong>bagian ujung kanan bawah halaman terakhir dokumen</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>).
                                     </p>
                                 </div>
                             </div>
@@ -1347,12 +1347,12 @@
                                 <!-- 6. UPLOAD DRAFT DOKUMEN -->
                                 <div class="row mb-3 align-items-center">
                                     <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Upload Draft Dokumen :
+                                        Upload Draft Dokumen (PDF) : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
                                         <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Naskah draf format Word (.docx) atau scan (.pdf). Stempel QR Code akan disematkan otomatis saat diajukan ke telaah" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="file" name="draft_file" class="form-control" accept=".docx,.pdf,.doc">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Wajib unggah naskah draf kerja sama dalam format PDF (.pdf). Dokumen yang Anda unggah ini yang akan dibubuhi stempel QR Code resmi di bagian ujung kanan bawah halaman terakhir saat diajukan ke telaah pimpinan." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
                                         </div>
                                     </div>
                                 </div>
@@ -1748,12 +1748,12 @@
                                 <!-- 10. UPLOAD BERKAS DRAF -->
                                 <div class="row mb-4 align-items-center">
                                     <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Upload Berkas Draf Paket :
+                                        Upload Berkas Draf Paket (PDF) : <span class="text-danger">*</span>
                                     </label>
                                     <div class="col-md-9">
                                         <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah naskah draf terpadu yang memuat kesepakatan Tridharma &amp; PKM bersama format Word (.docx) atau PDF" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="file" name="draft_file" class="form-control" accept=".docx,.pdf,.doc">
+                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Wajib unggah naskah draf paket terpadu dalam format PDF (.pdf). Dokumen yang Anda unggah ini yang akan dibubuhi stempel QR Code resmi pada ujung kanan bawah halaman terakhir saat diajukan ke telaah pimpinan." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                            <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
                                         </div>
                                     </div>
                                 </div>
@@ -2342,8 +2342,8 @@
                                                                     </div>
                                                                     <p class="text-muted mb-2" style="font-size: 0.73rem;">
                                                                         Ketika Anda menekan tombol <strong>Ajukan Naskah ke Meja Pemeriksaan (SUBMIT)</strong>:
-                                                                        <br>&bull; Sistem secara otomatis menyematkan stempel QR Code resmi ke berkas Word pada <strong>bagian ujung kanan bawah halaman terakhir dokumen</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>) tanpa mengganggu tata letak tanda tangan basah.
-                                                                        <br>&bull; Berkas Word tersebut otomatis dikonversi menjadi dokumen PDF resmi untuk ditelaah oleh pimpinan.
+                                                                        <br>&bull; Sistem secara otomatis menyematkan stempel QR Code resmi langsung ke naskah dokumen PDF yang dikirim oleh pengusul pada <strong>bagian ujung kanan bawah halaman terakhir dokumen</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>) tanpa menimpa atau mengubah isi substansi naskah.
+                                                                        <br>&bull; Naskah draf ber-QR Code tersebut langsung siap ditelaah kelayakan hukumnya oleh pimpinan.
                                                                     </p>
                                                                     <div class="mb-2">
                                                                         <label class="form-label fw-bold text-dark d-block mb-1" style="font-size: 0.73rem;">
@@ -2359,11 +2359,11 @@
                                                                     </div>
                                                                     <div>
                                                                         <label class="form-label fw-bold text-dark d-block mb-1" style="font-size: 0.73rem;">
-                                                                            <i class="bi bi-file-earmark-word text-primary me-1"></i> Unggah Naskah Word (.docx) Revisi Pengusul (Opsional):
+                                                                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i> Unggah Naskah PDF Revisi Pengusul (Opsional):
                                                                         </label>
-                                                                        <input type="file" name="draft_docx_file" class="form-control form-control-sm mb-1" accept=".docx">
+                                                                        <input type="file" name="draft_file" class="form-control form-control-sm mb-1" accept=".pdf">
                                                                         <small class="text-muted d-block" style="font-size: 0.68rem;">
-                                                                            Jika Anda telah mengedit naskah dari template, unggah di sini. Jika dikosongkan, sistem akan mengotomasi berkas dari <em>Template Resmi MoU UNIPAR</em> yang terisi nomor naskah dan nama mitra.
+                                                                            Jika dikosongkan, sistem akan membubuhkan QR Code langsung pada naskah draf PDF yang telah Anda unggah pada saat pembuatan draf.
                                                                         </small>
                                                                     </div>
                                                                 </div>

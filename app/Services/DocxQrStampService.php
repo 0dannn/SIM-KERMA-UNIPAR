@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Log;
 use ZipArchive;
 use DOMDocument;
 use DOMXPath;
+use setasign\Fpdi\Fpdi;
+use FPDF;
 
 class DocxQrStampService
 {
@@ -69,9 +71,219 @@ class DocxQrStampService
     }
 
     /**
+     * Method Utama: Sematkan stempel QR Code ke naskah yang dikirim oleh pengusul.
+     * Mengutamakan berkas draf yang dikirim (format PDF) dan menempatkan stempel
+     * di bagian ujung kanan bawah halaman terakhir dokumen (A4 / F4).
+     */
+    public function stampDocument(Document $doc, ?string $inputPath = null, ?string $paperSize = null): array
+    {
+        // 1. Tentukan berkas draf yang diunggah pengusul
+        $targetPath = null;
+        if ($inputPath && file_exists($inputPath)) {
+            $targetPath = $inputPath;
+        } elseif (!empty($doc->draft_file) && file_exists(public_path($doc->draft_file))) {
+            $targetPath = public_path($doc->draft_file);
+        } elseif (!empty($doc->docx_path) && file_exists(public_path($doc->docx_path))) {
+            $targetPath = public_path($doc->docx_path);
+        }
+
+        $ext = strtolower(pathinfo($targetPath ?? '', PATHINFO_EXTENSION));
+
+        // Jika berkas yang dikirim berformat DOCX
+        if ($ext === 'docx') {
+            return $this->stampMoU($doc, $targetPath, $paperSize);
+        }
+
+        // Format standar utama pengusul: PDF (.pdf)
+        return $this->stampPdf($doc, $targetPath, $paperSize);
+    }
+
+    /**
+     * Sematkan stempel QR Code resmi ke berkas PDF yang dikirim oleh pengusul
+     * di bagian ujung kanan bawah halaman terakhir dokumen (mendukung ukuran A4 dan F4).
+     */
+    public function stampPdf(Document $doc, ?string $inputPdfPath = null, ?string $paperSize = null): array
+    {
+        $regId = $doc->reg_id ?: 'REG-' . $doc->doc_id;
+        $cleanRegId = preg_replace('/[^A-Za-z0-9_\-]/', '_', $regId);
+        $verifyUrl = url('/verify/' . $regId);
+
+        $paperSize = strtoupper($paperSize ?: $doc->paper_size ?: 'A4');
+        if (!in_array($paperSize, ['A4', 'F4'])) {
+            $paperSize = 'A4';
+        }
+
+        $uploadsDir = public_path('uploads/documents');
+        if (!file_exists($uploadsDir)) {
+            mkdir($uploadsDir, 0777, true);
+        }
+
+        // Tentukan berkas sumber PDF yang dikirim dari draf pengusul
+        $sourcePdf = null;
+        if ($inputPdfPath && file_exists($inputPdfPath)) {
+            $sourcePdf = $inputPdfPath;
+        } elseif (!empty($doc->draft_file) && file_exists(public_path($doc->draft_file))) {
+            $sourcePdf = public_path($doc->draft_file);
+        } elseif (!empty($doc->signed_file) && file_exists(public_path($doc->signed_file))) {
+            $sourcePdf = public_path($doc->signed_file);
+        }
+
+        // Jika belum ada berkas PDF draf, buatkan draf dasar pengusul
+        if (!$sourcePdf || !file_exists($sourcePdf)) {
+            $sourcePdf = $this->generateFallbackPdf($doc, $paperSize);
+        }
+
+        // 1. Buat gambar QR Code PNG resmi dengan badge SIMKERMA UNIPAR
+        $qrPngBinary = $this->generateQrCodePng($verifyUrl, 320, $regId);
+        $qrRelativePath = 'uploads/documents/qr_' . $cleanRegId . '.png';
+        $qrAbsolutePath = public_path($qrRelativePath);
+        file_put_contents($qrAbsolutePath, $qrPngBinary);
+
+        // 2. Tentukan nama berkas hasil stempel resmi
+        $timestamp = time();
+        $stampedRelativePath = 'uploads/documents/Dokumen_' . $cleanRegId . '_' . $timestamp . '.pdf';
+        $stampedAbsolutePath = public_path($stampedRelativePath);
+
+        $stamped = false;
+
+        // 3. Gunakan FPDI untuk mengimpor seluruh halaman naskah PDF asli yang dikirim pengusul
+        // dan menyematkan QR Code di ujung kanan bawah halaman terakhir
+        try {
+            $fpdi = new Fpdi();
+            $pageCount = $fpdi->setSourceFile($sourcePdf);
+
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                $templateId = $fpdi->importPage($pageNo);
+                $size = $fpdi->getTemplateSize($templateId);
+
+                $fpdi->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $fpdi->useTemplate($templateId);
+
+                // Pada halaman terakhir: pasang stempel QR Code di ujung kanan bawah
+                if ($pageNo === $pageCount) {
+                    $stampWidth = 34; // mm (~3.4 cm)
+                    $stampHeight = $stampWidth * 1.15; // mm (~3.91 cm)
+                    $marginRight = 10; // mm dari tepi kanan kertas
+                    $marginBottom = 10; // mm dari tepi bawah kertas
+
+                    $x = $size['width'] - $stampWidth - $marginRight;
+                    $y = $size['height'] - $stampHeight - $marginBottom;
+
+                    $fpdi->Image($qrAbsolutePath, $x, $y, $stampWidth, $stampHeight);
+                }
+            }
+
+            $fpdi->Output('F', $stampedAbsolutePath);
+            $stamped = true;
+        } catch (\Throwable $e) {
+            Log::warning("FPDI stamp notice: " . $e->getMessage() . ". Mencoba fallback Word COM...");
+        }
+
+        // Fallback Microsoft Word COM jika PDF memerlukan perlakuan khusus
+        if (!$stamped && class_exists('COM')) {
+            $word = null;
+            try {
+                $word = new \COM("Word.Application");
+                $word->Visible = false;
+                $word->DisplayAlerts = 0;
+
+                $docObj = $word->Documents->Open(realpath($sourcePdf), false, false);
+                $shape = $docObj->Shapes->AddPicture($qrAbsolutePath, false, true);
+                $shape->Name = "QRCode";
+                $shape->RelativeHorizontalPosition = 0; // Margin
+                $shape->RelativeVerticalPosition = 0;   // Margin
+                $shape->Left = -999996; // wdShapeRight
+                $shape->Top = -999997;  // wdShapeBottom
+                $shape->Width = 96;
+                $shape->Height = 110;
+
+                $docObj->ExportAsFixedFormat($stampedAbsolutePath, 17);
+                $docObj->Close(false);
+                $stamped = true;
+            } catch (\Throwable $e2) {
+                Log::error("Word COM PDF stamp error: " . $e2->getMessage());
+            } finally {
+                if ($word) {
+                    try { $word->Quit(); } catch (\Throwable $ignore) {}
+                }
+            }
+        }
+
+        // Jika tetap belum dapat diproses, salin berkas sumber agar tidak hilang
+        if (!$stamped || !file_exists($stampedAbsolutePath)) {
+            copy($sourcePdf, $stampedAbsolutePath);
+        }
+
+        // 4. Update model dokumen ke berkas PDF yang sudah dibubuhi stempel
+        $doc->paper_size = $paperSize;
+        $doc->qr_code_path = $qrRelativePath;
+        $doc->draft_file = $stampedRelativePath;
+        $doc->signed_file = $stampedRelativePath;
+        $doc->save();
+
+        return [
+            'success' => true,
+            'paper_size' => $paperSize,
+            'pdf_path' => $stampedRelativePath,
+            'qr_code_path' => $qrRelativePath,
+            'verification_url' => $verifyUrl,
+        ];
+    }
+
+    /**
+     * Hasilkan PDF draf dasar pengusul jika tidak ada berkas yang diunggah.
+     */
+    protected function generateFallbackPdf(Document $doc, string $paperSize = 'A4'): string
+    {
+        $size = ($paperSize === 'F4') ? [215, 330] : 'A4';
+        $pdf = new FPDF('P', 'mm', $size);
+        $pdf->SetMargins(20, 20, 20);
+        $pdf->AddPage();
+
+        $pdf->SetFont('Arial', 'B', 15);
+        $pdf->Cell(0, 10, 'UNIVERSITAS PARNA RAYA MANADO', 0, 1, 'C');
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(0, 7, 'NASKAH DRAF ' . strtoupper($doc->doc_type ?: 'KERJA SAMA'), 0, 1, 'C');
+        $pdf->Ln(4);
+        $pdf->Line(20, $pdf->GetY(), ($paperSize === 'F4' ? 195 : 190), $pdf->GetY());
+        $pdf->Ln(8);
+
+        $pdf->SetFont('Arial', '', 10);
+        $pdf->Cell(50, 6, 'Nomor Registrasi', 0, 0);
+        $pdf->Cell(5, 6, ':', 0, 0);
+        $pdf->Cell(0, 6, $doc->reg_id ?: '-', 0, 1);
+
+        $pdf->Cell(50, 6, 'Nomor Dokumen', 0, 0);
+        $pdf->Cell(5, 6, ':', 0, 0);
+        $pdf->Cell(0, 6, $doc->doc_number ?: '---/UNIPAR/' . ($doc->doc_type ?: 'MoU') . '/X/' . date('Y'), 0, 1);
+
+        $pdf->Cell(50, 6, 'Judul Kerja Sama', 0, 0);
+        $pdf->Cell(5, 6, ':', 0, 0);
+        $pdf->MultiCell(0, 6, $doc->title ?: 'Perjanjian Kerja Sama Kemitraan');
+
+        $pdf->Cell(50, 6, 'Pihak Pertama (Pengusul)', 0, 0);
+        $pdf->Cell(5, 6, ':', 0, 0);
+        $pdf->Cell(0, 6, $doc->unit ?: 'Universitas Parna Raya Manado', 0, 1);
+
+        $pdf->Cell(50, 6, 'Pihak Kedua (Mitra)', 0, 0);
+        $pdf->Cell(5, 6, ':', 0, 0);
+        $pdf->Cell(0, 6, ($doc->partner_name ?: 'Mitra Strategis') . ' (' . ($doc->partner_category ?: 'DUDI / Swasta') . ')', 0, 1);
+
+        $pdf->Cell(50, 6, 'Ruang Lingkup', 0, 0);
+        $pdf->Cell(5, 6, ':', 0, 0);
+        $pdf->MultiCell(0, 6, $doc->scope ?: 'Kerja sama kemitraan Tridharma Perguruan Tinggi');
+
+        $pdf->Ln(12);
+        $pdf->MultiCell(0, 6, "Demikian naskah draf kerja sama ini disusun untuk ditelaah dan diverifikasi oleh pihak-pihak berwenang.");
+
+        $fallbackPath = public_path('uploads/documents/draf_generated_' . ($doc->id ?: time()) . '.pdf');
+        $pdf->Output('F', $fallbackPath);
+        return $fallbackPath;
+    }
+
+    /**
      * Sematkan QR Code dinamis ke dalam berkas Word (.docx) di bagian ujung kanan bawah
      * halaman terakhir dokumen, dengan dukungan penuh untuk ukuran kertas A4 dan F4 (Folio).
-     * Area tanda tangan pada tabel tetap bersih untuk tanda tangan fisik (wet signature).
      */
     public function stampMoU(Document $doc, ?string $inputDocxPath = null, ?string $paperSize = null): array
     {
@@ -97,6 +309,9 @@ class DocxQrStampService
 
         if ($inputDocxPath && file_exists($inputDocxPath)) {
             $sourceDocx = $inputDocxPath;
+            $isUsingSystemTemplate = false;
+        } elseif (!empty($doc->docx_path) && file_exists(public_path($doc->docx_path))) {
+            $sourceDocx = public_path($doc->docx_path);
             $isUsingSystemTemplate = false;
         } elseif (file_exists($templatePath)) {
             $sourceDocx = $templatePath;
@@ -143,7 +358,6 @@ class DocxQrStampService
             $xpath->registerNamespace('r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships');
 
             // 4a. Bersihkan QR Code atau gambar di seluruh sel tabel tanda tangan
-            // agar tanda tangan basah (wet signature) tetap leluasa dan bersih
             $tables = $xpath->query('//w:tbl');
             foreach ($tables as $tbl) {
                 if (strpos($tbl->textContent, 'Pihak Pertama') !== false || strpos($tbl->textContent, 'Rektor') !== false) {
@@ -170,14 +384,12 @@ class DocxQrStampService
             $pgSzNodes = $xpath->query('//w:pgSz');
             foreach ($pgSzNodes as $pgSz) {
                 if ($paperSize === 'F4') {
-                    // Standar Folio/F4 di Indonesia: 215 mm x 330 mm (12189 x 18708 dxa)
                     $pgSz->setAttribute('w:w', '12189');
                     $pgSz->setAttribute('w:h', '18708');
                     if ($pgSz->hasAttribute('w:code')) {
                         $pgSz->removeAttribute('w:code');
                     }
                 } else {
-                    // Standar A4: 210 mm x 297 mm (11906 x 16838 dxa)
                     $pgSz->setAttribute('w:w', '11906');
                     $pgSz->setAttribute('w:h', '16838');
                     $pgSz->setAttribute('w:code', '9');
@@ -188,7 +400,6 @@ class DocxQrStampService
             $body = $xpath->query('//w:body')->item(0);
             $lastSectPr = $xpath->query('.//w:sectPr[parent::w:body]', $body)->item(0);
 
-            // Dimensi DrawingML (cx = 765387 EMU / ~2.02 cm, cy = 880195 EMU / ~2.33 cm)
             $cx = 765387;
             $cy = 880195;
 
@@ -251,7 +462,6 @@ class DocxQrStampService
 
             $xml = $dom->saveXML();
 
-            // 4e. Pengisian otomatis nomor surat dan mitra jika menggunakan template baku
             if ($isUsingSystemTemplate) {
                 $docNumber = $doc->doc_number ?: '---/UNIPAR/MoU/X/' . date('Y');
                 $partnerDocNumber = $doc->partner_doc_number ?: '---/MITRA/2026';
@@ -286,7 +496,6 @@ class DocxQrStampService
         // 5. Konversi Berkas Word (.docx) ke PDF Resmi (.pdf) via Microsoft Word COM
         $pdfRelativePath = 'uploads/documents/MoU_' . $cleanRegId . '_' . $timestamp . '.pdf';
         $pdfAbsolutePath = public_path($pdfRelativePath);
-        $pdfSuccess = false;
 
         if (class_exists('COM')) {
             $word = null;
@@ -296,9 +505,8 @@ class DocxQrStampService
                 $word->DisplayAlerts = 0;
 
                 $docObj = $word->Documents->Open(realpath($docxAbsolutePath), false, false);
-                $docObj->ExportAsFixedFormat($pdfAbsolutePath, 17); // 17 = wdExportFormatPDF
+                $docObj->ExportAsFixedFormat($pdfAbsolutePath, 17);
                 $docObj->Close(false);
-                $pdfSuccess = true;
             } catch (\Throwable $e) {
                 Log::warning("Word COM PDF conversion notice: " . $e->getMessage());
             } finally {
@@ -308,9 +516,7 @@ class DocxQrStampService
                         if (function_exists('com_release')) {
                             com_release($word);
                         }
-                    } catch (\Throwable $e) {
-                        // ignore cleanup exceptions
-                    }
+                    } catch (\Throwable $e) {}
                 }
             }
         }

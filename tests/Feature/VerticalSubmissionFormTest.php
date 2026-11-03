@@ -7,6 +7,9 @@ use App\Models\Document;
 use App\Models\AuditTrail;
 use App\Models\Partner;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
+use FPDF;
+use setasign\Fpdi\Fpdi;
 
 class VerticalSubmissionFormTest extends TestCase
 {
@@ -211,5 +214,139 @@ class VerticalSubmissionFormTest extends TestCase
         $this->assertEquals('-', $doc->parent_mou, 'parent_mou harus default ke tanda strip -');
         $this->assertEquals('MoA / PKS', $doc->doc_type);
         $this->assertEquals('A4', $doc->paper_size);
+    }
+
+    /**
+     * Test naskah draf PDF yang diunggah oleh user langsung distempel QR Code
+     * di ujung kanan bawah halaman terakhir dokumen pada saat SUBMIT (bukan menggunakan template bawaan).
+     */
+    public function test_user_uploaded_pdf_is_stamped_at_bottom_right_of_last_page_on_submit(): void
+    {
+        // 1. Buat berkas PDF draf asli buatan user sebanyak 2 halaman
+        $fpdf = new FPDF('P', 'mm', 'A4');
+        $fpdf->AddPage();
+        $fpdf->SetFont('Arial', 'B', 16);
+        $fpdf->Cell(0, 10, 'Naskah Asli Pengusul Halaman 1', 0, 1);
+        $fpdf->AddPage();
+        $fpdf->SetFont('Arial', '', 12);
+        $fpdf->Cell(0, 10, 'Naskah Asli Pengusul Halaman 2 (Halaman Terakhir)', 0, 1);
+        $originalPdfContent = $fpdf->Output('S');
+
+        $uploadedPdf = UploadedFile::fake()->createWithContent('naskah_asli_pengusul.pdf', $originalPdfContent);
+
+        $payload = [
+            'title' => 'Kerja Sama Draf Asli PDF Pengusul',
+            'doc_type' => 'MoU',
+            'paper_size' => 'A4',
+            'parent_mou' => '-',
+            'unit' => 'Program Studi Teknik Informatika',
+            'partner_name' => 'PT Pengusul Asli Digital',
+            'category' => 'DUDI / Swasta',
+            'scope' => 'Uji coba stempel naskah PDF asli pengusul',
+            'validity' => '1 Tahun',
+            'draft_file' => $uploadedPdf,
+        ];
+
+        // Buat draf
+        $response = $this->post(route('simkerma.store-jalur1'), $payload);
+        $response->assertStatus(302);
+
+        $doc = Document::where('partner_name', 'PT Pengusul Asli Digital')->first();
+        $this->assertNotNull($doc);
+        $this->assertEquals('DRAFT', $doc->status);
+        $this->assertNotNull($doc->draft_file);
+        $this->assertFileExists(public_path($doc->draft_file));
+
+        // 2. Transisikan dari DRAFT ke REVIEW via SUBMIT
+        $transitionResponse = $this->post(route('simkerma.transition'), [
+            'doc_id' => $doc->doc_id,
+            'event' => 'SUBMIT',
+            'paper_size' => 'A4',
+            'notes' => 'Pengajuan naskah draf PDF asli untuk telaah legal pimpinan.',
+        ]);
+        $transitionResponse->assertStatus(302);
+
+        $doc->refresh();
+        $this->assertEquals('REVIEW', $doc->status);
+        $this->assertNotNull($doc->draft_file);
+        $this->assertFileExists(public_path($doc->draft_file));
+
+        // Verifikasi dokumen yang distempel adalah file PDF hasil stempel dari naskah user
+        $stampedPath = public_path($doc->draft_file);
+        $this->assertStringEndsWith('.pdf', $stampedPath);
+        $this->assertFileExists(public_path($doc->qr_code_path));
+
+        // Gunakan FPDI untuk memverifikasi struktur PDF berstempel
+        $fpdi = new Fpdi();
+        $pageCount = $fpdi->setSourceFile($stampedPath);
+        $this->assertEquals(2, $pageCount, 'Jumlah halaman naskah berstempel harus sama dengan naskah asli pengusul (2 halaman).');
+
+        // Pastikan ukuran halaman A4
+        $templateId1 = $fpdi->importPage(1);
+        $size1 = $fpdi->getTemplateSize($templateId1);
+        $this->assertEquals(210, round($size1['width']));
+        $this->assertEquals(297, round($size1['height']));
+
+        $templateId2 = $fpdi->importPage(2);
+        $size2 = $fpdi->getTemplateSize($templateId2);
+        $this->assertEquals(210, round($size2['width']));
+        $this->assertEquals(297, round($size2['height']));
+    }
+
+    /**
+     * Test naskah draf PDF dengan format kertas F4 (Folio 215 x 330 mm)
+     * stempel QR Code diposisikan dinamis di pojok kanan bawah halaman terakhir.
+     */
+    public function test_user_uploaded_f4_pdf_is_stamped_correctly(): void
+    {
+        $fpdf = new FPDF('P', 'mm', [215, 330]);
+        $fpdf->AddPage();
+        $fpdf->SetFont('Arial', 'B', 14);
+        $fpdf->Cell(0, 10, 'Naskah Kertas F4 Halaman 1', 0, 1);
+        $originalF4Content = $fpdf->Output('S');
+
+        $uploadedPdf = UploadedFile::fake()->createWithContent('naskah_f4.pdf', $originalF4Content);
+
+        $payload = [
+            'title' => 'Kerja Sama Draf Asli PDF Ukuran F4',
+            'doc_type' => 'MoA / PKS',
+            'paper_size' => 'F4',
+            'parent_mou' => '-',
+            'unit' => 'Program Studi Sistem Informasi',
+            'partner_name' => 'PT Folio Mandiri Sejahtera',
+            'category' => 'DUDI / Swasta',
+            'scope' => 'Pengujian kertas F4',
+            'validity' => '1 Tahun',
+            'draft_file' => $uploadedPdf,
+        ];
+
+        $response = $this->post(route('simkerma.store-jalur1'), $payload);
+        $response->assertStatus(302);
+
+        $doc = Document::where('partner_name', 'PT Folio Mandiri Sejahtera')->first();
+        $this->assertNotNull($doc);
+
+        $transitionResponse = $this->post(route('simkerma.transition'), [
+            'doc_id' => $doc->doc_id,
+            'event' => 'SUBMIT',
+            'paper_size' => 'F4',
+            'notes' => 'Pengajuan naskah draf F4.',
+        ]);
+        $transitionResponse->assertStatus(302);
+
+        $doc->refresh();
+        $this->assertEquals('REVIEW', $doc->status);
+
+        $stampedPath = public_path($doc->draft_file);
+        $this->assertFileExists($stampedPath);
+
+        $fpdi = new Fpdi();
+        $pageCount = $fpdi->setSourceFile($stampedPath);
+        $this->assertEquals(1, $pageCount);
+
+        $templateId = $fpdi->importPage(1);
+        $size = $fpdi->getTemplateSize($templateId);
+        $this->assertEquals(215, round($size['width']));
+        $this->assertEquals(330, round($size['height']));
     }
 }
