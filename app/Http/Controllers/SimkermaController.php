@@ -762,6 +762,37 @@ class SimkermaController extends Controller
     }
 
     /**
+     * Hapus Semua Pengajuan dan Persetujuan Dokumen Kerja Sama (Fitur Mode Pengembangan)
+     */
+    public function resetAllDocuments(Request $request)
+    {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Activity::truncate();
+        AuditTrail::truncate();
+        Document::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        // Bersihkan berkas fisik yang pernah diunggah/dibuat di public/uploads/documents (kecuali .gitkeep)
+        $docDir = public_path('uploads/documents');
+        if (is_dir($docDir)) {
+            $files = glob($docDir . '/*');
+            foreach ($files as $file) {
+                if (is_file($file) && basename($file) !== '.gitkeep') {
+                    @unlink($file);
+                }
+            }
+        }
+
+        session()->forget('selected_doc_id');
+
+        return redirect()->route('simkerma.index', ['menu' => 4])
+            ->with('flash', [
+                'type' => 'success',
+                'msg' => 'Semua data pengajuan dan persetujuan kerja sama beserta log jejak audit berhasil dibersihkan (Mode Pengembangan).'
+            ]);
+    }
+
+    /**
      * Halaman Verifikasi Publik QR Code
      */
     public function verify(Request $request, $reg_id = null)

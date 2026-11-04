@@ -1033,75 +1033,17 @@
     {{-- 4. PENGAJUAN DAN PERSETUJUAN KERJA SAMA (SISTEM RESMI AKTIF & REAL FSM ENGINE)        --}}
     {{-- ===================================================================================== --}}
     @elseif ($activeMenu === 4)
-
-        <!-- BILAH KENDALI UTAMA: PERAN AKTOR OTENTIK DENGAN ROLE MASTER -->
-        <div class="card card-wireframe mb-4">
-            <div class="card-body p-3 bg-white">
-                <div class="row align-items-center g-3">
-                    <div class="col-lg-6">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="bg-primary text-white p-2 rounded">
-                                <i class="bi bi-shield-check fs-5"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold">PENGAJUAN DAN PERSETUJUAN KERJA SAMA</h6>
-                                <div class="small text-muted">Mesin FSM 9 Status &amp; Keterlacakan Hierarki Kemitraan (IKU 6) &bull; MySQL Relasional</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-6">
-                        <form method="POST" action="{{ route('simkerma.change-role') }}" class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-lg-end gap-2">
-                            @csrf
-                            <span class="small fw-bold text-muted text-nowrap"><i class="bi bi-person-badge me-1"></i>Peran Aktif:</span>
-                            <div class="btn-group shadow-sm w-100 w-sm-auto" role="group">
-                                <button type="submit" name="role" value="UNIT" class="btn btn-sm {{ $activeRole === 'UNIT' ? 'btn-primary text-white fw-bold' : 'btn-outline-primary' }}" title="Unit Pengusul (Prodi / Fakultas / LPPM)">
-                                    UNIT
-                                </button>
-                                <button type="submit" name="role" value="LEGAL" class="btn btn-sm {{ $activeRole === 'LEGAL' ? 'btn-warning text-dark fw-bold' : 'btn-outline-warning text-dark' }}" title="Tim Telaah Hukum &amp; Kemitraan">
-                                    LEGAL
-                                </button>
-                                <button type="submit" name="role" value="LEADER" class="btn btn-sm {{ $activeRole === 'LEADER' ? 'btn-success text-white fw-bold' : 'btn-outline-success' }}" title="Pimpinan Institusi (Rektorat / Dekanat)">
-                                    LEADER
-                                </button>
-                                <button type="submit" name="role" value="SYSTEM" class="btn btn-sm {{ $activeRole === 'SYSTEM' ? 'btn-dark text-white fw-bold' : 'btn-outline-dark' }}" title="Scheduler Otomasi Sistem (Cron Worker)">
-                                    SYSTEM
-                                </button>
-                                <button type="submit" name="role" value="ADMIN" class="btn btn-sm {{ in_array($activeRole, ['ADMIN', 'MASTER'], true) ? 'btn-danger text-white fw-bold' : 'btn-outline-danger' }}" title="Role Admin / Master (Super Admin / Akses Bypass Semua Langkah)">
-                                    <i class="bi bi-star-fill me-1"></i> ADMIN
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PITA STEPPER 7 STATUS SIKLUS HIDUP FSM -->
-            <div class="card-footer bg-light border-top p-2 px-3">
-                <div class="d-flex align-items-center justify-content-between overflow-x-auto py-1" style="min-width: 720px; font-size: 0.72rem;">
-                    @php
-                        $stepperList = [
-                            'DRAFT' => ['1. DRAFT', 'bg-secondary text-white'],
-                            'REVIEW' => ['2. REVIEW', 'bg-info text-dark'],
-                            'VERIFIED' => ['3. VERIFIED', 'bg-primary text-white'],
-                            'ACTIVE' => ['4. ACTIVE', 'bg-success text-white'],
-                            'WARNING' => ['5. WARNING', 'bg-warning text-dark'],
-                            'EXPIRED' => ['6. EXPIRED', 'bg-danger text-white'],
-                            'CANCELLED' => ['7. CANCELLED', 'bg-dark text-white']
-                        ];
-                    @endphp
-                    @foreach ($stepperList as $stKey => $stMeta)
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="badge {{ ($currentDoc && $currentDoc->status === $stKey) ? $stMeta[1] : 'bg-light text-dark border' }}" style="font-size: 0.68rem;">
-                                {{ $stMeta[0] }}
-                            </span>
-                            @if (!$loop->last)
-                                <i class="bi bi-chevron-right text-muted small" style="font-size: 0.65rem;"></i>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
+        @php
+            $stepperList = [
+                'DRAFT' => ['1. DRAFT', 'bg-secondary text-white'],
+                'REVIEW' => ['2. REVIEW', 'bg-info text-dark'],
+                'VERIFIED' => ['3. VERIFIED', 'bg-primary text-white'],
+                'ACTIVE' => ['4. ACTIVE', 'bg-success text-white'],
+                'WARNING' => ['5. WARNING', 'bg-warning text-dark'],
+                'EXPIRED' => ['6. EXPIRED', 'bg-danger text-white'],
+                'CANCELLED' => ['7. CANCELLED', 'bg-dark text-white']
+            ];
+        @endphp
 
         {{-- JIKA MODE INPUT PENGAJUAN BARU SEDANG AKTIF --}}
         @if ($isCreatingNew)
@@ -1846,7 +1788,7 @@
                             <i class="bi bi-table text-primary me-1"></i> Daftar Seluruh Pengajuan &amp; Persetujuan Kerja Sama
                         </h6>
                         <small class="text-muted">
-                            Menampilkan seluruh dokumen kerja sama terdaftar secara vertikal dengan QR Code real-time pada setiap baris.
+                            Menampilkan seluruh dokumen kerja sama terdaftar secara vertikal beserta status siklus hidup FSM.
                         </small>
                     </div>
                     <div class="d-flex align-items-center gap-2">
@@ -2114,34 +2056,27 @@
                                             }
                                         @endphp
 
-                                        <!-- QR Code Resmi di Atas Status -->
-                                        <div class="p-1 border rounded bg-white shadow-sm d-inline-block mb-1">
-                                            <div class="row-qr-canvas" data-reg-id="{{ $doc->reg_id }}" style="width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; margin: 0 auto;"></div>
+                                        <!-- Status Badge & Jejak Audit -->
+                                        <span class="badge {{ $stBadge }} py-1 px-2 d-block fw-bold shadow-sm mb-1" style="font-size: 0.72rem;">
+                                            {{ $doc->status }}
+                                        </span>
+                                        <div class="badge bg-light text-dark border font-monospace mb-1" style="font-size: 0.62rem;">
+                                            {{ $doc->reg_id }}
                                         </div>
 
-                                        <!-- Deretan Tombol Aksi: Perbesar QR, Buka Verifikasi, & Buka Naskah PDF -->
-                                        <div class="d-flex justify-content-center gap-1 mb-2">
-                                            <button type="button" class="btn btn-outline-dark btn-sm py-0 px-1" style="font-size: 0.62rem;" title="Perbesar QR Code" onclick="showQrModal('{{ $doc->reg_id }}', '{{ $doc->doc_number ?: 'Dalam Proses' }}', '{{ addslashes(str_replace(["\r", "\n"], ' ', $doc->scope)) }}', '{{ addslashes($doc->partner_name) }}', '{{ $doc->status }}', '{{ $doc->date_signed ? $doc->date_signed->format('d M Y') : ($doc->date_approved ? $doc->date_approved->format('d M Y') : date('d M Y')) }}', '{{ addslashes($doc->partner_doc_number ?? '') }}')">
-                                                <i class="bi bi-arrows-fullscreen"></i>
-                                            </button>
-                                            <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-outline-primary btn-sm py-0 px-1" style="font-size: 0.62rem;" title="Buka Lembar Verifikasi Publik">
-                                                <i class="bi bi-box-arrow-up-right"></i>
+                                        <!-- Tombol Pintas: Buka Verifikasi & Naskah PDF -->
+                                        <div class="d-flex justify-content-center gap-1 mb-1">
+                                            <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.65rem;" title="Buka Lembar Verifikasi Publik">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>Verifikasi
                                             </a>
                                             @if ($pdfUrl)
-                                                <a href="{{ $pdfUrl }}" target="_blank" class="btn {{ $pdfBtnClass }} btn-sm py-0 px-1" style="font-size: 0.62rem;" title="{{ $pdfTitle }}">
+                                                <a href="{{ $pdfUrl }}" target="_blank" class="btn {{ $pdfBtnClass }} btn-sm py-0 px-1" style="font-size: 0.65rem;" title="{{ $pdfTitle }}">
                                                     <i class="{{ $pdfIcon }}"></i>
                                                 </a>
                                             @endif
                                         </div>
 
-                                        <!-- Status Badge & Jejak Audit di Bawah Tombol -->
-                                        <span class="badge {{ $stBadge }} py-1 px-2 d-block fw-bold shadow-sm" style="font-size: 0.72rem;">
-                                            {{ $doc->status }}
-                                        </span>
-                                        <div class="badge bg-light text-dark border mt-1 font-monospace" style="font-size: 0.62rem;">
-                                            {{ $doc->reg_id }}
-                                        </div>
-                                        <div class="text-muted small mt-1" style="font-size: 0.66rem;">
+                                        <div class="text-muted small" style="font-size: 0.66rem;">
                                             <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Jejak Audit
                                         </div>
                                     </td>
@@ -2664,33 +2599,10 @@
 
         @endif
 
-        {{-- SCRIPT GENERATOR QR CODE UNTUK SEMUA BARIS TABEL & FILTER PENCARIAN --}}
+        {{-- SCRIPT FILTER PENCARIAN SISI KLIEN --}}
         @if (!$isCreatingNew)
         @push('scripts')
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Render QR Code untuk setiap baris tabel secara mandiri
-            document.querySelectorAll('.row-qr-canvas').forEach(function(canvasBox) {
-                const regId = canvasBox.getAttribute('data-reg-id');
-                if (regId) {
-                    canvasBox.innerHTML = '';
-                    const verifyUrl = window.location.origin + '/verify/' + encodeURIComponent(regId);
-                    try {
-                        new QRCode(canvasBox, {
-                            text: verifyUrl,
-                            width: 68,
-                            height: 68,
-                            colorDark: "#0f172a",
-                            colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel.M
-                        });
-                    } catch(e) {
-                        canvasBox.innerHTML = '<i class="bi bi-qr-code text-dark fs-2"></i>';
-                    }
-                }
-            });
-        });
-
         // Fitur Filter & Pencarian Cepat Sisi Klien
         function filterDocumentsTable() {
             const query = (document.getElementById('tableFilterInput').value || '').toLowerCase().trim();

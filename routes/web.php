@@ -20,6 +20,7 @@ Route::post('/simkerma/store-jalur2', [SimkermaController::class, 'storeJalur2']
 Route::post('/simkerma/transition', [SimkermaController::class, 'transition'])->name('simkerma.transition');
 Route::post('/simkerma/reset-draft', [SimkermaController::class, 'resetDraft'])->name('simkerma.reset-draft');
 Route::post('/simkerma/delete-draft', [SimkermaController::class, 'deleteDraft'])->name('simkerma.delete-draft');
+Route::post('/simkerma/reset-all-documents', [SimkermaController::class, 'resetAllDocuments'])->name('simkerma.reset-all-documents');
 Route::post('/simkerma/store-activity', [SimkermaController::class, 'storeActivity'])->name('simkerma.store-activity');
 Route::post('/simkerma/store-evaluation', [SimkermaController::class, 'storeEvaluation'])->name('simkerma.store-evaluation');
 Route::post('/simkerma/store-partner', [SimkermaController::class, 'storePartner'])->name('simkerma.store-partner');

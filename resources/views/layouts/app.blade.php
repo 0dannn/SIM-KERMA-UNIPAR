@@ -403,18 +403,20 @@
         <header class="bg-white border-bottom py-3 px-4 shadow-sm">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                 <div>
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="tag-wireframe fw-bold">{{ $current['tag'] }}</span>
-                        <span class="text-muted small">Menu {{ $current['id'] }} dari 7 Fitur Utama</span>
-                    </div>
                     <h4 class="mb-0 fw-bold text-dark text-uppercase">{{ $current['title'] }}</h4>
                     <p class="text-muted small mb-0">{{ $current['subtitle'] }}</p>
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm" onclick="showQrModal('REG-UNIPAR-2026-042', '341/UNIPAR/MoU/X/2026', 'PKS Program Magang Industri AI', 'PT Industri Inovasi Digital', 'VERIFIED', '30 Oktober 2026')">
-                            <i class="bi bi-qr-code-scan me-1 text-primary"></i> Cek QR Registrasi
-                        </button>
+                        <!-- Tombol Hapus Semua Pengajuan (Mode Pengembangan) -->
+                        <form method="POST" action="{{ route('simkerma.reset-all-documents') }}" class="d-inline" onsubmit="return confirm('PERINGATAN PENGEMBANGAN:\n\nApakah Anda yakin ingin menghapus SEMUA data pengajuan dan persetujuan kerja sama?\n\nSemua dokumen, jejak audit (audit trails), dan log siklus FSM akan dihapus permanen.')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm d-flex align-items-center gap-1 py-1 px-2 fw-semibold" style="font-size: 0.75rem;" title="Hapus Semua Pengajuan dan Persetujuan (Mode Pengembangan)">
+                                <i class="bi bi-trash3-fill"></i>
+                                <span class="d-none d-sm-inline">Hapus Semua Pengajuan</span>
+                            </button>
+                        </form>
+
                         @if (auth()->check())
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1 shadow-sm bg-white" type="button" data-bs-toggle="dropdown">
@@ -448,6 +450,7 @@
         <!-- KONTEN FITUR SESUAI MENU -->
         <main class="p-4 flex-grow-1">
 
+            @if ($current['id'] != 4)
             <!-- KOTAK INFORMASI SPESIFIKASI DOKUMEN RESMI -->
             <div class="alert alert-secondary border d-flex align-items-start mb-4 py-2 px-3 bg-white shadow-sm" role="alert">
                 <i class="bi bi-info-circle-fill text-dark me-2 mt-1 fs-6"></i>
@@ -460,6 +463,7 @@
                     </ul>
                 </div>
             </div>
+            @endif
 
             @yield('content')
 

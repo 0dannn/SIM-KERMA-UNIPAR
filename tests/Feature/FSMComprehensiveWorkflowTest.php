@@ -351,4 +351,31 @@ class FSMComprehensiveWorkflowTest extends TestCase
         $deleteResponse->assertSessionHas('flash.type', 'danger');
         $this->assertDatabaseHas('documents', ['doc_id' => $doc->doc_id]);
     }
+
+    /**
+     * KASUS 9: Fitur Pembersihan Mode Pengembangan (Reset All Documents)
+     */
+    public function test_kasus_9_reset_all_documents_clears_database(): void
+    {
+        Document::create([
+            'doc_id' => 'DOC-RESET-TEST',
+            'reg_id' => 'REG-RESET-TEST',
+            'doc_number' => '999/UNIPAR/MoA/X/2026',
+            'track' => 'Jalur 1: Kemitraan Bertahap',
+            'doc_type' => 'MoA / PKS',
+            'partner_name' => 'Mitra Uji Reset',
+            'partner_category' => 'DUDI / Swasta',
+            'unit' => 'Program Studi Teknik Informatika',
+            'scope' => 'Uji Coba Reset Semua Dokumen',
+            'status' => 'DRAFT'
+        ]);
+
+        $this->assertDatabaseHas('documents', ['doc_id' => 'DOC-RESET-TEST']);
+
+        $response = $this->post(route('simkerma.reset-all-documents'));
+        $response->assertRedirect(route('simkerma.index', ['menu' => 4]));
+        $response->assertSessionHas('flash.type', 'success');
+
+        $this->assertEquals(0, Document::count());
+    }
 }
