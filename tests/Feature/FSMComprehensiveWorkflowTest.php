@@ -207,14 +207,29 @@ class FSMComprehensiveWorkflowTest extends TestCase
         $doc->refresh();
         $this->assertEquals('WARNING', $doc->status);
 
-        // 2. Skenario A: Perpanjangan naskah (RENEW) oleh Unit & Pimpinan
+        // 2. Skenario A: Inisiasi Adendum (RENEW) oleh Unit kembali ke DRAFT, lalu melewati alur penuh telaah hukum
         $this->fsmService->transition($doc, 'RENEW', 'UNIT', 'LPPM UNIPAR', 'Inisiasi Adendum Perpanjangan 2 Tahun', [
             'validity' => '2 Tahun (Adendum)',
             'partner_doc_number' => 'PEMKOT-MND/ADND/2026/01'
         ]);
         $doc->refresh();
-        $this->assertEquals('ACTIVE', $doc->status);
+        $this->assertEquals('DRAFT', $doc->status);
         $this->assertEquals('2 Tahun (Adendum)', $doc->validity);
+
+        // Alur telaah adendum: SUBMIT -> REVIEW -> VERIFY -> VERIFIED -> ACTIVATE -> ACTIVE
+        $this->fsmService->transition($doc, 'SUBMIT', 'UNIT', 'LPPM UNIPAR');
+        $doc->refresh();
+        $this->assertEquals('REVIEW', $doc->status);
+
+        $this->fsmService->transition($doc, 'VERIFY', 'LEGAL', 'Tim Legal UNIPAR');
+        $doc->refresh();
+        $this->assertEquals('VERIFIED', $doc->status);
+
+        $this->fsmService->transition($doc, 'ACTIVATE', 'LEADER', 'Rektor UNIPAR', 'Pengesahan Naskah Adendum Bermeterai', [
+            'signed_file' => 'adendum_signed_scan.pdf'
+        ]);
+        $doc->refresh();
+        $this->assertEquals('ACTIVE', $doc->status);
 
         // 3. Skenario B: Peringatan terpicu lagi dan dibiarkan hingga kedaluwarsa alami
         $this->fsmService->transition($doc, 'TRIGGER_WARNING', 'SYSTEM', 'Scheduler Otomasi');
@@ -222,8 +237,17 @@ class FSMComprehensiveWorkflowTest extends TestCase
         $doc->refresh();
         $this->assertEquals('EXPIRED', $doc->status);
 
-        // 4. Skenario C: Reaktivasi naskah yang sudah kedaluwarsa
+        // 4. Skenario C: Reaktivasi naskah yang sudah kedaluwarsa kembali ke DRAFT untuk penelaahan ulang
         $this->fsmService->transition($doc, 'RENEW', 'LEADER', 'Rektor UNIPAR', 'Reaktivasi naskah pasca-kedaluwarsa melalui adendum pembaruan');
+        $doc->refresh();
+        $this->assertEquals('DRAFT', $doc->status);
+
+        // Draf reaktivasi ditelaah kembali hingga aktif
+        $this->fsmService->transition($doc, 'SUBMIT', 'UNIT', 'LPPM UNIPAR');
+        $this->fsmService->transition($doc, 'VERIFY', 'LEGAL', 'Tim Legal UNIPAR');
+        $this->fsmService->transition($doc, 'ACTIVATE', 'LEADER', 'Rektor UNIPAR', 'Pengesahan Naskah Reaktivasi Sah', [
+            'signed_file' => 'reaktivasi_signed_scan.pdf'
+        ]);
         $doc->refresh();
         $this->assertEquals('ACTIVE', $doc->status);
     }

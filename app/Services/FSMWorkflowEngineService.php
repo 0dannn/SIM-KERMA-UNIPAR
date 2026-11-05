@@ -81,10 +81,10 @@ class FSMWorkflowEngineService
         ],
         'WARNING' => [
             'RENEW' => [
-                'to' => 'ACTIVE',
+                'to' => 'DRAFT',
                 'roles' => ['UNIT', 'LEADER', 'LEGAL', 'ADMIN', 'MASTER'],
-                'label' => 'Perpanjang Naskah (Inisiasi Adendum)',
-                'icon' => 'bi-arrow-clockwise',
+                'label' => 'Inisiasi Draf Adendum (Kembali ke Draf)',
+                'icon' => 'bi-arrow-repeat',
                 'btn' => 'btn-primary'
             ],
             'EXPIRE' => [
@@ -97,10 +97,10 @@ class FSMWorkflowEngineService
         ],
         'EXPIRED' => [
             'RENEW' => [
-                'to' => 'ACTIVE',
+                'to' => 'DRAFT',
                 'roles' => ['UNIT', 'LEADER', 'LEGAL', 'ADMIN', 'MASTER'],
-                'label' => 'Reaktivasi Naskah Kedaluwarsa',
-                'icon' => 'bi-arrow-clockwise',
+                'label' => 'Inisiasi Draf Reaktivasi (Kembali ke Draf)',
+                'icon' => 'bi-arrow-repeat',
                 'btn' => 'btn-dark'
             ]
         ],
@@ -208,6 +208,10 @@ class FSMWorkflowEngineService
                     $auditNote = 'Naskah diajukan ke meja pemeriksaan legal / pimpinan';
                 } elseif ($newStatus === 'DRAFT' && $event === 'RETURN_TO_DRAFT') {
                     $auditNote = 'Naskah dikembalikan ke status DRAFT untuk perbaikan klausul/substansi';
+                } elseif ($newStatus === 'DRAFT' && $event === 'RENEW') {
+                    $auditNote = ($currentStatus === 'WARNING')
+                        ? 'Inisiasi draf adendum perpanjangan masa aktif (Dokumen kembali ke status DRAFT untuk penyusunan dan penelaahan klausul baru)'
+                        : 'Inisiasi draf reaktivasi pemulihan naskah kedaluwarsa (Dokumen kembali ke status DRAFT untuk penelaahan ulang)';
                 } elseif ($newStatus === 'CANCELLED') {
                     $auditNote = 'Pengusulan naskah dibatalkan secara permanen oleh pengusul';
                 } elseif ($newStatus === 'WARNING') {

@@ -2447,42 +2447,35 @@
                                                                     <div class="fw-bold text-dark mb-2 d-flex align-items-center justify-content-between">
                                                                         <span>
                                                                             <i class="bi bi-arrow-repeat text-warning-emphasis me-1"></i> 
-                                                                            Pembaruan Naskah Perpanjangan / Adendum (Status: {{ $doc->status }}):
+                                                                            Inisiasi Naskah Perpanjangan / Adendum (Status: {{ $doc->status }}):
                                                                         </span>
-                                                                        <span class="badge bg-warning text-dark border">Ambang Batas H-90</span>
+                                                                        <span class="badge bg-warning text-dark border">Kembali ke Status DRAF</span>
                                                                     </div>
+                                                                    <p class="text-muted small mb-2" style="font-size: 0.72rem;">
+                                                                        Sesuai prinsip <strong>Anti-Bypass FSM</strong>, perpanjangan masa aktif (adendum) atau reaktivasi naskah kedaluwarsa akan mengembalikan dokumen ke status <strong>DRAFT</strong> agar draf klausul baru dapat disesuaikan dan ditelaah ulang oleh Tim Legal (REVIEW) sebelum disahkan pimpinan.
+                                                                    </p>
                                                                     <div class="row g-2 mb-2">
                                                                         <div class="col-sm-6">
                                                                             <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">
-                                                                                Nomor Dokumen Pihak 1 (UNIPAR): <span class="text-danger">*</span>
+                                                                                Nomor Dokumen Pihak 1 (UNIPAR):
                                                                             </label>
-                                                                            <input type="text" name="doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->doc_number }}" placeholder="Nomor naskah perpanjangan UNIPAR" required>
+                                                                            <input type="text" name="doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->doc_number }}" placeholder="Nomor naskah perpanjangan UNIPAR">
                                                                         </div>
                                                                         <div class="col-sm-6">
                                                                             <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">
-                                                                                Nomor Dokumen Pihak 2 (Mitra): <span class="text-danger">*</span>
+                                                                                Nomor Dokumen Pihak 2 (Mitra):
                                                                             </label>
-                                                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->partner_doc_number }}" placeholder="Nomor naskah perpanjangan dari mitra" required>
+                                                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->partner_doc_number }}" placeholder="Nomor naskah perpanjangan dari mitra">
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="mb-2">
-                                                                        <label class="form-label fw-bold text-dark d-block" style="font-size: 0.75rem;">
-                                                                            <i class="bi bi-cloud-arrow-up text-primary me-1"></i>
-                                                                            Upload Dokumen Perpanjangan / Adendum (PDF): <span class="text-danger">*</span>
-                                                                        </label>
-                                                                        <input type="file" name="signed_scan_file" class="form-control form-control-sm mb-1" accept=".pdf">
-                                                                        <small class="text-muted" style="font-size: 0.7rem;">
-                                                                            Unggah berkas scan PDF naskah perpanjangan bertanda tangan basah dan bermeterai dari kedua belah pihak.
-                                                                        </small>
                                                                     </div>
                                                                     <div class="row g-2">
                                                                         <div class="col-sm-6">
-                                                                            <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">Masa Berlaku Perpanjangan:</label>
+                                                                            <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">Usulan Masa Berlaku Baru:</label>
                                                                             <input type="text" name="new_validity" class="form-control form-control-sm bg-white" value="{{ $doc->validity ? $doc->validity.' (Diperpanjang)' : '1 Tahun Perpanjangan' }}">
                                                                         </div>
                                                                         <div class="col-sm-6">
-                                                                            <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">Tanggal Pengesahan Baru:</label>
-                                                                            <input type="date" name="date_signed" class="form-control form-control-sm bg-white" value="{{ date('Y-m-d') }}">
+                                                                            <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">Unggah Draf Baru (PDF / DOCX):</label>
+                                                                            <input type="file" name="draft_file" class="form-control form-control-sm mb-1" accept=".pdf,.docx">
                                                                         </div>
                                                                     </div>
                                                                 </div>

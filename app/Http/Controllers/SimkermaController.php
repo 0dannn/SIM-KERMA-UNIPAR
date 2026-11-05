@@ -639,6 +639,24 @@ class SimkermaController extends Controller
                 $additionalData['signed_file'] = $filename;
             }
 
+            // Handle Berkas Upload Draf (PDF/DOCX) pada Inisiasi Adendum / Reaktivasi (RENEW)
+            if ($event === 'RENEW' && $request->hasFile('draft_file')) {
+                $uploadedDraft = $request->file('draft_file');
+                $ext = strtolower($uploadedDraft->getClientOriginalExtension());
+                $dest = public_path('uploads/documents');
+                if (!file_exists($dest)) {
+                    mkdir($dest, 0777, true);
+                }
+                $filename = 'draf_adendum_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '_' . time() . '.' . $ext;
+                $uploadedDraft->move($dest, $filename);
+                if ($ext === 'docx') {
+                    $document->docx_path = 'uploads/documents/' . $filename;
+                } else {
+                    $document->draft_file = 'uploads/documents/' . $filename;
+                }
+                $document->save();
+            }
+
             $this->fsmService->transition($document, $event, $activeRole, $actorTitle, $notes, $additionalData);
 
             // Jika transisi SUBMIT (Pengajuan Draf ke Meja Pemeriksaan REVIEW Pimpinan):
