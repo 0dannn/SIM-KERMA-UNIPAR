@@ -1045,31 +1045,27 @@
             ];
         @endphp
 
-        {{-- JIKA MODE INPUT PENGAJUAN BARU SEDANG AKTIF --}}
+        {{-- ===================================================================================== --}}
+        {{-- 1. FORMULIR PENGAJUAN MOU BARU (DEDICATED UNTUK DOKUMEN MOU SAJA)                     --}}
+        {{-- ===================================================================================== --}}
         @if ($isCreatingNew)
 
-            <div class="card card-wireframe mb-4">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <div class="card card-wireframe mb-4 shadow-sm border">
+                <div class="card-header bg-white py-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                     <div>
-                        <h6 class="card-title mb-0 fw-bold text-uppercase">Formulir Pengajuan Dokumen Kerja Sama Baru</h6>
-                        <div class="small text-muted">Pengajuan baru akan diterbitkan dengan status awal <strong>DRAFT</strong> lengkap dengan QR Code registrasi resmi.</div>
+                        <h5 class="card-title mb-0 fw-bold text-dark">
+                            <i class="bi bi-file-earmark-plus text-primary me-2"></i> Pengajuan MoU (Nota Kesepahaman Baru)
+                        </h5>
+                        <div class="small text-muted">
+                            Pengajuan naskah Nota Kesepahaman (MoU) induk kemitraan institusi diterbitkan dengan status awal <strong>DRAFT</strong> lengkap dengan QR Code registrasi resmi.
+                        </div>
                     </div>
                     <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm fw-semibold">
-                        <i class="bi bi-arrow-left me-1"></i> Batal / Kembali ke Tabel Pengajuan
+                        <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar Pengajuan
                     </a>
                 </div>
                 <div class="card-body p-4">
 
-                    <!-- Pemberitahuan Kontekstual Jika Menurunkan dari Dokumen Induk -->
-                    @if ($parentDocForDerive)
-                        <div class="alert alert-info py-2 px-3 small mb-4 d-flex align-items-center gap-2 border shadow-sm">
-                            <i class="bi bi-diagram-3-fill fs-5 text-primary"></i>
-                            <div>
-                                <strong>Menurunkan Dokumen dari Induk Aktif:</strong> Naskah baru ini akan otomatis diikat secara hukum ke dokumen induk <strong>{{ $parentDocForDerive->doc_number }}</strong> bersama mitra <strong>{{ $parentDocForDerive->partner_name }}</strong>.
-                            </div>
-                        </div>
-                    @endif
-                    
                     <!-- Banner Unduh Template Dokumen Word Draf MoU Resmi -->
                     <div class="card border-primary-subtle bg-primary-subtle bg-opacity-10 mb-4 shadow-sm">
                         <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -1079,10 +1075,10 @@
                                 </div>
                                 <div>
                                     <h6 class="fw-bold text-dark mb-1">
-                                        Template Dokumen Naskah Draf MoU Resmi (.docx) &mdash; Format Bersih (Tanpa QR Code)
+                                        Template Dokumen Naskah Draf MoU Resmi (.docx) &mdash; Format Baku UNIPAR
                                     </h6>
                                     <p class="text-muted small mb-0">
-                                        Unduh template naskah Word resmi ini sebagai acuan penyusunan draf kerja sama, lalu simpan naskah draf final Anda dalam format <strong>PDF</strong>. Ketika draf naskah diajukan ke meja pemeriksaan (<strong>SUBMIT &rarr; REVIEW</strong>), sistem secara otomatis menyematkan stempel QR Code resmi langsung ke naskah PDF yang Anda unggah pada <strong>bagian ujung kanan bawah halaman terakhir dokumen</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>).
+                                        Unduh template naskah Word resmi ini sebagai acuan penyusunan naskah MoU, lalu simpan draf final Anda dalam format <strong>PDF</strong>. Saat draf diajukan (<strong>SUBMIT &rarr; REVIEW</strong>), sistem secara otomatis menyematkan stempel QR Code resmi langsung ke naskah PDF pada <strong>ujung kanan bawah halaman terakhir</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>).
                                     </p>
                                 </div>
                             </div>
@@ -1094,642 +1090,284 @@
                         </div>
                     </div>
 
-                    <!-- Tab Jalur 1 vs Jalur 2 -->
-                    <ul class="nav nav-pills nav-fill bg-light p-1 rounded border mb-4 small" id="jalurTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active py-2 fw-bold" id="jalur1-tab" data-bs-toggle="pill" data-bs-target="#jalur1-pane" type="button" role="tab" aria-controls="jalur1-pane" aria-selected="true">
-                                <i class="bi bi-file-earmark-text me-1"></i> Jalur 1: Kemitraan Bertahap (MoU / MoA / IA)
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link py-2 fw-bold" id="jalur2-tab" data-bs-toggle="pill" data-bs-target="#jalur2-pane" type="button" role="tab" aria-controls="jalur2-pane" aria-selected="false">
-                                <i class="bi bi-box-seam me-1"></i> Jalur 2: Paket Terpadu Tridharma &amp; PKM
-                            </button>
-                        </li>
-                    </ul>
+                    <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="small">
+                        @csrf
+                        <input type="hidden" name="doc_type" value="MoU">
+                        <input type="hidden" name="parent_mou" value="-">
 
-                    <div class="tab-content" id="jalurTabContent">
-                        <!-- JALUR 1: KEMITRAAN BERTAHAP -->
-                        <div class="tab-pane fade show active" id="jalur1-pane" role="tabpanel" aria-labelledby="jalur1-tab">
-                            <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="small">
-                                @csrf
-
-                                <!-- 1. JUDUL / NAMA KERJA SAMA -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Judul / Nama Kerja Sama : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Perjanjian Kerja Sama Penyelenggaraan Program Merdeka Belajar Kampus Merdeka dan Penguatan Tridharma Perguruan Tinggi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="title" class="form-control" required>
-                                        </div>
-                                    </div>
+                        <!-- 1. JUDUL / TOPIK KERJA SAMA MOU -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Judul / Topik Kerja Sama MoU : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Nota Kesepahaman tentang Kerja Sama Bidang Pendidikan, Penelitian, dan Pengabdian kepada Masyarakat" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="title" class="form-control" placeholder="Contoh: Nota Kesepahaman tentang Kerja Sama Bidang Pendidikan, Penelitian, dan Pengabdian kepada Masyarakat" required>
                                 </div>
-
-                                <!-- 2. JENIS DOKUMEN (MoU / MoA / IA) -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Jenis Dokumen : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih jenis naskah: MoU (Nota Kesepahaman Induk), MoA/PKS (Perjanjian Kerja Sama), atau IA (Implementation Arrangement)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="doc_type" id="inputDocType" class="form-select" onchange="handleDocTypeChange(this.value)" required>
-                                                <option value="MoU" {{ ($prefillDeriveType === 'MoU') ? 'selected' : '' }}>MoU (Nota Kesepahaman Induk)</option>
-                                                <option value="MoA / PKS" {{ ($prefillDeriveType === 'MoA' || $prefillDeriveType === 'MoA / PKS') ? 'selected' : '' }}>MoA / PKS (Perjanjian Kerja Sama)</option>
-                                                <option value="IA" {{ ($prefillDeriveType === 'IA') ? 'selected' : '' }}>IA (Implementation Arrangement)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 2b. DOKUMEN INDUK RUJUKAN (JIKA MoA / IA) -->
-                                <div class="row mb-3 align-items-center" id="groupParentMou">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Dokumen Induk Rujukan :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 001/UNIPAR/MoU/X/2026 atau ketik '-' jika dokumen berdiri sendiri tanpa MoU induk" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="parent_mou" id="inputParentMou" class="form-control" value="{{ $prefillParentDocNumber ?: '-' }}" list="registeredMouList">
-                                        </div>
-                                        <datalist id="registeredMouList">
-                                            <option value="-">
-                                            @foreach ($registeredMous as $mouItem)
-                                                <option value="{{ $mouItem->doc_number }}">
-                                            @endforeach
-                                        </datalist>
-                                    </div>
-                                </div>
-
-                                <!-- UKURAN KERTAS DOKUMEN (A4 / F4) -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Ukuran Kertas Dokumen : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih format kertas naskah: A4 (210 x 297 mm) atau F4 / Folio (215 x 330 mm). Sistem menempatkan QR Code di ujung kanan bawah halaman terakhir sesuai ukuran kertas yang dipilih." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="paper_size" class="form-select" required>
-                                                <option value="A4" selected>Kertas A4 (210 &times; 297 mm) &mdash; Standar</option>
-                                                <option value="F4">Kertas F4 / Folio (215 &times; 330 mm)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 3. IDENTITAS PIHAK PERTAMA (PENGUSUL) -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Unit Pengusul (Pihak I) : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Program Studi Teknik Informatika, Fakultas Ilmu Komputer, atau LPPM UNIPAR" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="unit" class="form-select">
-                                                <option>Program Studi Teknik Informatika</option>
-                                                <option>Fakultas Ilmu Komputer</option>
-                                                <option>Fakultas Ekonomi dan Bisnis</option>
-                                                <option>LPPM Universitas Parna Raya</option>
-                                                <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
-                                                <option>Rektorat Universitas Parna Raya</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Penandatangan Pihak I :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Rektor Universitas Parna Raya / Dekan Fakultas Ilmu Komputer" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="first_party_signer" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 4. IDENTITAS PIHAK KEDUA (MITRA) -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Nama Mitra (Pihak II) : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: PT Telekomunikasi Indonesia Tbk / RS Siloam Manado / Dinas Kominfo Provinsi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="partner_name" class="form-control" value="{{ $prefillPartnerName }}" list="partnerDatalist" required>
-                                        </div>
-                                        <datalist id="partnerDatalist">
-                                            @foreach ($partners as $p)
-                                                <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
-                                            @endforeach
-                                        </datalist>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Kategori / Sektor Mitra :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih kategori sektor mitra: DUDI / Swasta, BUMN, Instansi Pemerintah, Perguruan Tinggi, dll." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="category" class="form-select">
-                                                <option {{ $prefillCategory === 'DUDI / Swasta' ? 'selected' : '' }}>DUDI / Swasta</option>
-                                                <option {{ $prefillCategory === 'BUMN' ? 'selected' : '' }}>BUMN</option>
-                                                <option {{ $prefillCategory === 'Instansi Pemerintah' ? 'selected' : '' }}>Instansi Pemerintah</option>
-                                                <option {{ $prefillCategory === 'Perguruan Tinggi' ? 'selected' : '' }}>Perguruan Tinggi</option>
-                                                <option {{ $prefillCategory === 'Lembaga Keagamaan / Komunitas' ? 'selected' : '' }}>Lembaga Keagamaan / Komunitas</option>
-                                                <option {{ $prefillCategory === 'Kesehatan' ? 'selected' : '' }}>Kesehatan</option>
-                                                <option>Lainnya</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Penandatangan Pihak II :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Direktur Utama PT Telkom Indonesia / Kepala Kantor Wilayah / Dekan Fakultas" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="second_party_signer" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Nomor Naskah Mitra :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 088/TELKOM/DIR/X/2026 (kosongkan jika belum diterbitkan nomor resmi dari pihak mitra)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="partner_doc_number" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 5. RUANG LINGKUP / BENTUK KEGIATAN -->
-                                <div class="row mb-3 align-items-start">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
-                                        Ruang Lingkup / Kegiatan : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-start gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Pertukaran mahasiswa, magang industri MBKM, penelitian kolaboratif, pengabdian masyarakat, dan dosen praktisi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <textarea name="scope" class="form-control" rows="3" required></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 6. UPLOAD DRAFT DOKUMEN -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Upload Draft Dokumen (PDF) : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Wajib unggah naskah draf kerja sama dalam format PDF (.pdf). Dokumen yang Anda unggah ini yang akan dibubuhi stempel QR Code resmi di bagian ujung kanan bawah halaman terakhir saat diajukan ke telaah pimpinan." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 7. TANGGAL MULAI & TANGGAL BERAKHIR -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Tanggal Mulai Berlaku :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Tanggal dimulainya perjanjian kerja sama secara resmi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="date" name="start_date" id="inputStartDate" class="form-control" value="{{ date('Y-m-d') }}" onchange="calculateDuration()">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Tanggal Berakhir :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Tanggal masa berlaku perjanjian kerja sama berakhir" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="date" name="end_date" id="inputEndDate" class="form-control" value="{{ date('Y-m-d', strtotime('+1 year')) }}" onchange="calculateDuration()">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Masa Berlaku Perjanjian :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 1 Tahun, 2 Tahun, 3 Tahun, atau 5 Tahun (dihitung otomatis dari tanggal mulai &amp; berakhir)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="validity" id="inputValidity" class="form-control" value="1 Tahun">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Ambang Batas Peringatan :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilihan batas peringatan dini sebelum naskah kedaluwarsa: H-90 Hari (3 Bulan), H-60 Hari (2 Bulan), atau H-30 Hari" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="warning_threshold" class="form-select">
-                                                <option value="H-90 Hari (3 Bulan)" selected>H-90 Hari (3 Bulan) &mdash; Sesuai Klausul MoU Baku UNIPAR</option>
-                                                <option value="H-60 Hari (2 Bulan)">H-60 Hari (2 Bulan) &mdash; Standar Kemendikbudristek</option>
-                                                <option value="H-30 Hari (1 Bulan)">H-30 Hari (1 Bulan) &mdash; Kemitraan Singkat</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 8. PIC / KONTAK NARAHUBUNG KEDUA PIHAK -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        PIC Pihak Pertama (UNIPAR) :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Dr. Ir. John Doe, M.Kom. (0812-4400-5500 / john@unipar.ac.id)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="pic_first_party" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        PIC Pihak Kedua (Mitra) :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Jane Smith, S.T. - Kepala Divisi HR (0813-5500-6600 / hr@mitra.co.id)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="pic_second_party" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 9. NILAI / NOMINAL DANA (JIKA ADA) -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Nilai / Nominal Dana (Jika Ada) :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Rp 50.000.000 / Non-finansial (In-kind) / Hibah Riset (kosongkan jika tanpa dana)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="nominal_value" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 10. DESKRIPSI / RINGKASAN -->
-                                <div class="row mb-4 align-items-start">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
-                                        Deskripsi / Ringkasan :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-start gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Ringkasan singkat latar belakang pengajuan, target luaran strategis, serta urgensi kerja sama kemitraan ini" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <textarea name="description" class="form-control" rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- TOMBOL AKSI SIMPAN -->
-                                <div class="row pt-2">
-                                    <div class="col-md-9 offset-md-3">
-                                        <button type="submit" class="btn btn-dark btn-sm fw-bold px-4 py-2 shadow-sm">
-                                            <i class="bi bi-save me-1"></i> Simpan Sebagai DRAF (Terbitkan QR Code)
-                                        </button>
-                                        <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm ms-2">Batal</a>
-                                    </div>
-                                </div>
-                            </form>
+                            </div>
                         </div>
 
-                        <!-- JALUR 2: PAKET TERPADU TRIDHARMA & PKM -->
-                        <div class="tab-pane fade" id="jalur2-pane" role="tabpanel" aria-labelledby="jalur2-tab">
-                            <form method="POST" action="{{ route('simkerma.store-jalur2') }}" enctype="multipart/form-data" class="small">
-                                @csrf
-
-                                <!-- 1. JUDUL / NAMA KERJA SAMA PKM -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Judul / Nama Program PKM : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Paket Terpadu Pengabdian Kepada Masyarakat &amp; Kemitraan MBKM" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="title" class="form-control" required>
-                                        </div>
+                        <!-- 2. JENIS DOKUMEN (LOCKED KE MOU) -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Jenis Dokumen :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Dokumen ini berjenis Nota Kesepahaman (MoU) sebagai dokumen payung induk institusi." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-primary px-3 py-2 fs-6 fw-semibold">
+                                            <i class="bi bi-bookmark-fill me-1"></i> MoU (Memorandum of Understanding / Nota Kesepahaman Induk)
+                                        </span>
+                                        <small class="text-muted fst-italic">&mdash; Dokumen Induk / Payung Hukum Kemitraan</small>
                                     </div>
                                 </div>
-
-                                <!-- 2. NAMA KEGIATAN / TOPIK PKM -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Nama Kegiatan / Topik PKM : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Digitalisasi UMKM dan Pemberdayaan Komunitas Nelayan Pesisir Manado" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="topic" class="form-control" required>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- UKURAN KERTAS DOKUMEN (A4 / F4) -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Ukuran Kertas Dokumen : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih format kertas naskah: A4 (210 x 297 mm) atau F4 / Folio (215 x 330 mm). Sistem menempatkan QR Code di ujung kanan bawah halaman terakhir sesuai ukuran kertas yang dipilih." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="paper_size" class="form-select" required>
-                                                <option value="A4" selected>Kertas A4 (210 &times; 297 mm) &mdash; Standar</option>
-                                                <option value="F4">Kertas F4 / Folio (215 &times; 330 mm)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 3. IDENTITAS PIHAK PERTAMA -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Unit Pengusul Utama (Pihak I) : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Fakultas Ilmu Komputer / Program Studi Teknik Informatika" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="unit_main" class="form-select">
-                                                <option>Program Studi Teknik Informatika</option>
-                                                <option selected>Fakultas Ilmu Komputer</option>
-                                                <option>Fakultas Ekonomi dan Bisnis</option>
-                                                <option>LPPM Universitas Parna Raya</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Unit Kolaborator Internal :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Fakultas Ekonomi dan Bisnis (pilih '-' jika tidak ada unit kolaborator)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="unit_collab" class="form-select">
-                                                <option>-</option>
-                                                <option>Fakultas Ilmu Komputer</option>
-                                                <option selected>Fakultas Ekonomi dan Bisnis</option>
-                                                <option>LPPM Universitas Parna Raya</option>
-                                                <option>Program Studi Teknik Informatika</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Penandatangan Pihak I :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Dekan Fakultas Ilmu Komputer / Ketua LPPM UNIPAR" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="first_party_signer" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 4. IDENTITAS PIHAK KEDUA (MITRA) -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Nama Instansi / Mitra (Pihak II) : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Koperasi Nelayan Bahari Manado / PT Bank SulutGo" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="partner_name" class="form-control" list="partnerDatalist" required>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Kategori / Sektor Mitra :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih sektor kategori mitra kemitraan PKM" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="category" class="form-select">
-                                                <option selected>DUDI / Swasta</option>
-                                                <option>BUMN</option>
-                                                <option>Instansi Pemerintah</option>
-                                                <option>Lembaga Keagamaan / Komunitas</option>
-                                                <option>Kesehatan</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Penandatangan Pihak II :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Kepala Desa / Ketua Koperasi / Direktur Utama" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="second_party_signer" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Nomor Naskah Resmi Mitra :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 012/KNB/PKM/XI/2026 (kosongkan jika belum ada nomor resmi mitra)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="partner_doc_number" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 5. TANGGAL MULAI & TANGGAL BERAKHIR -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Tanggal Mulai PKM :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Tanggal dimulainya pelaksanaan program kegiatan PKM" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="date" name="start_date" id="inputPkmStartDate" class="form-control" value="{{ date('Y-m-d') }}">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Tanggal Berakhir PKM :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Tanggal berakhirnya pelaksanaan program kegiatan PKM" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="date" name="end_date" id="inputPkmEndDate" class="form-control" value="{{ date('Y-m-d', strtotime('+1 year')) }}">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Jangka Waktu PKM :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilihan durasi siklus program PKM (6 Bulan, 1 Tahun, 2 Tahun)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="duration" class="form-select">
-                                                <option selected>1 Tahun</option>
-                                                <option>6 Bulan</option>
-                                                <option>2 Tahun</option>
-                                                <option>3 Tahun</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Ambang Batas Peringatan :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilihan ambang batas peringatan dini sebelum masa berlaku PKM berakhir" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <select name="warning_threshold" class="form-select">
-                                                <option value="H-90 Hari (3 Bulan)" selected>H-90 Hari (3 Bulan) &mdash; Sesuai Klausul MoU Baku</option>
-                                                <option value="H-60 Hari (2 Bulan)">H-60 Hari (2 Bulan) &mdash; Standar Kemendikbudristek</option>
-                                                <option value="H-30 Hari (1 Bulan)">H-30 Hari (1 Bulan) &mdash; Kemitraan Singkat</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 6. PIC / KONTAK NARAHUBUNG -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        PIC Pihak Pertama (UNIPAR) :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Ketua Tim Dosen Pengabdi / Dosen Pembimbing (0812-4400-5500)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="pic_first_party" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        PIC Pihak Kedua (Mitra) :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Narahubung Komunitas / Koordinator Lapangan Mitra (0813-5500-6600)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="pic_second_party" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 7. DATA MAHASISWA & PESERTA -->
-                                <div class="row mb-3 align-items-start">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
-                                        Data Mahasiswa / Peserta : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-start gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: 10 Mahasiswa Prodi Teknik Informatika (Angkatan 2023) peserta PKM Terpadu" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <textarea name="students_data" class="form-control" rows="2" required></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 8. NILAI / NOMINAL DANA -->
-                                <div class="row mb-3 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Nilai / Nominal Dana (Jika Ada) :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Rp 25.000.000 (Hibah Internal PKM LPPM) / Non-finansial" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="text" name="nominal_value" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 9. DESKRIPSI / RINGKASAN -->
-                                <div class="row mb-3 align-items-start">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
-                                        Deskripsi / Ringkasan :
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-start gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Ringkasan target luaran, skema kegiatan Tridharma, dan manfaat bagi masyarakat mitra sasaran" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <textarea name="description" class="form-control" rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 10. UPLOAD BERKAS DRAF -->
-                                <div class="row mb-4 align-items-center">
-                                    <label class="col-md-3 col-form-label fw-bold text-dark">
-                                        Upload Berkas Draf Paket (PDF) : <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Wajib unggah naskah draf paket terpadu dalam format PDF (.pdf). Dokumen yang Anda unggah ini yang akan dibubuhi stempel QR Code resmi pada ujung kanan bawah halaman terakhir saat diajukan ke telaah pimpinan." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                            <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- TOMBOL AKSI SIMPAN -->
-                                <div class="row pt-2">
-                                    <div class="col-md-9 offset-md-3">
-                                        <button type="submit" class="btn btn-dark btn-sm fw-bold px-4 py-2 shadow-sm">
-                                            <i class="bi bi-box-seam me-1"></i> Simpan Sebagai Paket DRAF (Terbitkan QR Code)
-                                        </button>
-                                        <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm ms-2">Batal</a>
-                                    </div>
-                                </div>
-                            </form>
+                            </div>
                         </div>
-                    </div>
 
+                        <!-- 3. UKURAN KERTAS DOKUMEN (A4 / F4) -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Ukuran Kertas Dokumen : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih format kertas naskah: A4 (210 x 297 mm) atau F4 / Folio (215 x 330 mm). Sistem menempatkan QR Code di ujung kanan bawah halaman terakhir sesuai ukuran kertas yang dipilih." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <select name="paper_size" class="form-select" required>
+                                        <option value="A4" selected>Kertas A4 (210 &times; 297 mm) &mdash; Standar Nasional</option>
+                                        <option value="F4">Kertas F4 / Folio (215 &times; 330 mm)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. IDENTITAS PIHAK PERTAMA (UNIPAR) -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Unit Pengusul (Pihak I) : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih unit pengusul di lingkungan Universitas Parna Raya" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <select name="unit" class="form-select" required>
+                                        <option>Program Studi Teknik Informatika</option>
+                                        <option>Fakultas Ilmu Komputer</option>
+                                        <option>Fakultas Ekonomi dan Bisnis</option>
+                                        <option>LPPM Universitas Parna Raya</option>
+                                        <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
+                                        <option>Rektorat Universitas Parna Raya</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Penandatangan Pihak I (UNIPAR) :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Penandatangan naskah MoU dari pihak UNIPAR (biasanya Rektor)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="first_party_signer" class="form-control" value="Rektor Universitas Parna Raya">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. IDENTITAS PIHAK KEDUA (MITRA) -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Nama Mitra (Pihak II) : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nama instansi atau institusi mitra kerja sama" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="partner_name" class="form-control" placeholder="Contoh: Universitas Indonesia / PT Telekomunikasi Indonesia Tbk" list="partnerDatalist" required>
+                                </div>
+                                <datalist id="partnerDatalist">
+                                    @foreach ($partners as $p)
+                                        <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
+                                    @endforeach
+                                </datalist>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Kategori / Sektor Mitra : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih kategori sektor mitra: Perguruan Tinggi, DUDI / Swasta, BUMN, Instansi Pemerintah, dll." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <select name="category" class="form-select" required>
+                                        <option value="Perguruan Tinggi" selected>Perguruan Tinggi</option>
+                                        <option value="DUDI / Swasta">DUDI / Swasta</option>
+                                        <option value="BUMN">BUMN</option>
+                                        <option value="Instansi Pemerintah">Instansi Pemerintah</option>
+                                        <option value="Lembaga Keagamaan / Komunitas">Lembaga Keagamaan / Komunitas</option>
+                                        <option value="Kesehatan">Kesehatan</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Penandatangan Pihak II (Mitra) :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pimpinan atau penandatangan resmi dari pihak mitra" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="second_party_signer" class="form-control" placeholder="Contoh: Rektor / Direktur Utama / Kepala Lembaga Mitra">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Nomor Naskah Mitra (Jika Ada) :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nomor registrasi dokumen dari pihak mitra (kosongkan jika belum ada)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="partner_doc_number" class="form-control" placeholder="Kosongkan jika belum ada nomor resmi mitra">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. RUANG LINGKUP TRIDHARMA -->
+                        <div class="row mb-3 align-items-start">
+                            <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
+                                Ruang Lingkup Tridharma / Kemitraan : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Ruang lingkup kemitraan Tridharma Perguruan Tinggi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <textarea name="scope" class="form-control" rows="3" placeholder="Contoh: Kerja sama kemitraan penyelenggaraan Tridharma Perguruan Tinggi meliputi Pendidikan, Penelitian kolaboratif, Pengabdian kepada Masyarakat, dan Program Merdeka Belajar Kampus Merdeka (MBKM)..." required></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. UPLOAD DRAFT DOKUMEN MOU (PDF) -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Upload Draf Naskah MoU (PDF) : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Wajib unggah naskah draf kerja sama dalam format PDF (.pdf). Dokumen ini yang akan dibubuhi stempel QR Code resmi di bagian ujung kanan bawah halaman terakhir saat diajukan ke telaah pimpinan." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
+                                </div>
+                                <div class="form-text text-muted">Format berkas: <strong>PDF (.pdf)</strong>. Naskah ini akan dibubuhi stempel QR Code resmi pada transisi SUBMIT.</div>
+                            </div>
+                        </div>
+
+                        <!-- 8. PERIODE BERLAKU & AMBANG PERINGATAN -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Tanggal Mulai Berlaku :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Tanggal dimulainya masa berlaku kesepahaman bersama" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="date" name="start_date" id="inputStartDate" class="form-control" value="{{ date('Y-m-d') }}" onchange="calculateDuration()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Tanggal Berakhir :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Tanggal berakhirnya masa berlaku kesepahaman bersama (standar MoU: 3 - 5 tahun)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="date" name="end_date" id="inputEndDate" class="form-control" value="{{ date('Y-m-d', strtotime('+5 years')) }}" onchange="calculateDuration()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Masa Berlaku Perjanjian :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Dihitung otomatis dari tanggal mulai dan tanggal berakhir" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="validity" id="inputValidity" class="form-control" value="5 Tahun">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Ambang Batas Peringatan Dini :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Peringatan dini otomatis sebelum naskah kedaluwarsa" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <select name="warning_threshold" class="form-select">
+                                        <option value="H-90 Hari (3 Bulan)" selected>H-90 Hari (3 Bulan) &mdash; Sesuai Klausul Baku UNIPAR</option>
+                                        <option value="H-60 Hari (2 Bulan)">H-60 Hari (2 Bulan) &mdash; Standar Kemendikbudristek</option>
+                                        <option value="H-30 Hari (1 Bulan)">H-30 Hari (1 Bulan) &mdash; Kemitraan Singkat</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 9. NARAHUBUNG (PIC) KEDUA PIHAK -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                PIC Pihak Pertama (UNIPAR) :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Dr. Eng. Recky, M.T. (0812-4400-5500 / kerma@unipar.ac.id)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="pic_first_party" class="form-control" placeholder="Contoh: Dr. Eng. Recky, M.T. (0812-4400-5500 / kerma@unipar.ac.id)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                PIC Pihak Kedua (Mitra) :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Dra. Maria Christine, M.Si. (0813-8899-7711 / info@mitra.ac.id)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="pic_second_party" class="form-control" placeholder="Contoh: Dra. Maria Christine, M.Si. (0813-8899-7711 / info@mitra.ac.id)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 10. DESKRIPSI / URGENSI KERJA SAMA -->
+                        <div class="row mb-4 align-items-start">
+                            <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
+                                Deskripsi / Urgensi Kerja Sama :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Ringkasan latar belakang pengajuan, target luaran strategis, serta urgensi kemitraan" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <textarea name="description" class="form-control" rows="3" placeholder="Ringkasan singkat urgensi kerja sama kemitraan strategis institusi..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOMBOL AKSI SIMPAN -->
+                        <div class="row pt-2">
+                            <div class="col-md-9 offset-md-3">
+                                <button type="submit" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+                                    <i class="bi bi-save me-1"></i> Simpan Sebagai DRAF MoU (Terbitkan QR Code)
+                                </button>
+                                <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary ms-2 px-3 py-2">Batal</a>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
             <script>
-            function handleDocTypeChange(val) {
-                const parentGroup = document.getElementById('groupParentMou');
-                const parentSelect = document.getElementById('inputParentMou');
-                if (!parentSelect) return;
-                if (val === 'MoU') {
-                    parentSelect.value = '-';
-                    if (parentGroup) parentGroup.style.display = 'none';
-                } else {
-                    if (parentGroup) parentGroup.style.display = 'block';
-                    if (parentSelect.value === '-') parentSelect.value = '';
-                }
-            }
-
             function calculateDuration() {
                 const startEl = document.getElementById('inputStartDate');
                 const endEl = document.getElementById('inputEndDate');
@@ -1758,12 +1396,6 @@
                 }
             }
             document.addEventListener('DOMContentLoaded', function() {
-                const docTypeEl = document.getElementById('inputDocType');
-                if (docTypeEl) {
-                    handleDocTypeChange(docTypeEl.value);
-                }
-
-                // Inisialisasi Tooltip Bootstrap 5 untuk seluruh icon petunjuk (?)
                 if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
                     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                     tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -1772,6 +1404,1163 @@
                 }
             });
             </script>
+
+        {{-- ===================================================================================== --}}
+        {{-- 2. FORMULIR PENGAJUAN DOKUMEN TURUNAN (MoA / IA) MENURUT INDUK MOU                    --}}
+        {{-- ===================================================================================== --}}
+        @elseif ($isCreatingDerive)
+
+            <div class="card card-wireframe mb-4 shadow-sm border">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold text-dark">
+                            <i class="bi bi-diagram-3-fill text-primary me-2"></i> Formulir Dokumen Turunan ({{ $prefillDeriveType }})
+                        </h5>
+                        <div class="small text-muted">
+                            Menurunkan naskah turunan pelaksanaan dari dokumen induk <strong>{{ $prefillParentDocNumber ?: $prefillParentId }}</strong> bersama mitra <strong>{{ $prefillPartnerName }}</strong>.
+                        </div>
+                    </div>
+                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $prefillParentId]) }}" class="btn btn-outline-secondary btn-sm fw-semibold">
+                        <i class="bi bi-arrow-left me-1"></i> Kembali ke Detail Dokumen Induk
+                    </a>
+                </div>
+                <div class="card-body p-4">
+
+                    <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="small">
+                        @csrf
+                        <input type="hidden" name="parent_mou" value="{{ $prefillParentDocNumber ?: $prefillParentId }}">
+
+                        <!-- DOKUMEN INDUK INFORMASI -->
+                        <div class="alert alert-info py-2 px-3 small mb-4 d-flex align-items-center gap-2 border shadow-sm">
+                            <i class="bi bi-link-45deg fs-4 text-primary"></i>
+                            <div>
+                                <strong>Menginduk ke Naskah Resmi:</strong> Dokumen turunan ini akan terikat secara hukum pada MoU Induk <strong>{{ $prefillParentDocNumber ?: $prefillParentId }}</strong> bersama mitra <strong>{{ $prefillPartnerName }}</strong>.
+                            </div>
+                        </div>
+
+                        <!-- 1. JUDUL / NAMA KERJA SAMA TURUNAN -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Judul Naskah Turunan : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <input type="text" name="title" class="form-control" placeholder="Contoh: Perjanjian Kerja Sama Penyelenggaraan Program Magang Industri MBKM..." required>
+                            </div>
+                        </div>
+
+                        <!-- 2. JENIS DOKUMEN TURUNAN -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Jenis Dokumen Turunan : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <select name="doc_type" class="form-select" required>
+                                    <option value="MoA / PKS" {{ stripos($prefillDeriveType, 'MoA') !== false ? 'selected' : '' }}>MoA / PKS (Perjanjian Kerja Sama &mdash; Tingkat Fakultas)</option>
+                                    <option value="IA" {{ stripos($prefillDeriveType, 'IA') !== false ? 'selected' : '' }}>IA (Implementation Arrangement &mdash; Tingkat Prodi/Lab)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 3. UKURAN KERTAS DOKUMEN -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Ukuran Kertas Dokumen : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <select name="paper_size" class="form-select" required>
+                                    <option value="A4" selected>Kertas A4 (210 &times; 297 mm) &mdash; Standar</option>
+                                    <option value="F4">Kertas F4 / Folio (215 &times; 330 mm)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 4. IDENTITAS UNIT PELAKSANA -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Unit Pelaksana (Pihak I) : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <select name="unit" class="form-select" required>
+                                    <option>Program Studi Teknik Informatika</option>
+                                    <option>Fakultas Ilmu Komputer</option>
+                                    <option>Fakultas Ekonomi dan Bisnis</option>
+                                    <option>LPPM Universitas Parna Raya</option>
+                                    <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
+                                    <option>Rektorat Universitas Parna Raya</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 5. MITRA (PREFILLED DARI INDUK) -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Nama Mitra (Pihak II) : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <input type="text" name="partner_name" class="form-control bg-light" value="{{ $prefillPartnerName }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Kategori Mitra :
+                            </label>
+                            <div class="col-md-9">
+                                <input type="text" name="category" class="form-control bg-light" value="{{ $prefillCategory }}">
+                            </div>
+                        </div>
+
+                        <!-- 6. RUANG LINGKUP SPESIFIK -->
+                        <div class="row mb-3 align-items-start">
+                            <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
+                                Ruang Lingkup Spesifik : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <textarea name="scope" class="form-control" rows="3" placeholder="Rincian bentuk kegiatan pelaksanaan kerja sama..." required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 7. NOMINAL / NILAI DANA -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Nilai Anggaran / Dana (Jika Ada) :
+                            </label>
+                            <div class="col-md-9">
+                                <input type="text" name="nominal_value" class="form-control" placeholder="Contoh: Rp 50.000.000 / Non-finansial (In-kind)">
+                            </div>
+                        </div>
+
+                        <!-- 8. UPLOAD DRAFT PDF -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Upload Draf Dokumen (PDF) : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
+                            </div>
+                        </div>
+
+                        <!-- 9. TANGGAL & DURASI -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Periode Berlaku :
+                            </label>
+                            <div class="col-md-9">
+                                <div class="row g-2">
+                                    <div class="col-sm-6">
+                                        <input type="date" name="start_date" class="form-control" value="{{ date('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <input type="date" name="end_date" class="form-control" value="{{ date('Y-m-d', strtotime('+1 year')) }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOMBOL AKSI -->
+                        <div class="row pt-2">
+                            <div class="col-md-9 offset-md-3">
+                                <button type="submit" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+                                    <i class="bi bi-save me-1"></i> Simpan Draf Dokumen Turunan (Terbitkan QR Code)
+                                </button>
+                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $prefillParentId]) }}" class="btn btn-outline-secondary ms-2 px-3 py-2">Batal</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        {{-- ===================================================================================== --}}
+        {{-- 3. DETAIL DOKUMEN KERJA SAMA (PERSIS SESUAI MOCKUP UI/detail_MoU.png)                 --}}
+        {{-- ===================================================================================== --}}
+        @elseif ($isViewingDetail && $currentDoc)
+
+            @php
+                $docStatus = $currentDoc->status;
+                // Skala 5 tahap alur FSM sesuai mockup
+                $stepRank = match($docStatus) {
+                    'DRAFT' => 1,
+                    'REVIEW' => 2,
+                    'VERIFIED' => 3,
+                    'ACTIVE' => 4,
+                    'WARNING' => 4,
+                    'EXPIRED', 'CANCELLED' => 5,
+                    default => 1,
+                };
+            @endphp
+
+            <!-- BREADCRUMBS -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb mb-0 small">
+                    <li class="breadcrumb-item"><a href="{{ route('simkerma.index', ['menu' => 1]) }}" class="text-decoration-none text-muted">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="text-decoration-none text-muted">Pengajuan &amp; Persetujuan</a></li>
+                    <li class="breadcrumb-item active fw-semibold text-primary" aria-current="page">Detail Dokumen</li>
+                </ol>
+            </nav>
+
+            <!-- HEADER BAR (BACK BUTTON, TITLE, ACTION BUTTONS) -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" title="Kembali ke Daftar Pengajuan">
+                        <i class="bi bi-arrow-left fs-5"></i>
+                    </a>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">Detail Dokumen Kerja Sama</h4>
+                        <div class="text-muted small">Informasi lengkap, alur persetujuan, dan dokumen turunan</div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Tombol Tambah Dokumen Turunan -->
+                    <div class="dropdown">
+                        <button class="btn btn-primary btn-sm fw-bold px-3 py-2 dropdown-toggle shadow-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-plus-lg"></i> Tambah Dokumen Turunan
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
+                            <li><h6 class="dropdown-header text-uppercase" style="font-size: 0.7rem;">Turunkan Dokumen Pelaksanaan</h6></li>
+                            <li>
+                                <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}">
+                                    <i class="bi bi-file-earmark-ruled text-primary fs-5"></i>
+                                    <div>
+                                        <div class="fw-bold">MoA / PKS</div>
+                                        <div class="text-muted" style="font-size: 0.72rem;">Perjanjian Kerja Sama Tingkat Fakultas/Unit</div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}">
+                                    <i class="bi bi-file-earmark-check text-success fs-5"></i>
+                                    <div>
+                                        <div class="fw-bold">IA (Implementation Arrangement)</div>
+                                        <div class="text-muted" style="font-size: 0.72rem;">Rencana Aksi Operasional Tingkat Prodi/Lab</div>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Tombol Opsi Lainnya (...) -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm px-3 py-2 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
+                            <li><a class="dropdown-item" href="{{ route('simkerma.verify', ['reg_id' => $currentDoc->reg_id]) }}" target="_blank"><i class="bi bi-box-arrow-up-right me-2 text-primary"></i> Buka Verifikasi Publik</a></li>
+                            @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
+                                <li><a class="dropdown-item" href="{{ asset($currentDoc->draft_file) }}" target="_blank"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Buka Naskah Draf PDF</a></li>
+                            @endif
+                            @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
+                                <li><a class="dropdown-item" href="{{ asset($currentDoc->signed_file) }}" target="_blank"><i class="bi bi-file-earmark-check me-2 text-success"></i> Buka Naskah Asli PDF</a></li>
+                            @endif
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-dark" href="#" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}"><i class="bi bi-sliders me-2 text-warning"></i> Kelola Transisi FSM</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUMMARY BANNER CARD (PERSIS UI/detail_MoU.png) -->
+            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+                        <!-- Icon Dokumen Besar -->
+                        <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 68px; height: 68px;">
+                            <i class="bi bi-file-earmark-text-fill fs-1"></i>
+                        </div>
+
+                        <!-- Data Utama Dokumen -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-semibold small">
+                                    <i class="bi bi-bookmark-fill me-1"></i> {{ $currentDoc->doc_type }} &mdash; Memorandum of Understanding
+                                </span>
+                                <span class="badge {{ $stepperList[$currentDoc->status][1] ?? 'bg-secondary text-white' }} px-3 py-1 fw-bold">
+                                    {{ $currentDoc->status }}
+                                </span>
+                            </div>
+
+                            <h3 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">
+                                {{ $currentDoc->doc_number ?: $currentDoc->doc_id }}
+                            </h3>
+
+                            <div class="text-secondary fw-semibold mb-2" style="font-size: 0.95rem;">
+                                <span>Universitas Parna Raya Manado</span>
+                                <span class="text-primary fw-bold mx-2">&times;</span>
+                                <span class="text-dark">{{ $currentDoc->partner_name }}</span>
+                            </div>
+
+                            <!-- Chips Metadata -->
+                            <div class="d-flex flex-wrap align-items-center gap-2 pt-1">
+                                <span class="badge bg-light text-secondary border font-monospace py-1 px-2" style="font-size: 0.75rem;">
+                                    <i class="bi bi-upc-scan me-1 text-primary"></i> {{ $currentDoc->reg_id }}
+                                </span>
+                                <span class="badge bg-light text-secondary border py-1 px-2" style="font-size: 0.75rem;">
+                                    <i class="bi bi-clock-history me-1 text-info"></i> {{ $currentDoc->auditTrails->count() }} Jejak Audit
+                                </span>
+                                <span class="badge bg-light text-secondary border py-1 px-2" style="font-size: 0.75rem;">
+                                    <i class="bi bi-building me-1 text-warning"></i> {{ $currentDoc->unit }}
+                                </span>
+                                <span class="badge bg-light text-secondary border py-1 px-2" style="font-size: 0.75rem;">
+                                    <i class="bi bi-tag me-1 text-success"></i> {{ $currentDoc->partner_category }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NAV TABS (5 TABS SESUAI MOCKUP) -->
+            <ul class="nav nav-tabs border-bottom mb-4" id="detailDocTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold text-dark py-2 px-3 border-0 border-bottom border-primary border-3" id="tab-info-btn" data-bs-toggle="tab" data-bs-target="#tab-info-pane" type="button" role="tab">
+                        <i class="bi bi-info-circle me-1 text-primary"></i> Informasi &amp; Alur
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold text-muted py-2 px-3" id="tab-docs-btn" data-bs-toggle="tab" data-bs-target="#tab-docs-pane" type="button" role="tab">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Dokumen &amp; Lampiran
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold text-muted py-2 px-3" id="tab-deriv-btn" data-bs-toggle="tab" data-bs-target="#tab-deriv-pane" type="button" role="tab">
+                        <i class="bi bi-diagram-3 me-1"></i> Dokumen Turunan ({{ $childDocs->count() }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold text-muted py-2 px-3" id="tab-act-btn" data-bs-toggle="tab" data-bs-target="#tab-act-pane" type="button" role="tab">
+                        <i class="bi bi-list-task me-1"></i> Pelaksanaan ({{ $currentDoc->activities->count() }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold text-muted py-2 px-3" id="tab-audit-btn" data-bs-toggle="tab" data-bs-target="#tab-audit-pane" type="button" role="tab">
+                        <i class="bi bi-clock-history me-1"></i> Riwayat &amp; Audit ({{ $currentDoc->auditTrails->count() }})
+                    </button>
+                </li>
+            </ul>
+
+            <!-- TAB PANES -->
+            <div class="tab-content" id="detailDocTabContent">
+
+                <!-- TAB 1: INFORMASI & ALUR (2 KOLOM PERSIS MOCKUP) -->
+                <div class="tab-pane fade show active" id="tab-info-pane" role="tabpanel">
+                    <div class="row g-4">
+
+                        <!-- KOLOM KIRI (7-8 COLS) -->
+                        <div class="col-lg-8">
+
+                            <!-- KARTU 1: INFORMASI UMUM -->
+                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
+                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold text-dark mb-0">Informasi Umum</h6>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm px-3 py-1 fw-semibold" data-bs-toggle="modal" data-bs-target="#editInfoModal_{{ $currentDoc->id }}">
+                                        <i class="bi bi-pencil me-1"></i> Edit
+                                    </button>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="row g-3 small">
+                                        <div class="col-sm-6">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Judul Kerja Sama</div>
+                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->title }}</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Unit Pengusul</div>
+                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->unit }}</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Mitra Kerja Sama</div>
+                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->partner_name }}</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Kategori Mitra</div>
+                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->partner_category }}</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Penandatangan UNIPAR</div>
+                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->first_party_signer ?: 'Rektor Universitas Parna Raya' }}</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Penandatangan Mitra</div>
+                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->second_party_signer ?: '-' }}</div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Masa Berlaku</div>
+                                            <div class="fw-bold text-dark mt-1">
+                                                {{ $currentDoc->start_date ? date('d/m/Y', strtotime($currentDoc->start_date)) : '-' }} s/d {{ $currentDoc->end_date ? date('d/m/Y', strtotime($currentDoc->end_date)) : '-' }} ({{ $currentDoc->validity ?: '1 Tahun' }})
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Ambang Batas Peringatan</div>
+                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->warning_threshold ?: 'H-90 Hari (3 Bulan)' }}</div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Ruang Lingkup</div>
+                                            <div class="fw-semibold text-secondary mt-1">{{ $currentDoc->scope ?: 'Kerja sama kemitraan Tridharma' }}</div>
+                                        </div>
+                                        @if (!empty($currentDoc->description))
+                                            <div class="col-12">
+                                                <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Deskripsi / Urgensi</div>
+                                                <div class="text-secondary mt-1">{{ $currentDoc->description }}</div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- KARTU 2: ALUR PROSES (FSM) -->
+                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
+                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold text-dark mb-0">Alur Proses (FSM)</h6>
+                                    <button type="button" class="btn btn-outline-primary btn-sm px-3 py-1 fw-semibold" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}">
+                                        <i class="bi bi-sliders me-1"></i> Lihat Detail FSM
+                                    </button>
+                                </div>
+                                <div class="card-body p-4">
+
+                                    <!-- Stepper 5 Tahap Sesuai Mockup -->
+                                    <div class="p-3 bg-light rounded-3 border mb-3">
+                                        <div class="d-flex align-items-center justify-content-between position-relative px-2">
+                                            <!-- Garis Background Stepper -->
+                                            <div class="position-absolute top-50 start-0 translate-middle-y w-100 bg-secondary bg-opacity-25" style="height: 3px; z-index: 1;"></div>
+                                            <!-- Garis Progress Aktif -->
+                                            <div class="position-absolute top-50 start-0 translate-middle-y bg-primary" style="height: 3px; z-index: 1; width: {{ max(0, min(100, ($stepRank - 1) * 25)) }}%;"></div>
+
+                                            @php
+                                                $steps = [
+                                                    1 => ['label' => 'Draft', 'sub' => 'Disusun oleh pengusul'],
+                                                    2 => ['label' => 'Review', 'sub' => 'Pemeriksaan legalitas'],
+                                                    3 => ['label' => 'Verifikasi', 'sub' => 'Stempel QR Code sah'],
+                                                    4 => ['label' => 'Active', 'sub' => 'Tanda tangan & berlaku'],
+                                                    5 => ['label' => 'Selesai', 'sub' => 'Arsip / evaluasi'],
+                                                ];
+                                            @endphp
+
+                                            @foreach ($steps as $sNum => $sInfo)
+                                                @php
+                                                    $isDone = ($stepRank > $sNum);
+                                                    $isCurrent = ($stepRank === $sNum);
+                                                    $circleBg = $isDone ? 'bg-success text-white shadow-sm' : ($isCurrent ? 'bg-primary text-white shadow ring-2 ring-primary' : 'bg-white text-muted border border-secondary');
+                                                @endphp
+                                                <div class="text-center position-relative" style="z-index: 2; width: 18%;">
+                                                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle fw-bold {{ $circleBg }}" style="width: 38px; height: 38px; font-size: 0.85rem;">
+                                                        @if ($isDone)
+                                                            <i class="bi bi-check-lg fs-5"></i>
+                                                        @else
+                                                            {{ $sNum }}
+                                                        @endif
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <div class="small fw-bold {{ $isCurrent ? 'text-primary' : ($isDone ? 'text-dark' : 'text-muted') }}">{{ $sInfo['label'] }}</div>
+                                                        <div class="text-muted d-none d-md-block" style="font-size: 0.68rem;">{{ $sInfo['sub'] }}</div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                    <!-- Status Box & Direct Transition Action -->
+                                    <div class="alert alert-light border d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 py-2 px-3 mb-0">
+                                        <div>
+                                            <div class="small text-muted mb-0">Status Siklus FSM Saat Ini:</div>
+                                            <div class="d-flex align-items-center gap-2 mt-1">
+                                                <span class="badge {{ $stepperList[$currentDoc->status][1] ?? 'bg-secondary' }} px-3 py-1 fw-bold fs-6">
+                                                    {{ $currentDoc->status }}
+                                                </span>
+                                                <span class="small text-secondary">
+                                                    @if ($currentDoc->status === 'DRAFT')
+                                                        Naskah draf sedang disusun oleh Unit Pengusul. Siap diajukan ke meja pemeriksaan review pimpinan.
+                                                    @elseif ($currentDoc->status === 'REVIEW')
+                                                        Naskah dalam tahap pemeriksaan legalitas dan substansi oleh LPPM / Biro Hukum UNIPAR.
+                                                    @elseif ($currentDoc->status === 'VERIFIED')
+                                                        Naskah telah lolos verifikasi sah dan stempel QR Code resmi telah diterbitkan. Menunggu pengunggahan naskah asli bertandatangan basah.
+                                                    @elseif ($currentDoc->status === 'ACTIVE')
+                                                        Dokumen telah berlaku aktif secara hukum dan terdaftar resmi di pangkalan data SIMKERMA UNIPAR.
+                                                    @elseif ($currentDoc->status === 'WARNING')
+                                                        Masa berlaku dokumen memasuki periode ambang peringatan dini (H-90 Hari). Segera ajukan perpanjangan/reaktivasi.
+                                                    @elseif ($currentDoc->status === 'EXPIRED')
+                                                        Masa berlaku dokumen telah kedaluwarsa. Dapat direaktivasi kembali ke status DRAFT.
+                                                    @elseif ($currentDoc->status === 'CANCELLED')
+                                                        Dokumen ini telah dibatalkan secara permanen.
+                                                    @endif
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="text-nowrap">
+                                            <button type="button" class="btn btn-dark btn-sm fw-bold px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}">
+                                                <i class="bi bi-sliders me-1 text-warning"></i> Kelola Transisi FSM
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- KARTU 3: DOKUMEN TURUNAN -->
+                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
+                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h6 class="fw-bold text-dark mb-0">Dokumen Turunan</h6>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold rounded-pill px-2 py-0" style="font-size: 0.72rem;">{{ $childDocs->count() }} Dokumen</span>
+                                        </div>
+                                        <div class="text-muted small" style="font-size: 0.76rem;">Dokumen turunan dari MoU ini (MoA dan IA)</div>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary btn-sm fw-semibold dropdown-toggle px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-plus-lg me-1"></i> Tambah Turunan
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
+                                            <li><a class="dropdown-item py-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}"><i class="bi bi-file-earmark-ruled me-2 text-primary"></i> + Tambah MoA / PKS</a></li>
+                                            <li><a class="dropdown-item py-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}"><i class="bi bi-file-earmark-check me-2 text-success"></i> + Tambah IA (Implementation)</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    @if ($childDocs->isNotEmpty())
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0 small">
+                                                <thead class="table-light text-muted" style="font-size: 0.75rem;">
+                                                    <tr>
+                                                        <th class="ps-3">Jenis</th>
+                                                        <th>Nomor Dokumen</th>
+                                                        <th>Judul Dokumen</th>
+                                                        <th>Unit Pelaksana</th>
+                                                        <th>Status</th>
+                                                        <th class="text-end pe-3">Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($childDocs as $cDoc)
+                                                        <tr>
+                                                            <td class="ps-3">
+                                                                <span class="badge {{ stripos($cDoc->doc_type, 'MoA') !== false ? 'bg-primary' : 'bg-success' }} py-1 px-2" style="font-size: 0.7rem;">
+                                                                    {{ $cDoc->doc_type }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="fw-bold font-monospace text-dark" style="font-size: 0.78rem;">
+                                                                {{ $cDoc->doc_number ?: $cDoc->doc_id }}
+                                                            </td>
+                                                            <td style="max-width: 250px;">
+                                                                <div class="text-truncate fw-semibold text-dark" title="{{ $cDoc->title }}">{{ $cDoc->title }}</div>
+                                                                <div class="text-muted" style="font-size: 0.7rem;">Mitra: {{ $cDoc->partner_name }}</div>
+                                                            </td>
+                                                            <td>
+                                                                <span class="text-secondary" style="font-size: 0.75rem;">{{ $cDoc->unit }}</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge {{ $stepperList[$cDoc->status][1] ?? 'bg-secondary' }} py-1 px-2" style="font-size: 0.7rem;">
+                                                                    {{ $cDoc->status }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="text-end pe-3">
+                                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0 px-2 fw-semibold" style="font-size: 0.72rem;">
+                                                                    <i class="bi bi-eye me-1"></i> Detail
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
+                                        <div class="p-4 text-center text-muted">
+                                            <i class="bi bi-diagram-3 fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                                            <div class="fw-semibold text-dark small">Belum Ada Dokumen Turunan Terdaftar</div>
+                                            <div class="small text-muted mb-3" style="font-size: 0.75rem;">MoU ini belum memiliki naskah turunan MoA (Perjanjian Kerja Sama) atau IA (Implementation Arrangement).</div>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}" class="btn btn-outline-primary btn-sm fw-semibold">
+                                                    <i class="bi bi-plus-lg me-1"></i> Tambah MoA / PKS
+                                                </a>
+                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-outline-success btn-sm fw-semibold">
+                                                    <i class="bi bi-plus-lg me-1"></i> Tambah IA
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- KOLOM KANAN (4 COLS) -->
+                        <div class="col-lg-4">
+
+                            <!-- KARTU 1: DOKUMEN & LAMPIRAN -->
+                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
+                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">Dokumen &amp; Lampiran</h6>
+                                        <div class="text-muted small" style="font-size: 0.76rem;">Berkas naskah dan lampiran terkait</div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-3">
+                                    <!-- 1. Draf Naskah PDF -->
+                                    <div class="p-3 bg-light rounded-3 border mb-2 d-flex align-items-center justify-content-between gap-2">
+                                        <div class="d-flex align-items-center gap-2 text-truncate">
+                                            <div class="bg-danger bg-opacity-10 text-danger rounded-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
+                                            </div>
+                                            <div class="text-truncate">
+                                                <div class="fw-bold text-dark text-truncate small" title="{{ basename($currentDoc->draft_file ?: 'draf_mou.pdf') }}">
+                                                    {{ basename($currentDoc->draft_file ?: 'draf_mou.pdf') }}
+                                                </div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">
+                                                    PDF &bull; {{ $currentDoc->paper_size ?: 'A4' }} &bull; Draf Pengusul
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                            @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
+                                                <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-light btn-sm border py-1 px-2" title="Buka / Preview PDF" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-light btn-sm border py-1 px-2" title="Unduh Berkas" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            @else
+                                                <span class="badge bg-secondary bg-opacity-25 text-dark" style="font-size: 0.68rem;">Draf Awal</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Naskah Resmi Berstempel QR Code / Naskah Asli -->
+                                    <div class="p-3 bg-light rounded-3 border mb-2 d-flex align-items-center justify-content-between gap-2">
+                                        <div class="d-flex align-items-center gap-2 text-truncate">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-file-earmark-check-fill fs-5"></i>
+                                            </div>
+                                            <div class="text-truncate">
+                                                <div class="fw-bold text-dark text-truncate small">
+                                                    {{ $currentDoc->signed_file ? basename($currentDoc->signed_file) : 'Naskah_Resmi_QR_' . strtolower(str_replace([' ', '/', '-'], '_', $currentDoc->doc_id)) . '.pdf' }}
+                                                </div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">
+                                                    @if ($currentDoc->signed_file)
+                                                        <span class="text-success fw-semibold"><i class="bi bi-patch-check-fill me-1"></i>Naskah Asli Bertandatangan</span>
+                                                    @elseif ($currentDoc->status === 'ACTIVE' || $currentDoc->status === 'VERIFIED')
+                                                        <span class="text-primary fw-semibold"><i class="bi bi-qr-code me-1"></i>Terverifikasi QR Code</span>
+                                                    @else
+                                                        <span class="text-muted fst-italic">Menunggu Transisi VERIFIED</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                            @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
+                                                <a href="{{ asset($currentDoc->signed_file) }}" target="_blank" class="btn btn-light btn-sm border py-1 px-2" title="Buka Naskah Asli" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ asset($currentDoc->signed_file) }}" download class="btn btn-light btn-sm border py-1 px-2" title="Unduh Naskah Asli" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            @elseif ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)) && in_array($currentDoc->status, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']))
+                                                <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-light btn-sm border py-1 px-2" title="Buka PDF Ber-QR Code" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-light btn-sm border py-1 px-2" title="Unduh Naskah PDF" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            @else
+                                                <span class="badge bg-secondary bg-opacity-25 text-secondary" style="font-size: 0.68rem;">Belum Terbit</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Template Word Draf (.docx) -->
+                                    <div class="p-3 bg-light rounded-3 border mb-3 d-flex align-items-center justify-content-between gap-2">
+                                        <div class="d-flex align-items-center gap-2 text-truncate">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-file-earmark-word-fill fs-5"></i>
+                                            </div>
+                                            <div class="text-truncate">
+                                                <div class="fw-bold text-dark text-truncate small">Template_MoU_UNIPAR.docx</div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">DOCX &bull; Template Format Baku</div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                            <a href="{{ asset('templates/Template_MoU_UNIPAR.docx') }}" download="Template_MoU_UNIPAR.docx" class="btn btn-light btn-sm border py-1 px-2" title="Unduh Template Word" style="font-size: 0.75rem;">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tombol Unggah Naskah / Dokumen Baru -->
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-semibold py-2" data-bs-toggle="modal" data-bs-target="#uploadDocModal_{{ $currentDoc->id }}">
+                                        <i class="bi bi-upload me-1"></i> Unggah Revisi / Naskah Asli
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- KARTU 2: AKTIVITAS TERAKHIR -->
+                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
+                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">Aktivitas Terakhir</h6>
+                                        <div class="text-muted small" style="font-size: 0.76rem;">Catatan rekam jejak audit FSM</div>
+                                    </div>
+                                    <a href="#tab-audit-pane" data-bs-toggle="tab" data-bs-target="#tab-audit-pane" class="text-decoration-none small fw-semibold text-primary" onclick="document.getElementById('tab-audit-btn').click();">
+                                        Lihat Semua ({{ $currentDoc->auditTrails->count() }})
+                                    </a>
+                                </div>
+                                <div class="card-body p-3">
+                                    @if ($currentDoc->auditTrails->isNotEmpty())
+                                        <div class="timeline position-relative ps-3" style="border-left: 2px solid #e2e8f0; margin-left: 8px;">
+                                            @foreach ($currentDoc->auditTrails->take(5) as $tIndex => $trail)
+                                                <div class="position-relative mb-3 ps-2">
+                                                    <!-- Dot Indicator -->
+                                                    <div class="position-absolute rounded-circle {{ $tIndex === 0 ? 'bg-primary ring-2' : 'bg-secondary' }}" style="width: 10px; height: 10px; left: -14px; top: 5px;"></div>
+                                                    
+                                                    <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
+                                                        <span class="badge bg-light text-dark border fw-bold" style="font-size: 0.68rem;">
+                                                            {{ $trail->event }}
+                                                        </span>
+                                                        <span class="text-muted" style="font-size: 0.68rem;">
+                                                            {{ $trail->timestamp_wita }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="small fw-semibold text-dark" style="font-size: 0.78rem;">
+                                                        {{ $trail->actor }} <span class="badge bg-secondary-subtle text-secondary py-0 px-1" style="font-size: 0.65rem;">{{ $trail->role }}</span>
+                                                    </div>
+                                                    <div class="text-muted mt-1 text-break" style="font-size: 0.72rem; line-height: 1.35;">
+                                                        {{ $trail->notes }}
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="text-muted text-center py-3 small">
+                                            Belum ada rekaman audit untuk dokumen ini.
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- TAB 2: DOKUMEN & LAMPIRAN DETAIL -->
+                <div class="tab-pane fade" id="tab-docs-pane" role="tabpanel">
+                    <div class="card border rounded-3 shadow-sm p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">Manajemen Berkas &amp; Pratinjau Naskah</h6>
+                            <button type="button" class="btn btn-primary btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#uploadDocModal_{{ $currentDoc->id }}">
+                                <i class="bi bi-upload me-1"></i> Unggah Berkas Baru
+                            </button>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 bg-light">
+                                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Naskah Draf Pengusul</h6>
+                                    @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
+                                        <div class="ratio ratio-16x9 border bg-white mb-2">
+                                            <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Draf"></iframe>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
+                                            <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-secondary btn-sm"><i class="bi bi-download me-1"></i>Unduh PDF</a>
+                                        </div>
+                                    @else
+                                        <div class="text-muted py-4 text-center small">Berkas naskah draf belum diunggah.</div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 bg-light">
+                                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-file-earmark-check text-success me-2"></i>Naskah Asli / Terverifikasi QR Code</h6>
+                                    @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
+                                        <div class="ratio ratio-16x9 border bg-white mb-2">
+                                            <iframe src="{{ asset($currentDoc->signed_file) }}" title="Preview Naskah Asli"></iframe>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ asset($currentDoc->signed_file) }}" target="_blank" class="btn btn-outline-success btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
+                                            <a href="{{ asset($currentDoc->signed_file) }}" download class="btn btn-success btn-sm"><i class="bi bi-download me-1"></i>Unduh Naskah Asli</a>
+                                        </div>
+                                    @elseif ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)) && in_array($currentDoc->status, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']))
+                                        <div class="ratio ratio-16x9 border bg-white mb-2">
+                                            <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Naskah QR Code"></iframe>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
+                                            <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-primary btn-sm"><i class="bi bi-download me-1"></i>Unduh Naskah Ber-QR</a>
+                                        </div>
+                                    @else
+                                        <div class="text-muted py-4 text-center small">Naskah asli bertandatangan basah belum diunggah. Naskah dapat diunggah pada tahap status VERIFIED &rarr; ACTIVE.</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: DOKUMEN TURUNAN DETAIL -->
+                <div class="tab-pane fade" id="tab-deriv-pane" role="tabpanel">
+                    <div class="card border rounded-3 shadow-sm p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="fw-bold mb-0">Daftar Dokumen Turunan (MoA &amp; IA)</h6>
+                                <div class="text-muted small">Naskah turunan pelaksanaan yang berinduk secara hukum ke dokumen MoU ini</div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}" class="btn btn-primary btn-sm fw-semibold">
+                                    <i class="bi bi-plus-lg me-1"></i> + Tambah MoA / PKS
+                                </a>
+                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-success btn-sm fw-semibold">
+                                    <i class="bi bi-plus-lg me-1"></i> + Tambah IA
+                                </a>
+                            </div>
+                        </div>
+                        @if ($childDocs->isNotEmpty())
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover align-middle mb-0 small">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Jenis</th>
+                                            <th>Nomor Dokumen</th>
+                                            <th>Judul Naskah</th>
+                                            <th>Unit Pelaksana</th>
+                                            <th>Mitra</th>
+                                            <th>Status FSM</th>
+                                            <th class="text-end">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($childDocs as $cDoc)
+                                            <tr>
+                                                <td><span class="badge {{ stripos($cDoc->doc_type, 'MoA') !== false ? 'bg-primary' : 'bg-success' }}">{{ $cDoc->doc_type }}</span></td>
+                                                <td class="font-monospace fw-bold">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</td>
+                                                <td>{{ $cDoc->title }}</td>
+                                                <td>{{ $cDoc->unit }}</td>
+                                                <td>{{ $cDoc->partner_name }}</td>
+                                                <td><span class="badge {{ $stepperList[$cDoc->status][1] ?? 'bg-secondary' }}">{{ $cDoc->status }}</span></td>
+                                                <td class="text-end">
+                                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0 px-2">
+                                                        <i class="bi bi-eye me-1"></i> Detail
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-diagram-3 fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                Belum ada naskah MoA atau IA yang berinduk pada dokumen ini.
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- TAB 4: PELAKSANAAN KEGIATAN -->
+                <div class="tab-pane fade" id="tab-act-pane" role="tabpanel">
+                    <div class="card border rounded-3 shadow-sm p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="fw-bold mb-0">Realisasi Kegiatan Pelaksanaan Kerja Sama</h6>
+                                <div class="text-muted small">Kegiatan implementasi Tridharma yang teregistrasi di Menu 5</div>
+                            </div>
+                            <a href="{{ route('simkerma.index', ['menu' => 5]) }}" class="btn btn-outline-primary btn-sm fw-semibold">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Buka Menu 5 Pemantauan
+                            </a>
+                        </div>
+                        @if ($currentDoc->activities->isNotEmpty())
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover align-middle mb-0 small">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nama Kegiatan</th>
+                                            <th>Bentuk Tridharma</th>
+                                            <th>Periode Pelaksanaan</th>
+                                            <th>Status Pelaksanaan</th>
+                                            <th>Luaran &amp; Capaian</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($currentDoc->activities as $act)
+                                            <tr>
+                                                <td class="fw-bold text-dark">{{ $act->title }}</td>
+                                                <td><span class="badge bg-secondary-subtle text-secondary border">{{ $act->activity_type ?: 'Tridharma' }}</span></td>
+                                                <td>{{ $act->start_date }} s/d {{ $act->end_date ?: '-' }}</td>
+                                                <td>
+                                                    @php
+                                                        $stClass = match($act->execution_status) {
+                                                            'SELESAI' => 'bg-success',
+                                                            'SEDANG_BERJALAN' => 'bg-primary',
+                                                            'BELUM_DIMULAI' => 'bg-warning text-dark',
+                                                            default => 'bg-secondary',
+                                                        };
+                                                    @endphp
+                                                    <span class="badge {{ $stClass }}">{{ $act->execution_status }}</span>
+                                                </td>
+                                                <td>{{ $act->outcome_target ?: '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-list-task fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                Belum ada data kegiatan pelaksanaan yang dicatatkan untuk dokumen ini.
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- TAB 5: RIWAYAT & AUDIT DETAIL -->
+                <div class="tab-pane fade" id="tab-audit-pane" role="tabpanel">
+                    <div class="card border rounded-3 shadow-sm p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="fw-bold mb-0">Rekam Jejak Audit &amp; Transisi FSM</h6>
+                                <div class="text-muted small">Catatan kronologis perubahan status, pengguna, dan disposisi resmi institusi</div>
+                            </div>
+                            <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                                Total: {{ $currentDoc->auditTrails->count() }} Rekaman
+                            </span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Waktu (WITA)</th>
+                                        <th>Aktor &amp; Peran</th>
+                                        <th>Event FSM</th>
+                                        <th>Status Sebelum &rarr; Sesudah</th>
+                                        <th>Catatan Disposisi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($currentDoc->auditTrails as $trail)
+                                        <tr>
+                                            <td class="font-monospace text-nowrap">{{ $trail->timestamp_wita }}</td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ $trail->actor }}</div>
+                                                <span class="badge bg-secondary-subtle text-secondary py-0 px-1" style="font-size: 0.65rem;">{{ $trail->role }}</span>
+                                            </td>
+                                            <td><span class="badge bg-dark">{{ $trail->event }}</span></td>
+                                            <td class="text-nowrap">
+                                                <span class="badge bg-light text-secondary border">{{ $trail->from_status }}</span>
+                                                <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                                <span class="badge bg-primary">{{ $trail->to_status }}</span>
+                                            </td>
+                                            <td>{{ $trail->notes }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-3 text-muted">Belum ada jejak audit.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MODAL EDIT INFORMASI UMUM -->
+            <div class="modal fade" id="editInfoModal_{{ $currentDoc->id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <form method="POST" action="{{ route('simkerma.update-document') }}" class="small">
+                            @csrf
+                            <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
+                            <div class="modal-header bg-dark text-white py-3">
+                                <h6 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Informasi Dokumen {{ $currentDoc->doc_id }}</h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Judul / Topik Kerja Sama :</label>
+                                    <input type="text" name="title" class="form-control" value="{{ $currentDoc->title }}" required>
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Unit Pengusul :</label>
+                                        <input type="text" name="unit" class="form-control" value="{{ $currentDoc->unit }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Nama Mitra :</label>
+                                        <input type="text" name="partner_name" class="form-control" value="{{ $currentDoc->partner_name }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Penandatangan UNIPAR :</label>
+                                        <input type="text" name="first_party_signer" class="form-control" value="{{ $currentDoc->first_party_signer }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Penandatangan Mitra :</label>
+                                        <input type="text" name="second_party_signer" class="form-control" value="{{ $currentDoc->second_party_signer }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Tanggal Mulai :</label>
+                                        <input type="date" name="start_date" class="form-control" value="{{ $currentDoc->start_date }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Tanggal Berakhir :</label>
+                                        <input type="date" name="end_date" class="form-control" value="{{ $currentDoc->end_date }}">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Ruang Lingkup :</label>
+                                    <textarea name="scope" class="form-control" rows="2">{{ $currentDoc->scope }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Deskripsi Ringkas :</label>
+                                    <textarea name="description" class="form-control" rows="2">{{ $currentDoc->description }}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary btn-sm fw-bold px-3"><i class="bi bi-save me-1"></i>Simpan Perubahan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL UNGGAH BERKAS REVISI / NASKAH ASLI -->
+            <div class="modal fade" id="uploadDocModal_{{ $currentDoc->id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <form method="POST" action="{{ route('simkerma.upload-document-file') }}" enctype="multipart/form-data" class="small">
+                            @csrf
+                            <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
+                            <div class="modal-header bg-dark text-white py-3">
+                                <h6 class="modal-title fw-bold"><i class="bi bi-upload me-2"></i>Unggah Berkas Dokumen {{ $currentDoc->doc_id }}</h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Jenis Berkas :</label>
+                                    <select name="file_type" class="form-select" required>
+                                        <option value="draft">Draf Revisi (PDF)</option>
+                                        <option value="signed">Naskah Asli Bertandatangan Basah (PDF)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Pilih Berkas PDF :</label>
+                                    <input type="file" name="file" class="form-control" accept=".pdf" required>
+                                    <div class="form-text text-muted">Format berkas harus berekstensi .pdf.</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary btn-sm fw-bold px-3"><i class="bi bi-upload me-1"></i>Unggah Sekarang</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL FSM TRANSITION UNTUK DOKUMEN YANG SEDANG DILIHAT DETAILNYA -->
+            @php
+                $doc = $currentDoc;
+            @endphp
+            <div class="modal fade" id="fsmModal_{{ $doc->id }}" tabindex="-1" aria-labelledby="fsmModalLabel_{{ $doc->id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-dark text-white py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-warning text-dark fw-bold">{{ $doc->doc_id }}</span>
+                                <div>
+                                    <h6 class="modal-title fw-bold mb-0" id="fsmModalLabel_{{ $doc->id }}">{{ $doc->partner_name }}</h6>
+                                    <small class="text-white-50">{{ $doc->doc_number ?: 'Registrasi: ' . $doc->reg_id }} &bull; {{ $doc->doc_type }}</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body p-4">
+                            <!-- Stepper Mini Siklus Status FSM Dokumen Ini -->
+                            <div class="p-2 bg-light rounded border mb-3">
+                                <div class="small fw-bold text-muted mb-1"><i class="bi bi-diagram-2 me-1"></i>Posisi Siklus Hidup FSM:</div>
+                                <div class="d-flex align-items-center overflow-x-auto gap-1 py-1" style="font-size: 0.68rem;">
+                                    @foreach ($stepperList as $stKey => $stMeta)
+                                        @php $isThisActive = ($stKey === $doc->status); @endphp
+                                        <span class="badge {{ $isThisActive ? 'bg-dark text-white border border-warning shadow-sm fw-bold' : 'bg-white text-muted border' }}">
+                                            {{ $stMeta[0] }}
+                                        </span>
+                                        @if (!$loop->last)
+                                            <i class="bi bi-chevron-right text-muted" style="font-size: 0.6rem;"></i>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Form Eksekusi Transisi Status FSM -->
+                            <div class="card border mb-3">
+                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                    <div class="fw-bold small text-dark"><i class="bi bi-arrow-repeat me-1 text-primary"></i> Eksekusi Transisi Siklus Status FSM</div>
+                                    <span class="badge bg-primary" style="font-size: 0.72rem;">Status Saat Ini: {{ $doc->status }}</span>
+                                </div>
+                                <div class="card-body p-3 small">
+                                    @php
+                                        $currAvail = app(\App\Services\FSMWorkflowEngineService::class)->getAvailableEvents($doc->status);
+                                    @endphp
+
+                                    @if (count($currAvail) > 0)
+                                        <form method="POST" action="{{ route('simkerma.transition') }}" enctype="multipart/form-data">
+                                            @csrf
+                                            <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
+                                            <input type="hidden" name="redirect_view" value="detail">
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-dark">Pilih Aksi Transisi Status Resmi (State Transition) :</label>
+                                                <select name="event" class="form-select form-select-sm" required onchange="handleTransitionEventChange(this, '{{ $doc->id }}')">
+                                                    <option value="">-- Pilih Event Transisi Status FSM yang Diizinkan --</option>
+                                                    @foreach ($currAvail as $evCode => $evMeta)
+                                                        @php
+                                                            $evRoles = (array)($evMeta['roles'] ?? []);
+                                                            $roleMatch = ($activeRole === 'MASTER' || in_array($activeRole, $evRoles, true));
+                                                            $rolesStr = implode(', ', $evRoles);
+                                                            $targetStatus = $evMeta['to'] ?? '';
+                                                        @endphp
+                                                        <option value="{{ $evCode }}" data-target="{{ $targetStatus }}" data-role="{{ $rolesStr }}" {{ !$roleMatch ? 'disabled' : '' }}>
+                                                            [{{ $evCode }}] &rarr; Status Baru: {{ $targetStatus }} (Wewenang: {{ $rolesStr }}) {{ !$roleMatch ? '[Peran Tidak Sesuai]' : '' }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="form-text text-muted" style="font-size: 0.72rem;">Peran Anda saat ini: <strong>{{ $activeRole }}</strong>. Aksi terkunci jika peran Anda bukan aktor berwenang.</div>
+                                            </div>
+
+                                            <!-- Field Khusus untuk ACTIVATE: Upload Naskah Asli Bertandatangan & Bermeterai -->
+                                            <div id="activateUploadGroup_{{ $doc->id }}" class="mb-3 p-3 bg-light rounded border" style="display: none;">
+                                                <div class="fw-bold text-dark mb-1"><i class="bi bi-file-earmark-check text-success me-1"></i>Unggah Naskah Asli Bertandatangan &amp; Bermeterai (Wajib):</div>
+                                                <div class="small text-muted mb-2">Untuk mengaktifkan dokumen secara sah (VERIFIED &rarr; ACTIVE), pengusul/admin wajib mengunggah naskah PDF asli yang telah dibubuhi tanda tangan basah dan meterai sah kedua belah pihak.</div>
+                                                <input type="file" name="signed_file" class="form-control form-control-sm" accept=".pdf">
+                                            </div>
+
+                                            <!-- Field Khusus untuk RENEW: Upload Naskah Draf Baru untuk Kembali ke DRAFT -->
+                                            <div id="renewUploadGroup_{{ $doc->id }}" class="mb-3 p-3 bg-light rounded border" style="display: none;">
+                                                <div class="fw-bold text-dark mb-1"><i class="bi bi-arrow-repeat text-warning me-1"></i>Unggah Naskah Draf Perpanjangan / Reaktivasi Baru (PDF):</div>
+                                                <div class="small text-muted mb-2">Perpanjangan dokumen kembali ke siklus awal (<strong>DRAFT</strong>). Unggah naskah draf kerja sama terbaru untuk ditelaah kembali.</div>
+                                                <input type="file" name="draft_file" class="form-control form-control-sm" accept=".pdf">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-dark">Catatan Disposisi / Rekam Jejak Audit :</label>
+                                                <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Tuliskan catatan verifikasi, disposisi, atau justifikasi perpanjangan..." required></textarea>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-dark btn-sm fw-bold px-3 py-2 shadow-sm">
+                                                <i class="bi bi-check-circle me-1 text-success"></i> Proses Transisi Status FSM
+                                            </button>
+                                        </form>
+                                    @else
+                                        <div class="alert alert-secondary py-2 mb-0">
+                                            <i class="bi bi-info-circle me-1"></i> Status <strong>{{ $doc->status }}</strong> adalah status terminal/terkunci pada alur saat ini. Tidak ada transisi langsung yang tersedia.
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light py-2">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         @else
 
@@ -1795,8 +2584,8 @@
                         <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
                             Total: <span id="visibleDocCount" class="text-primary fw-bold">{{ $documents->count() }}</span> Dokumen
                         </span>
-                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm text-nowrap">
-                            <i class="bi bi-plus-circle-fill me-1"></i> + Tambah Pengajuan Baru
+                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_mou']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm text-nowrap">
+                            <i class="bi bi-plus-circle-fill me-1"></i> + Pengajuan MoU Baru
                         </a>
                     </div>
                 </div>
@@ -2083,8 +2872,11 @@
 
                                     <!-- 7. AKSI FSM & DISPOSISI -->
                                     <td class="text-end">
-                                        <button type="button" class="btn btn-dark btn-sm fw-bold w-100 mb-1 shadow-sm py-1" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $doc->id }}" style="font-size: 0.75rem;">
-                                            <i class="bi bi-sliders me-1 text-warning"></i> Kelola Alur FSM
+                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="btn btn-primary btn-sm fw-bold w-100 mb-1 shadow-sm py-1" style="font-size: 0.75rem;">
+                                            <i class="bi bi-eye me-1"></i> Detail
+                                        </a>
+                                        <button type="button" class="btn btn-outline-dark btn-sm py-0 px-2 w-100 mb-1" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $doc->id }}" style="font-size: 0.65rem;" title="Buka Konsol FSM Cepat">
+                                            <i class="bi bi-sliders me-1 text-warning"></i> Kelola FSM
                                         </button>
                                         
                                         <div class="d-flex gap-1 justify-content-end">
@@ -2581,7 +3373,7 @@
                                     <td colspan="6" class="text-center py-5 text-muted">
                                         <i class="bi bi-folder2-open fs-1 d-block mb-2 text-secondary"></i>
                                         <strong class="text-dark">Belum Ada Pengajuan Dokumen Kerja Sama</strong>
-                                        <div class="small mt-1">Gunakan tombol <strong>+ Tambah Pengajuan Baru</strong> di atas untuk membuat usulan dokumen baru.</div>
+                                        <div class="small mt-1">Gunakan tombol <strong>+ Pengajuan MoU Baru</strong> di atas untuk membuat usulan dokumen MoU baru.</div>
                                     </td>
                                 </tr>
                             @endforelse

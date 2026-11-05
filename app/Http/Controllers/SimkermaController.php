@@ -61,8 +61,11 @@ class SimkermaController extends Controller
             session(['selected_doc_id' => $currentDoc->doc_id]);
         }
 
-        // Mode Form Tambah Pengajuan Baru
-        $isCreatingNew = ($request->query('view') === 'new');
+        // Mode Tampilan: List Dokumen, Formulir Pengajuan MoU, Formulir Turunan, atau Detail Dokumen
+        $viewMode = $request->query('view', 'list');
+        $isCreatingNew = ($viewMode === 'new' || $viewMode === 'new_mou');
+        $isCreatingDerive = ($viewMode === 'new_derive');
+        $isViewingDetail = ($viewMode === 'detail' && $currentDoc !== null);
 
         // Pre-fill Turunan Dokumen (Hierarki IKU 6)
         $prefillParentId = $request->query('parent_id', '');
@@ -130,7 +133,10 @@ class SimkermaController extends Controller
             'partners',
             'currentDoc',
             'selectedDocId',
+            'viewMode',
             'isCreatingNew',
+            'isCreatingDerive',
+            'isViewingDetail',
             'prefillParentId',
             'prefillDeriveType',
             'parentDocForDerive',
@@ -453,10 +459,10 @@ class SimkermaController extends Controller
 
         session(['selected_doc_id' => $doc->doc_id]);
 
-        return redirect()->route('simkerma.index', ['menu' => 4, 'doc' => $doc->doc_id])
+        return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id])
             ->with('flash', [
                 'type' => 'success',
-                'msg' => 'Dokumen baru ' . $doc->doc_id . ' (' . $docType . ') berhasil dibuat dengan status DRAFT. QR Code registrasi telah terbit resmi.'
+                'msg' => 'Dokumen ' . $docType . ' baru ' . $doc->doc_id . ' (' . $doc->doc_number . ') berhasil dibuat dengan status DRAFT. QR Code registrasi telah terbit resmi.'
             ]);
     }
 
@@ -687,13 +693,22 @@ class SimkermaController extends Controller
                 }
             }
 
-            return redirect()->route('simkerma.index', ['menu' => 4, 'doc' => $document->doc_id])
+            $routeParams = ['menu' => 4, 'doc' => $document->doc_id];
+            if ($request->filled('redirect_view')) {
+                $routeParams['view'] = $request->input('redirect_view');
+            }
+
+            return redirect()->route('simkerma.index', $routeParams)
                 ->with('flash', [
                     'type' => 'success',
                     'msg' => "Status dokumen {$document->doc_id} berhasil ditransisikan: {$oldStatus} &rarr; {$document->status} [{$event}].{$stampSuccessMsg} Status QR Code terbaharui otomatis."
                 ]);
         } catch (IllegalTransitionException $e) {
-            return redirect()->route('simkerma.index', ['menu' => 4, 'doc' => $document->doc_id])
+            $errParams = ['menu' => 4, 'doc' => $document->doc_id];
+            if ($request->filled('redirect_view')) {
+                $errParams['view'] = $request->input('redirect_view');
+            }
+            return redirect()->route('simkerma.index', $errParams)
                 ->with('flash', [
                     'type' => 'danger',
                     'msg' => $e->getMessage()
@@ -1016,6 +1031,97 @@ class SimkermaController extends Controller
             ->with('flash', [
                 'type' => 'success',
                 'msg' => "Profil data mitra '{$partner->name}' berhasil diperbarui{$syncMsg}"
+            ]);
+    }
+
+    /**
+     * Perbarui Informasi Dokumen Kerja Sama dari Menu Detail
+     */
+    public function updateDocument(Request $request)
+    {
+        $docId = $request->input('doc_id');
+        $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
+
+        $document->update([
+            'title' => $request->input('title', $document->title),
+            'unit' => $request->input('unit', $document->unit),
+            'first_party_signer' => $request->input('first_party_signer', $document->first_party_signer),
+            'partner_name' => $request->input('partner_name', $document->partner_name),
+            'partner_category' => $request->input('partner_category', $document->partner_category),
+            'second_party_signer' => $request->input('second_party_signer', $document->second_party_signer),
+            'scope' => $request->input('scope', $document->scope),
+            'description' => $request->input('description', $document->description),
+            'start_date' => $request->input('start_date', $document->start_date),
+            'end_date' => $request->input('end_date', $document->end_date),
+            'validity' => $request->input('validity', $document->validity),
+            'warning_threshold' => $request->input('warning_threshold', $document->warning_threshold),
+        ]);
+
+        $activeRole = session('active_role', 'ADMIN');
+        AuditTrail::create([
+            'document_id' => $document->id,
+            'actor' => 'Pengguna (' . $activeRole . ')',
+            'role' => $activeRole,
+            'event' => 'UPDATE_INFO',
+            'from_status' => $document->status,
+            'to_status' => $document->status,
+            'notes' => 'Pembaruan informasi umum dokumen kerja sama melalui menu detail.',
+            'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
+        ]);
+
+        return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id])
+            ->with('flash', [
+                'type' => 'success',
+                'msg' => 'Informasi umum dokumen ' . $document->doc_id . ' berhasil diperbarui.'
+            ]);
+    }
+
+    /**
+     * Unggah Berkas Dokumen (Draf Revisi atau Naskah Asli) dari Menu Detail
+     */
+    public function uploadDocumentFile(Request $request)
+    {
+        $docId = $request->input('doc_id');
+        $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
+        $fileType = $request->input('file_type', 'draft');
+
+        $dest = public_path('uploads/documents');
+        if (!file_exists($dest)) {
+            mkdir($dest, 0777, true);
+        }
+
+        if ($fileType === 'draft' && $request->hasFile('file')) {
+            $file = $request->file('file');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $filename = 'draf_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '_' . time() . '.' . $ext;
+            $file->move($dest, $filename);
+            $document->draft_file = 'uploads/documents/' . $filename;
+            $document->save();
+        } elseif ($fileType === 'signed' && $request->hasFile('file')) {
+            $file = $request->file('file');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $filename = 'signed_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '_' . time() . '.' . $ext;
+            $file->move($dest, $filename);
+            $document->signed_file = 'uploads/documents/' . $filename;
+            $document->save();
+        }
+
+        $activeRole = session('active_role', 'ADMIN');
+        AuditTrail::create([
+            'document_id' => $document->id,
+            'actor' => 'Pengguna (' . $activeRole . ')',
+            'role' => $activeRole,
+            'event' => 'UPLOAD_FILE',
+            'from_status' => $document->status,
+            'to_status' => $document->status,
+            'notes' => 'Pengunggahan berkas ' . ($fileType === 'signed' ? 'Naskah Asli Bertandatangan' : 'Draf Revisi') . ' berhasil.',
+            'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
+        ]);
+
+        return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id])
+            ->with('flash', [
+                'type' => 'success',
+                'msg' => 'Berkas ' . ($fileType === 'signed' ? 'naskah asli' : 'draf revisi') . ' berhasil diunggah.'
             ]);
     }
 }

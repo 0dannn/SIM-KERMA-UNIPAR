@@ -25,6 +25,8 @@ Route::post('/simkerma/store-activity', [SimkermaController::class, 'storeActivi
 Route::post('/simkerma/store-evaluation', [SimkermaController::class, 'storeEvaluation'])->name('simkerma.store-evaluation');
 Route::post('/simkerma/store-partner', [SimkermaController::class, 'storePartner'])->name('simkerma.store-partner');
 Route::post('/simkerma/update-partner', [SimkermaController::class, 'updatePartner'])->name('simkerma.update-partner');
+Route::post('/simkerma/update-document', [SimkermaController::class, 'updateDocument'])->name('simkerma.update-document');
+Route::post('/simkerma/upload-document-file', [SimkermaController::class, 'uploadDocumentFile'])->name('simkerma.upload-document-file');
 
 // Rute Verifikasi Publik QR Code (Bisa diakses via /verify/{reg_id} atau ?action=verify&reg=...)
 Route::get('/verify/{reg_id?}', [SimkermaController::class, 'verify'])->name('simkerma.verify');

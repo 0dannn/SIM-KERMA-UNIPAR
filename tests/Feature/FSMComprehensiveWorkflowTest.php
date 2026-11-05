@@ -402,4 +402,83 @@ class FSMComprehensiveWorkflowTest extends TestCase
 
         $this->assertEquals(0, Document::count());
     }
+
+    /**
+     * KASUS 10: Pengajuan MoU Khusus, Pengalihan Otomatis ke Detail View, dan Sinkronisasi UI
+     */
+    public function test_kasus_10_pengajuan_mou_dan_detail_view_navigation(): void
+    {
+        // 1. Simulasikan pembuatan MoU baru melalui formulir khusus Pengajuan MoU
+        $response = $this->withSession(['active_role' => 'UNIT'])
+            ->post(route('simkerma.store-jalur1'), [
+                'title' => 'Nota Kesepahaman Kemitraan Strategis Kampus Merdeka',
+                'doc_type' => 'MoU',
+                'parent_mou' => '-',
+                'paper_size' => 'A4',
+                'unit' => 'Fakultas Ilmu Komputer',
+                'first_party_signer' => 'Rektor Universitas Parna Raya',
+                'partner_name' => 'Universitas Indonesia',
+                'category' => 'Perguruan Tinggi',
+                'second_party_signer' => 'Rektor Universitas Indonesia',
+                'scope' => 'Penyelenggaraan Tridharma Perguruan Tinggi dan Kolaborasi Riset',
+                'validity' => '5 Tahun',
+                'warning_threshold' => 'H-90 Hari (3 Bulan)',
+                'description' => 'Kerja sama strategis payung hukum institusi'
+            ]);
+
+        $createdDoc = Document::where('partner_name', 'Universitas Indonesia')->first();
+        $this->assertNotNull($createdDoc);
+        $this->assertEquals('DRAFT', $createdDoc->status);
+        $this->assertEquals('MoU', $createdDoc->doc_type);
+
+        // Harus langsung dialihkan ke menu detail dokumen terkait
+        $response->assertRedirect(route('simkerma.index', [
+            'menu' => 4,
+            'view' => 'detail',
+            'doc' => $createdDoc->doc_id
+        ]));
+
+        // 2. Kunjungi halaman detail dokumen
+        $detailResponse = $this->get(route('simkerma.index', [
+            'menu' => 4,
+            'view' => 'detail',
+            'doc' => $createdDoc->doc_id
+        ]));
+        $detailResponse->assertStatus(200);
+        $detailResponse->assertSee('Detail Dokumen Kerja Sama');
+        $detailResponse->assertSee('Informasi Umum');
+        $detailResponse->assertSee('Alur Proses (FSM)');
+        $detailResponse->assertSee('Dokumen Turunan');
+        $detailResponse->assertSee('Dokumen &amp; Lampiran', false);
+        $detailResponse->assertSee('Aktivitas Terakhir');
+        $detailResponse->assertSee('Universitas Indonesia');
+
+        // 3. Kunjungi halaman tabel Menu 4 -> Pastikan ada tombol '+ Pengajuan MoU Baru' dan tombol 'Detail'
+        $tableResponse = $this->get(route('simkerma.index', ['menu' => 4]));
+        $tableResponse->assertStatus(200);
+        $tableResponse->assertSee('+ Pengajuan MoU Baru');
+        $tableResponse->assertSee('Detail');
+
+        // 4. Uji pembaruan data melalui endpoint update-document
+        $updateResponse = $this->withSession(['active_role' => 'ADMIN'])
+            ->post(route('simkerma.update-document'), [
+                'doc_id' => $createdDoc->doc_id,
+                'title' => 'Nota Kesepahaman Kemitraan Strategis AI & MBKM (Diperbarui)',
+                'unit' => $createdDoc->unit,
+                'partner_name' => $createdDoc->partner_name,
+                'partner_category' => $createdDoc->partner_category,
+                'scope' => 'Pendidikan, Riset AI, dan Pengabdian Masyarakat Terintegrasi',
+                'description' => 'Revisi deskripsi urgensi kemitraan'
+            ]);
+
+        $updateResponse->assertRedirect(route('simkerma.index', [
+            'menu' => 4,
+            'view' => 'detail',
+            'doc' => $createdDoc->doc_id
+        ]));
+
+        $createdDoc->refresh();
+        $this->assertEquals('Nota Kesepahaman Kemitraan Strategis AI & MBKM (Diperbarui)', $createdDoc->title);
+        $this->assertEquals('Pendidikan, Riset AI, dan Pengabdian Masyarakat Terintegrasi', $createdDoc->scope);
+    }
 }
