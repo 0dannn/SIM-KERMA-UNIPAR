@@ -1102,8 +1102,8 @@
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Nota Kesepahaman tentang Kerja Sama Bidang Pendidikan, Penelitian, dan Pengabdian kepada Masyarakat" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="title" class="form-control" placeholder="Contoh: Nota Kesepahaman tentang Kerja Sama Bidang Pendidikan, Penelitian, dan Pengabdian kepada Masyarakat" required>
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Judul atau topik naskah Nota Kesepahaman (MoU)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="title" class="form-control" required>
                                 </div>
                             </div>
                         </div>
@@ -1169,7 +1169,7 @@
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nama instansi atau institusi mitra kerja sama" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="partner_name" class="form-control" placeholder="Contoh: Universitas Indonesia / PT Telekomunikasi Indonesia Tbk" list="partnerDatalist" required>
+                                    <input type="text" name="partner_name" class="form-control" list="partnerDatalist" required>
                                 </div>
                                 <datalist id="partnerDatalist">
                                     @foreach ($partners as $p)
@@ -1206,7 +1206,7 @@
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pimpinan atau penandatangan resmi dari pihak mitra" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="second_party_signer" class="form-control" placeholder="Contoh: Rektor / Direktur Utama / Kepala Lembaga Mitra">
+                                    <input type="text" name="second_party_signer" class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -1219,7 +1219,7 @@
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nomor registrasi dokumen dari pihak mitra (opsional pada inisiasi draf, wajib saat transisi pengesahan/ACTIVE)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="partner_doc_number" class="form-control" placeholder="Kosongkan jika belum ada nomor resmi mitra (dapat diisi saat ACTIVE)">
+                                    <input type="text" name="partner_doc_number" class="form-control">
                                 </div>
                                 <div class="form-text text-muted">
                                     Opsional pada fase inisiasi DRAFT/SUBMIT. Wajib dilengkapi saat penandatanganan fisik naskah (ACTIVE).
@@ -1316,7 +1316,7 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Masa berlaku MoU dalam satuan tahun (umumnya 3 - 5 tahun). Bersifat opsional saat draf awal." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
                                     <div class="input-group">
-                                        <input type="number" min="1" max="10" name="validity_years" id="inputValidityYears" class="form-control" placeholder="Contoh: 3 atau 5" oninput="calculateEndDate()">
+                                        <input type="number" min="1" max="10" name="validity_years" id="inputValidityYears" class="form-control" oninput="calculateEndDate()">
                                         <span class="input-group-text bg-light text-muted">Tahun</span>
                                     </div>
                                     <input type="hidden" name="validity" id="inputValidity">
@@ -1347,8 +1347,8 @@
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Dr. Eng. Recky, M.T. (0812-4400-5500 / kerma@unipar.ac.id)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="pic_first_party" class="form-control" placeholder="Contoh: Dr. Eng. Recky, M.T. (0812-4400-5500 / kerma@unipar.ac.id)">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nama dan kontak narahubung resmi pihak UNIPAR" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="pic_first_party" class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -1359,8 +1359,8 @@
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Contoh: Dra. Maria Christine, M.Si. (0813-8899-7711 / info@mitra.ac.id)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="pic_second_party" class="form-control" placeholder="Contoh: Dra. Maria Christine, M.Si. (0813-8899-7711 / info@mitra.ac.id)">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nama dan kontak narahubung resmi pihak mitra" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="pic_second_party" class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -1373,7 +1373,7 @@
                             <div class="col-md-9">
                                 <div class="d-flex align-items-start gap-2">
                                     <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Ringkasan latar belakang pengajuan, target luaran strategis, serta urgensi kemitraan" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <textarea name="description" class="form-control" rows="3" placeholder="Ringkasan singkat urgensi kerja sama kemitraan strategis institusi..."></textarea>
+                                    <textarea name="description" class="form-control" rows="3"></textarea>
                                 </div>
                             </div>
                         </div>
