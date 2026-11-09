@@ -1610,9 +1610,9 @@
                     'DRAFT' => 1,
                     'REVIEW' => 2,
                     'VERIFIED' => 3,
-                    'ACTIVE' => 4,
-                    'WARNING' => 4,
-                    'EXPIRED', 'CANCELLED' => 5,
+                    'ACTIVE', 'WARNING' => 4,
+                    'EXPIRED' => 5,
+                    'CANCELLED' => 0,
                     default => 1,
                 };
                 $availableEvents = $availEvents ?? ($currentDoc ? app(\App\Services\FSMWorkflowEngineService::class)->getAvailableEvents($currentDoc->status) : []);
@@ -1717,6 +1717,10 @@
                                     @if ($currentDoc->status === 'ACTIVE')
                                         <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
                                             <i class="bi bi-check-lg me-1"></i> ACTIVE
+                                        </span>
+                                    @elseif ($currentDoc->status === 'DRAFT')
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                            <i class="bi bi-pencil-square me-1"></i> DRAFT
                                         </span>
                                     @elseif ($currentDoc->status === 'REVIEW')
                                         <span class="badge rounded-pill bg-info-subtle text-info border border-info-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
@@ -1853,6 +1857,124 @@
                                 </div>
 
                                 <!-- KARTU 2: ALUR PROSES (FINITE STATE MACHINE) -->
+                                @php
+                                    // Lookup Jejak Audit untuk masing-masing fase alur
+                                    $auditDraft = $currentDoc->auditTrails->firstWhere('event', 'CREATE_DRAFT') 
+                                        ?? $currentDoc->auditTrails->sortBy('id')->first();
+                                    $auditSubmit = $currentDoc->auditTrails->firstWhere('event', 'SUBMIT');
+                                    $auditVerify = $currentDoc->auditTrails->firstWhere('event', 'VERIFY');
+                                    $auditActive = $currentDoc->auditTrails->firstWhere('event', 'ACTIVATE');
+                                    $auditExpire = $currentDoc->auditTrails->firstWhere('event', 'EXPIRE');
+
+                                    // Tanggal masing-masing node FSM
+                                    $dateNode1 = $auditDraft ? \Carbon\Carbon::parse($auditDraft->created_at)->format('d M Y') : \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y');
+                                    
+                                    $isNode2Done = in_array($docStatus, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']) || $auditSubmit !== null;
+                                    $dateNode2 = $auditSubmit 
+                                        ? \Carbon\Carbon::parse($auditSubmit->created_at)->format('d M Y') 
+                                        : ($isNode2Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : '-');
+
+                                    $isNode3Done = in_array($docStatus, ['VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']) || $auditVerify !== null;
+                                    $isNode3Active = ($docStatus === 'REVIEW');
+                                    $dateNode3 = $auditVerify 
+                                        ? \Carbon\Carbon::parse($auditVerify->created_at)->format('d M Y') 
+                                        : ($currentDoc->date_approved 
+                                            ? \Carbon\Carbon::parse($currentDoc->date_approved)->subDay()->format('d M Y') 
+                                            : ($isNode3Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : ($isNode3Active ? 'Dalam Telaah' : '-')));
+
+                                    $isNode4Done = in_array($docStatus, ['ACTIVE', 'WARNING', 'EXPIRED']) || $auditActive !== null;
+                                    $isNode4Active = ($docStatus === 'VERIFIED');
+                                    $dateNode4 = $currentDoc->date_approved 
+                                        ? \Carbon\Carbon::parse($currentDoc->date_approved)->format('d M Y') 
+                                        : ($auditActive 
+                                            ? \Carbon\Carbon::parse($auditActive->created_at)->format('d M Y') 
+                                            : ($isNode4Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : ($isNode4Active ? 'Siap Diteken' : '-')));
+
+                                    $isNode5Active = ($docStatus === 'ACTIVE');
+                                    $isNode5Warning = ($docStatus === 'WARNING');
+                                    $isNode5Done = in_array($docStatus, ['ACTIVE', 'WARNING', 'EXPIRED']);
+                                    $dateNode5 = $isNode5Done 
+                                        ? ($currentDoc->start_date ? \Carbon\Carbon::parse($currentDoc->start_date)->format('d M Y') : ($currentDoc->date_signed ? \Carbon\Carbon::parse($currentDoc->date_signed)->format('d M Y') : ''))
+                                        : '';
+
+                                    $isNode6Active = ($docStatus === 'EXPIRED');
+                                    $dateNode6 = $isNode6Active 
+                                        ? ($currentDoc->end_date ? \Carbon\Carbon::parse($currentDoc->end_date)->format('d M Y') : '')
+                                        : '';
+
+                                    // Lebar garis progres FSM horizontal
+                                    $progressWidth = match($docStatus) {
+                                        'DRAFT' => '0%',
+                                        'REVIEW' => '40%',
+                                        'VERIFIED' => '60%',
+                                        'ACTIVE', 'WARNING' => '80%',
+                                        'EXPIRED' => '100%',
+                                        'CANCELLED' => '0%',
+                                        default => '0%'
+                                    };
+                                    $progressColor = ($docStatus === 'EXPIRED') ? '#ef4444' : '#22c55e';
+
+                                    // Konfigurasi Banner Keterangan Status Aktual
+                                    $alertConfig = match($docStatus) {
+                                        'DRAFT' => [
+                                            'bg' => '#eff6ff',
+                                            'border' => '#bfdbfe',
+                                            'color' => '#1e40af',
+                                            'icon' => 'bi-info-circle-fill text-primary',
+                                            'text' => 'Dokumen berstatus DRAFT (Tahap 1: Inisiasi Pengusulan). Klausul naskah masih dapat disunting sebelum diajukan (SUBMIT) ke meja pemeriksaan.',
+                                        ],
+                                        'REVIEW' => [
+                                            'bg' => '#eff6ff',
+                                            'border' => '#bfdbfe',
+                                            'color' => '#1e40af',
+                                            'icon' => 'bi-hourglass-split text-primary',
+                                            'text' => 'Dokumen berstatus REVIEW (Tahap 2: Telaah Mutu & Hukum). Naskah sedang diperiksa dan diverifikasi oleh LPPM / Bagian Kerja Sama.',
+                                        ],
+                                        'VERIFIED' => [
+                                            'bg' => '#f0fdf4',
+                                            'border' => '#bbf7d0',
+                                            'color' => '#166534',
+                                            'icon' => 'bi-patch-check-fill text-success',
+                                            'text' => 'Dokumen berstatus VERIFIED (Tahap 3: Lolos Telaah Mutu). Naskah dibekukan (Freeze Text), siap dicetak dan ditandatangani oleh Rektor/Pimpinan.',
+                                        ],
+                                        'ACTIVE' => [
+                                            'bg' => '#f0fdf4',
+                                            'border' => '#bbf7d0',
+                                            'color' => '#166534',
+                                            'icon' => 'bi-check-circle-fill text-success',
+                                            'text' => 'Dokumen telah disahkan dan sedang berlaku (Active)' . ($currentDoc->end_date ? ' sampai ' . \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') : '') . '.',
+                                        ],
+                                        'WARNING' => [
+                                            'bg' => '#fffbeb',
+                                            'border' => '#fde68a',
+                                            'color' => '#92400e',
+                                            'icon' => 'bi-exclamation-triangle-fill text-warning',
+                                            'text' => 'Peringatan Dini Masa Berlaku (Warning): Dokumen mendekati akhir masa aktif (< 90 hari' . ($currentDoc->end_date ? ', berakhir ' . \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') : '') . '). Segera inisiasi adendum perpanjangan.',
+                                        ],
+                                        'EXPIRED' => [
+                                            'bg' => '#fef2f2',
+                                            'border' => '#fecaca',
+                                            'color' => '#991b1b',
+                                            'icon' => 'bi-x-circle-fill text-danger',
+                                            'text' => 'Masa berlaku dokumen telah berakhir (Expired)' . ($currentDoc->end_date ? ' pada ' . \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') : '') . '. Naskah dapat direaktivasi dengan inisiasi draf baru.',
+                                        ],
+                                        'CANCELLED' => [
+                                            'bg' => '#fef2f2',
+                                            'border' => '#fecaca',
+                                            'color' => '#991b1b',
+                                            'icon' => 'bi-slash-circle-fill text-danger',
+                                            'text' => 'Pengusulan dokumen kerja sama ini telah dibatalkan secara permanen (Cancelled).',
+                                        ],
+                                        default => [
+                                            'bg' => '#f8fafc',
+                                            'border' => '#e2e8f0',
+                                            'color' => '#475569',
+                                            'icon' => 'bi-info-circle text-secondary',
+                                            'text' => 'Status alur dokumen saat ini: ' . $docStatus,
+                                        ]
+                                    };
+                                @endphp
+
                                 <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
                                     <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
@@ -1865,80 +1987,149 @@
                                     <div class="card-body py-2 px-3">
                                         <!-- HORIZONTAL STEPPER PERSIS MOCKUP detail_MoU.png -->
                                         <div class="stepper-wrap position-relative py-1 px-2 mb-2">
-                                            <!-- Connecting line background -->
-                                            <div class="position-absolute" style="top: 17px; left: 8%; right: 8%; height: 3px; background-color: #e2e8f0; z-index: 1;"></div>
-                                            <!-- Active progress line -->
-                                            @php
-                                                $progressWidth = match($stepRank) {
-                                                    1 => '0%',
-                                                    2 => '20%',
-                                                    3 => '40%',
-                                                    4 => '80%',
-                                                    5 => '100%',
-                                                    default => '0%'
-                                                };
-                                            @endphp
-                                            <div class="position-absolute" style="top: 17px; left: 8%; width: {{ $progressWidth }}; height: 3px; background-color: #22c55e; z-index: 1; transition: width 0.3s ease;"></div>
+                                            <!-- Connecting line background & active line -->
+                                            <div class="position-absolute" style="top: 15px; left: 45px; right: 45px; height: 3px; background-color: #e2e8f0; z-index: 1;">
+                                                <div style="width: {{ $progressWidth }}; height: 100%; background-color: {{ $progressColor }}; transition: width 0.3s ease;"></div>
+                                            </div>
 
                                             <div class="d-flex justify-content-between position-relative" style="z-index: 2;">
                                                 <!-- Node 1: Draft -->
                                                 <div class="text-center" style="width: 75px;">
-                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
-                                                        <i class="bi bi-check"></i>
-                                                    </div>
-                                                    <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Draft</div>
-                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') }}</div>
+                                                    @if ($docStatus === 'CANCELLED')
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #ef4444;">
+                                                            <i class="bi bi-x-lg"></i>
+                                                        </div>
+                                                        <div class="fw-semibold text-danger mt-1" style="font-size: 0.72rem;">Draft</div>
+                                                    @else
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e; {{ $docStatus === 'DRAFT' ? 'border: 2px solid #bbf7d0; box-shadow: 0 0 0 3px #dcfce7;' : '' }}">
+                                                            <i class="bi bi-check"></i>
+                                                        </div>
+                                                        <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Draft</div>
+                                                    @endif
+                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ $dateNode1 }}</div>
                                                 </div>
 
                                                 <!-- Node 2: Verifikasi Unit -->
                                                 <div class="text-center" style="width: 85px;">
-                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
-                                                        <i class="bi bi-check"></i>
-                                                    </div>
-                                                    <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Verifikasi Unit</div>
-                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') }}</div>
+                                                    @if ($isNode2Done)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
+                                                            <i class="bi bi-check"></i>
+                                                        </div>
+                                                        <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Verifikasi Unit</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">{{ $dateNode2 }}</div>
+                                                    @else
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
+                                                            <i class="bi bi-circle"></i>
+                                                        </div>
+                                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">Verifikasi Unit</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">-</div>
+                                                    @endif
                                                 </div>
 
                                                 <!-- Node 3: Review LPPM -->
                                                 <div class="text-center" style="width: 80px;">
-                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: {{ $stepRank >= 3 ? '#22c55e' : '#e2e8f0' }}; color: {{ $stepRank >= 3 ? '#ffffff' : '#64748b' }} !important;">
-                                                        <i class="bi {{ $stepRank >= 3 ? 'bi-check' : 'bi-circle' }}"></i>
-                                                    </div>
-                                                    <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Review LPPM</div>
-                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ $currentDoc->date_approved ? \Carbon\Carbon::parse($currentDoc->date_approved)->subDay()->format('d M Y') : '-' }}</div>
+                                                    @if ($isNode3Done)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
+                                                            <i class="bi bi-check"></i>
+                                                        </div>
+                                                        <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Review LPPM</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">{{ $dateNode3 }}</div>
+                                                    @elseif ($isNode3Active)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #3b82f6; border: 2px solid #bfdbfe; box-shadow: 0 0 0 3px #dbeafe;">
+                                                            <i class="bi bi-hourglass-split"></i>
+                                                        </div>
+                                                        <div class="fw-bold text-primary mt-1" style="font-size: 0.72rem;">Review LPPM</div>
+                                                        <div class="text-primary fw-medium" style="font-size: 0.65rem;">Sedang Telaah</div>
+                                                    @else
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
+                                                            <i class="bi bi-circle"></i>
+                                                        </div>
+                                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">Review LPPM</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">-</div>
+                                                    @endif
                                                 </div>
 
                                                 <!-- Node 4: Persetujuan Pimpinan -->
                                                 <div class="text-center" style="width: 100px;">
-                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: {{ $stepRank >= 4 ? '#22c55e' : '#e2e8f0' }}; color: {{ $stepRank >= 4 ? '#ffffff' : '#64748b' }} !important;">
-                                                        <i class="bi {{ $stepRank >= 4 ? 'bi-check' : 'bi-circle' }}"></i>
-                                                    </div>
-                                                    <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Persetujuan Pimpinan</div>
-                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ $currentDoc->date_approved ? \Carbon\Carbon::parse($currentDoc->date_approved)->format('d M Y') : '-' }}</div>
+                                                    @if ($isNode4Done)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
+                                                            <i class="bi bi-check"></i>
+                                                        </div>
+                                                        <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Persetujuan Pimpinan</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">{{ $dateNode4 }}</div>
+                                                    @elseif ($isNode4Active)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #3b82f6; border: 2px solid #bfdbfe; box-shadow: 0 0 0 3px #dbeafe;">
+                                                            <i class="bi bi-pen-fill"></i>
+                                                        </div>
+                                                        <div class="fw-bold text-primary mt-1" style="font-size: 0.72rem;">Persetujuan Pimpinan</div>
+                                                        <div class="text-primary fw-medium" style="font-size: 0.65rem;">Siap Diteken</div>
+                                                    @else
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
+                                                            <i class="bi bi-circle"></i>
+                                                        </div>
+                                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">Persetujuan Pimpinan</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">-</div>
+                                                    @endif
                                                 </div>
 
                                                 <!-- Node 5: Active -->
                                                 <div class="text-center" style="width: 75px;">
-                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: {{ $currentDoc->status === 'ACTIVE' || $stepRank >= 4 ? '#22c55e' : '#e2e8f0' }}; color: {{ $currentDoc->status === 'ACTIVE' || $stepRank >= 4 ? '#ffffff' : '#64748b' }} !important; border: 2px solid #bbf7d0;">
-                                                        <i class="bi bi-calendar-check"></i>
-                                                    </div>
-                                                    <div class="fw-bold text-success mt-1" style="font-size: 0.72rem;">Active</div>
+                                                    @if ($isNode5Active)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e; border: 2px solid #bbf7d0; box-shadow: 0 0 0 3px #dcfce7;">
+                                                            <i class="bi bi-calendar-check"></i>
+                                                        </div>
+                                                        <div class="fw-bold text-success mt-1" style="font-size: 0.72rem;">Active</div>
+                                                        @if ($dateNode5)
+                                                            <div class="text-success fw-medium" style="font-size: 0.65rem;">{{ $dateNode5 }}</div>
+                                                        @endif
+                                                    @elseif ($isNode5Warning)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #f59e0b; border: 2px solid #fde68a; box-shadow: 0 0 0 3px #fef3c7;">
+                                                            <i class="bi bi-bell-fill"></i>
+                                                        </div>
+                                                        <div class="fw-bold text-warning mt-1" style="font-size: 0.72rem;">Warning</div>
+                                                        @if ($dateNode5)
+                                                            <div class="text-warning fw-medium" style="font-size: 0.65rem;">{{ $dateNode5 }}</div>
+                                                        @endif
+                                                    @elseif ($isNode5Done)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
+                                                            <i class="bi bi-check"></i>
+                                                        </div>
+                                                        <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Active</div>
+                                                        @if ($dateNode5)
+                                                            <div class="text-muted" style="font-size: 0.65rem;">{{ $dateNode5 }}</div>
+                                                        @endif
+                                                    @else
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
+                                                            <i class="bi bi-calendar"></i>
+                                                        </div>
+                                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">Active</div>
+                                                    @endif
                                                 </div>
 
                                                 <!-- Node 6: Selesai -->
                                                 <div class="text-center" style="width: 75px;">
-                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
-                                                        <i class="bi bi-circle"></i>
-                                                    </div>
-                                                    <div class="text-muted mt-1" style="font-size: 0.72rem;">Selesai</div>
+                                                    @if ($isNode6Active)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #ef4444; border: 2px solid #fecaca; box-shadow: 0 0 0 3px #fee2e2;">
+                                                            <i class="bi bi-clock-history"></i>
+                                                        </div>
+                                                        <div class="fw-bold text-danger mt-1" style="font-size: 0.72rem;">Selesai</div>
+                                                        @if ($dateNode6)
+                                                            <div class="text-danger fw-medium" style="font-size: 0.65rem;">{{ $dateNode6 }}</div>
+                                                        @endif
+                                                    @else
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
+                                                            <i class="bi bi-circle"></i>
+                                                        </div>
+                                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">Selesai</div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Single Line Alert Strip -->
-                                        <div class="alert alert-success d-flex align-items-center py-1 px-2.5 mb-0 rounded-2" style="font-size: 0.78rem; background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;">
-                                            <i class="bi bi-check-circle-fill me-2 fs-6 text-success"></i>
-                                            <span>Dokumen telah disahkan dan sedang berlaku (Active).</span>
+                                        <!-- Single Line Alert Strip Dinamis Sesuai Status FSM Aktual -->
+                                        <div class="alert d-flex align-items-center py-1 px-2.5 mb-0 rounded-2" style="font-size: 0.78rem; background-color: {{ $alertConfig['bg'] }}; border-color: {{ $alertConfig['border'] }}; color: {{ $alertConfig['color'] }};">
+                                            <i class="bi {{ $alertConfig['icon'] }} me-2 fs-6"></i>
+                                            <span>{{ $alertConfig['text'] }}</span>
                                         </div>
                                     </div>
                                 </div>
