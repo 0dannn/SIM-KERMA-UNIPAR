@@ -300,13 +300,13 @@
                 <table class="table table-wireframe table-hover align-middle mb-0 small" id="partnerTable">
                     <thead class="bg-light">
                         <tr>
-                            <th style="min-width: 200px;">Nama &amp; Profil Mitra</th>
-                            <th style="min-width: 140px;">Kategori Mitra</th>
-                            <th style="min-width: 180px;">Unit Kampus &amp; Mitra Rujukan</th>
-                            <th style="min-width: 200px;">Lingkup Kerja Sama Utama</th>
-                            <th style="min-width: 130px;">Riwayat Dokumen</th>
-                            <th style="min-width: 130px;" class="text-center">Status Kemitraan</th>
-                            <th style="min-width: 140px;" class="text-end">Aksi Terintegrasi</th>
+                            <th style="min-width: 160px;">Nama &amp; Profil Mitra</th>
+                            <th style="min-width: 120px;">Kategori Mitra</th>
+                            <th style="min-width: 140px;">Unit Kampus &amp; Mitra Rujukan</th>
+                            <th style="min-width: 150px;">Lingkup Kerja Sama Utama</th>
+                            <th style="min-width: 100px;">Riwayat Dokumen</th>
+                            <th style="min-width: 105px;" class="text-center">Status Kemitraan</th>
+                            <th style="min-width: 110px;" class="text-end">Aksi Terintegrasi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -901,12 +901,12 @@
                 <table class="table table-wireframe table-hover align-middle mb-0 small" id="repoTable">
                     <thead class="bg-light">
                         <tr>
-                            <th style="min-width: 220px;">Nomor Dokumen &amp; Jenis Naskah</th>
-                            <th style="min-width: 240px;">Judul Kerja Sama &amp; Mitra</th>
-                            <th style="min-width: 170px;">Tanggal TTD &amp; Masa Berlaku</th>
-                            <th style="min-width: 160px;">Pihak Penandatangan</th>
-                            <th style="min-width: 160px;">Berkas &amp; Riwayat Audit</th>
-                            <th style="min-width: 140px;" class="text-center">Aksi Dokumen</th>
+                            <th style="min-width: 170px;">Nomor Dokumen &amp; Jenis Naskah</th>
+                            <th style="min-width: 180px;">Judul Kerja Sama &amp; Mitra</th>
+                            <th style="min-width: 130px;">Tanggal TTD &amp; Masa Berlaku</th>
+                            <th style="min-width: 130px;">Pihak Penandatangan</th>
+                            <th style="min-width: 130px;">Berkas &amp; Riwayat Audit</th>
+                            <th style="min-width: 110px;" class="text-center">Aksi Dokumen</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1573,11 +1573,11 @@
         {{-- ===================================================================================== --}}
         {{-- 3. DETAIL DOKUMEN KERJA SAMA (PERSIS SESUAI MOCKUP UI/detail_MoU.png)                 --}}
         {{-- ===================================================================================== --}}
-        @elseif ($isViewingDetail && $currentDoc)
+                @elseif ($isViewingDetail && $currentDoc)
 
             @php
                 $docStatus = $currentDoc->status;
-                // Skala 5 tahap alur FSM sesuai mockup
+                // Skala tahap alur FSM sesuai mockup
                 $stepRank = match($docStatus) {
                     'DRAFT' => 1,
                     'REVIEW' => 2,
@@ -1587,982 +1587,986 @@
                     'EXPIRED', 'CANCELLED' => 5,
                     default => 1,
                 };
+                $availableEvents = $availEvents ?? ($currentDoc ? app(\App\Services\FSMWorkflowEngineService::class)->getAvailableEvents($currentDoc->status) : []);
             @endphp
 
-            <!-- BREADCRUMBS -->
-            <nav aria-label="breadcrumb" class="mb-3">
-                <ol class="breadcrumb mb-0 small">
-                    <li class="breadcrumb-item"><a href="{{ route('simkerma.index', ['menu' => 1]) }}" class="text-decoration-none text-muted">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="text-decoration-none text-muted">Pengajuan &amp; Persetujuan</a></li>
-                    <li class="breadcrumb-item active fw-semibold text-primary" aria-current="page">Detail Dokumen</li>
-                </ol>
-            </nav>
+            <div class="detail-viewport-1080p">
 
-            <!-- HEADER BAR (BACK BUTTON, TITLE, ACTION BUTTONS) -->
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-                <div class="d-flex align-items-center gap-3">
-                    <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" title="Kembali ke Daftar Pengajuan">
-                        <i class="bi bi-arrow-left fs-5"></i>
-                    </a>
-                    <div>
-                        <h4 class="fw-bold mb-0 text-dark">Detail Dokumen Kerja Sama</h4>
-                        <div class="text-muted small">Informasi lengkap, alur persetujuan, dan dokumen turunan</div>
-                    </div>
-                </div>
+                <!-- BREADCRUMBS -->
+                <nav aria-label="breadcrumb" class="mb-1">
+                    <ol class="breadcrumb mb-0 small" style="font-size: 0.75rem;">
+                        <li class="breadcrumb-item"><a href="{{ route('simkerma.index', ['menu' => 1]) }}" class="text-decoration-none text-muted"><i class="bi bi-house me-1"></i></a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="text-decoration-none text-muted">Pengajuan &amp; Persetujuan</a></li>
+                        <li class="breadcrumb-item active text-dark fw-medium" aria-current="page">Detail Dokumen</li>
+                    </ol>
+                </nav>
 
-                <div class="d-flex align-items-center gap-2">
-                    <!-- Tombol Tambah Dokumen Turunan -->
-                    <div class="dropdown">
-                        <button class="btn btn-primary btn-sm fw-bold px-3 py-2 dropdown-toggle shadow-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-plus-lg"></i> Tambah Dokumen Turunan
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
-                            <li><h6 class="dropdown-header text-uppercase" style="font-size: 0.7rem;">Turunkan Dokumen Pelaksanaan</h6></li>
-                            <li>
-                                <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}">
-                                    <i class="bi bi-file-earmark-ruled text-primary fs-5"></i>
-                                    <div>
-                                        <div class="fw-bold">MoA / PKS</div>
-                                        <div class="text-muted" style="font-size: 0.72rem;">Perjanjian Kerja Sama Tingkat Fakultas/Unit</div>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}">
-                                    <i class="bi bi-file-earmark-check text-success fs-5"></i>
-                                    <div>
-                                        <div class="fw-bold">IA (Implementation Arrangement)</div>
-                                        <div class="text-muted" style="font-size: 0.72rem;">Rencana Aksi Operasional Tingkat Prodi/Lab</div>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
+                <!-- HEADER BAR (TITLE & ACTION BUTTONS) -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm bg-white rounded-3 d-flex align-items-center justify-content-center shadow-2xs" style="width: 32px; height: 32px; border-color: #cbd5e1;" title="Kembali ke Daftar Pengajuan">
+                            <i class="bi bi-arrow-left text-dark"></i>
+                        </a>
+                        <h5 class="fw-bold mb-0 text-dark" style="font-size: 1.15rem;">Detail Dokumen Kerja Sama</h5>
                     </div>
 
-                    <!-- Tombol Opsi Lainnya (...) -->
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary btn-sm px-3 py-2 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-three-dots"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
-                            <li><a class="dropdown-item" href="{{ route('simkerma.verify', ['reg_id' => $currentDoc->reg_id]) }}" target="_blank"><i class="bi bi-box-arrow-up-right me-2 text-primary"></i> Buka Verifikasi Publik</a></li>
-                            @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
-                                <li><a class="dropdown-item" href="{{ asset($currentDoc->draft_file) }}" target="_blank"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Buka Naskah Draf PDF</a></li>
-                            @endif
-                            @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
-                                <li><a class="dropdown-item" href="{{ asset($currentDoc->signed_file) }}" target="_blank"><i class="bi bi-file-earmark-check me-2 text-success"></i> Buka Naskah Asli PDF</a></li>
-                            @endif
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-dark" href="#" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}"><i class="bi bi-sliders me-2 text-warning"></i> Kelola Transisi FSM</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SUMMARY BANNER CARD (PERSIS UI/detail_MoU.png) -->
-            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
-                <div class="card-body p-4">
-                    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
-                        <!-- Icon Dokumen Besar -->
-                        <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 68px; height: 68px;">
-                            <i class="bi bi-file-earmark-text-fill fs-1"></i>
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Dropdown Tambah Dokumen Turunan -->
+                        <div class="dropdown">
+                            <button class="btn btn-primary btn-sm fw-semibold px-3 py-1.5 shadow-sm dropdown-toggle d-flex align-items-center gap-1.5" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.8rem; background-color: #3b82f6; border-color: #3b82f6;">
+                                <i class="bi bi-plus-lg"></i> Tambah Dokumen Turunan
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1" style="min-width: 220px;">
+                                <li>
+                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}">
+                                        <i class="bi bi-file-earmark-text text-primary fs-6"></i>
+                                        <div>
+                                            <div class="fw-bold">MoA / PKS</div>
+                                            <div class="text-muted" style="font-size: 0.7rem;">Perjanjian Kerja Sama Tingkat Fakultas</div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}">
+                                        <i class="bi bi-file-earmark-check text-success fs-6"></i>
+                                        <div>
+                                            <div class="fw-bold">IA</div>
+                                            <div class="text-muted" style="font-size: 0.7rem;">Implementation Arrangement Tingkat Prodi</div>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
 
-                        <!-- Data Utama Dokumen -->
-                        <div class="flex-grow-1">
-                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-semibold small">
-                                    <i class="bi bi-bookmark-fill me-1"></i> {{ $currentDoc->doc_type }} &mdash; Memorandum of Understanding
-                                </span>
-                                <span class="badge {{ $stepperList[$currentDoc->status][1] ?? 'bg-secondary text-white' }} px-3 py-1 fw-bold">
-                                    {{ $currentDoc->status }}
-                                </span>
-                            </div>
-
-                            <h3 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">
-                                {{ $currentDoc->doc_number ?: $currentDoc->doc_id }}
-                            </h3>
-
-                            <div class="text-secondary fw-semibold mb-2" style="font-size: 0.95rem;">
-                                <span>Universitas Parna Raya Manado</span>
-                                <span class="text-primary fw-bold mx-2">&times;</span>
-                                <span class="text-dark">{{ $currentDoc->partner_name }}</span>
-                            </div>
-
-                            <!-- Chips Metadata -->
-                            <div class="d-flex flex-wrap align-items-center gap-2 pt-1">
-                                <span class="badge bg-light text-secondary border font-monospace py-1 px-2" style="font-size: 0.75rem;">
-                                    <i class="bi bi-upc-scan me-1 text-primary"></i> {{ $currentDoc->reg_id }}
-                                </span>
-                                <span class="badge bg-light text-secondary border py-1 px-2" style="font-size: 0.75rem;">
-                                    <i class="bi bi-clock-history me-1 text-info"></i> {{ $currentDoc->auditTrails->count() }} Jejak Audit
-                                </span>
-                                <span class="badge bg-light text-secondary border py-1 px-2" style="font-size: 0.75rem;">
-                                    <i class="bi bi-building me-1 text-warning"></i> {{ $currentDoc->unit }}
-                                </span>
-                                <span class="badge bg-light text-secondary border py-1 px-2" style="font-size: 0.75rem;">
-                                    <i class="bi bi-tag me-1 text-success"></i> {{ $currentDoc->partner_category }}
-                                </span>
-                            </div>
+                        <!-- Dropdown Opsi Lainnya (...) -->
+                        <div class="dropdown">
+                            <button class="btn btn-light border btn-sm px-2.5 py-1.5 shadow-2xs" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #cbd5e1;">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1">
+                                <li><a class="dropdown-item py-1 px-3" href="{{ route('simkerma.verify', ['reg_id' => $currentDoc->reg_id]) }}" target="_blank"><i class="bi bi-box-arrow-up-right me-2 text-primary"></i> Buka Verifikasi Publik</a></li>
+                                @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
+                                    <li><a class="dropdown-item py-1 px-3" href="{{ asset($currentDoc->draft_file) }}" target="_blank"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Buka Naskah Draf PDF</a></li>
+                                @endif
+                                @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
+                                    <li><a class="dropdown-item py-1 px-3" href="{{ asset($currentDoc->signed_file) }}" target="_blank"><i class="bi bi-file-earmark-check me-2 text-success"></i> Buka Naskah Asli PDF</a></li>
+                                @endif
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li><a class="dropdown-item py-1 px-3" href="#" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}"><i class="bi bi-sliders me-2 text-warning"></i> Kelola Transisi FSM</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- NAV TABS (5 TABS SESUAI MOCKUP) -->
-            <ul class="nav nav-tabs border-bottom mb-4" id="detailDocTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active fw-bold text-dark py-2 px-3 border-0 border-bottom border-primary border-3" id="tab-info-btn" data-bs-toggle="tab" data-bs-target="#tab-info-pane" type="button" role="tab">
-                        <i class="bi bi-info-circle me-1 text-primary"></i> Informasi &amp; Alur
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-semibold text-muted py-2 px-3" id="tab-docs-btn" data-bs-toggle="tab" data-bs-target="#tab-docs-pane" type="button" role="tab">
-                        <i class="bi bi-file-earmark-pdf me-1"></i> Dokumen &amp; Lampiran
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-semibold text-muted py-2 px-3" id="tab-deriv-btn" data-bs-toggle="tab" data-bs-target="#tab-deriv-pane" type="button" role="tab">
-                        <i class="bi bi-diagram-3 me-1"></i> Dokumen Turunan ({{ $childDocs->count() }})
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-semibold text-muted py-2 px-3" id="tab-act-btn" data-bs-toggle="tab" data-bs-target="#tab-act-pane" type="button" role="tab">
-                        <i class="bi bi-list-task me-1"></i> Pelaksanaan ({{ $currentDoc->activities->count() }})
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-semibold text-muted py-2 px-3" id="tab-audit-btn" data-bs-toggle="tab" data-bs-target="#tab-audit-pane" type="button" role="tab">
-                        <i class="bi bi-clock-history me-1"></i> Riwayat &amp; Audit ({{ $currentDoc->auditTrails->count() }})
-                    </button>
-                </li>
-            </ul>
-
-            <!-- TAB PANES -->
-            <div class="tab-content" id="detailDocTabContent">
-
-                <!-- TAB 1: INFORMASI & ALUR (2 KOLOM PERSIS MOCKUP) -->
-                <div class="tab-pane fade show active" id="tab-info-pane" role="tabpanel">
-                    <div class="row g-4">
-
-                        <!-- KOLOM KIRI (7-8 COLS) -->
-                        <div class="col-lg-8">
-
-                            <!-- KARTU 1: INFORMASI UMUM -->
-                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
-                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                                    <h6 class="fw-bold text-dark mb-0">Informasi Umum</h6>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm px-3 py-1 fw-semibold" data-bs-toggle="modal" data-bs-target="#editInfoModal_{{ $currentDoc->id }}">
-                                        <i class="bi bi-pencil me-1"></i> Edit
-                                    </button>
+                <!-- SUMMARY BANNER CARD (PERSIS UI/detail_MoU.png) -->
+                <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
+                    <div class="card-body p-2 px-3">
+                        <div class="d-flex align-items-center justify-content-between gap-3">
+                            <!-- Left Group: Icon + Title info -->
+                            <div class="d-flex align-items-center gap-3 text-truncate">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background-color: #eff6ff; border: 1px solid #dbeafe;">
+                                    <i class="bi bi-file-earmark-text text-primary fs-3"></i>
                                 </div>
-                                <div class="card-body p-4">
-                                    <div class="row g-3 small">
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Judul Kerja Sama</div>
-                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->title }}</div>
+                                <div class="text-truncate">
+                                    <div class="d-flex align-items-center gap-2 mb-0.5">
+                                        <span class="badge rounded-pill text-white fw-bold px-2 py-0.5" style="background-color: #1e3a8a; font-size: 0.68rem;">{{ $currentDoc->doc_type }}</span>
+                                        <span class="text-muted" style="font-size: 0.76rem;">Memorandum of Understanding</span>
+                                    </div>
+                                    <h5 class="fw-bold text-dark mb-0 text-truncate" style="letter-spacing: -0.3px; font-size: 1.15rem;">
+                                        {{ $currentDoc->doc_number ?: $currentDoc->doc_id }}
+                                    </h5>
+                                    <div class="text-secondary text-truncate" style="font-size: 0.78rem;">
+                                        <span>Universitas Parna Raya Manado</span>
+                                        <span class="text-muted mx-1">&times;</span>
+                                        <span class="text-dark fw-medium">{{ $currentDoc->partner_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Group: Status Badge + Reg Code + Audit Trail -->
+                            <div class="text-end flex-shrink-0">
+                                <div>
+                                    @if ($currentDoc->status === 'ACTIVE')
+                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                            <i class="bi bi-check-lg me-1"></i> ACTIVE
+                                        </span>
+                                    @elseif ($currentDoc->status === 'REVIEW')
+                                        <span class="badge rounded-pill bg-info-subtle text-info border border-info-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                            <i class="bi bi-clock-history me-1"></i> REVIEW
+                                        </span>
+                                    @elseif ($currentDoc->status === 'VERIFIED')
+                                        <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                            <i class="bi bi-shield-check me-1"></i> VERIFIED
+                                        </span>
+                                    @elseif ($currentDoc->status === 'WARNING')
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                            <i class="bi bi-exclamation-triangle me-1"></i> WARNING
+                                        </span>
+                                    @elseif ($currentDoc->status === 'EXPIRED')
+                                        <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                            <i class="bi bi-clock me-1"></i> EXPIRED
+                                        </span>
+                                    @elseif ($currentDoc->status === 'CANCELLED')
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                            <i class="bi bi-x-circle me-1"></i> CANCELLED
+                                        </span>
+                                    @else
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                            {{ $currentDoc->status }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="text-secondary small fw-semibold font-monospace mt-1" style="font-size: 0.72rem;">{{ $currentDoc->reg_id }}</div>
+                                <div class="text-muted mt-0.5" style="font-size: 0.7rem;">
+                                    <i class="bi bi-calendar-event me-1 text-secondary"></i> Jejak Audit: {{ $currentDoc->auditTrails->count() }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NAV TABS (5 TABS SESUAI MOCKUP detail_MoU.png) -->
+                <ul class="nav nav-tabs border-bottom mb-2" id="detailDocTabs" role="tablist" style="font-size: 0.82rem;">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold py-1 px-3 d-flex align-items-center gap-1.5" id="tab-info-btn" data-bs-toggle="tab" data-bs-target="#tab-info-pane" type="button" role="tab">
+                            <i class="bi bi-info-circle text-primary"></i> Informasi &amp; Alur
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-medium text-muted py-1 px-3 d-flex align-items-center gap-1.5" id="tab-docs-btn" data-bs-toggle="tab" data-bs-target="#tab-docs-pane" type="button" role="tab">
+                            <i class="bi bi-file-earmark-text"></i> Dokumen &amp; Lampiran
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-medium text-muted py-1 px-3 d-flex align-items-center gap-1.5" id="tab-deriv-btn" data-bs-toggle="tab" data-bs-target="#tab-deriv-pane" type="button" role="tab">
+                            <i class="bi bi-diagram-3"></i> Dokumen Turunan ({{ $childDocs->count() }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-medium text-muted py-1 px-3 d-flex align-items-center gap-1.5" id="tab-act-btn" data-bs-toggle="tab" data-bs-target="#tab-act-pane" type="button" role="tab">
+                            <i class="bi bi-list-task"></i> Pelaksanaan
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-medium text-muted py-1 px-3 d-flex align-items-center gap-1.5" id="tab-audit-btn" data-bs-toggle="tab" data-bs-target="#tab-audit-pane" type="button" role="tab">
+                            <i class="bi bi-clock-history"></i> Riwayat &amp; Audit
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- TAB PANES -->
+                <div class="tab-content" id="detailDocTabContent">
+
+                    <!-- TAB 1: INFORMASI & ALUR (2 KOLOM PERSIS MOCKUP detail_MoU.png) -->
+                    <div class="tab-pane fade show active" id="tab-info-pane" role="tabpanel">
+                        <div class="row g-2">
+
+                            <!-- KOLOM KIRI (7-8 COLS) -->
+                            <div class="col-lg-8">
+
+                                <!-- KARTU 1: INFORMASI UMUM -->
+                                <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
+                                    <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
+                                            <i class="bi bi-info-circle text-primary"></i> Informasi Umum
                                         </div>
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Unit Pengusul</div>
-                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->unit }}</div>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2.5 fw-semibold d-flex align-items-center gap-1" style="font-size: 0.72rem; border-color: #cbd5e1;" data-bs-toggle="modal" data-bs-target="#editInfoModal_{{ $currentDoc->id }}">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                    </div>
+                                    <div class="card-body py-2 px-3">
+                                        <div class="table-responsive border-0 shadow-none mb-0">
+                                            <table class="table table-borderless table-sm mb-0" style="font-size: 0.78rem; line-height: 1.45;">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 150px;">Jenis Dokumen</td>
+                                                        <td class="py-0.5 px-1 text-muted" style="width: 10px;">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">{{ $currentDoc->doc_type }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Mitra Kerja Sama</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">{{ $currentDoc->partner_name }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Unit Pengusul</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">{{ $currentDoc->unit }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Ruang Lingkup</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5 text-truncate" style="max-width: 480px;">{{ $currentDoc->scope ?: $currentDoc->title }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Masa Berlaku</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            {{ \Carbon\Carbon::parse($currentDoc->start_date)->translatedFormat('d F Y') }} &ndash; {{ \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') }} ({{ trim(str_ireplace("Tahun", "", $currentDoc->validity ?: "1")) }} Tahun)
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Peringatan</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="py-0.5">
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.7rem;">
+                                                                <i class="bi bi-bell-fill me-1"></i> H-90 Hari (3 Bulan)
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Mitra Kerja Sama</div>
-                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->partner_name }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- KARTU 2: ALUR PROSES (FINITE STATE MACHINE) -->
+                                <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
+                                    <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
+                                            <i class="bi bi-layers text-primary"></i> Alur Proses (Finite State Machine)
                                         </div>
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Kategori Mitra</div>
-                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->partner_category }}</div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Penandatangan UNIPAR</div>
-                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->first_party_signer ?: 'Rektor Universitas Parna Raya' }}</div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Penandatangan Mitra</div>
-                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->second_party_signer ?: '-' }}</div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Masa Berlaku</div>
-                                            <div class="fw-bold text-dark mt-1">
-                                                {{ $currentDoc->start_date ? date('d/m/Y', strtotime($currentDoc->start_date)) : '-' }} s/d {{ $currentDoc->end_date ? date('d/m/Y', strtotime($currentDoc->end_date)) : '-' }} ({{ $currentDoc->validity ?: '1 Tahun' }})
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 fw-semibold d-flex align-items-center gap-1" style="font-size: 0.72rem; border-color: #cbd5e1;" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}">
+                                            <i class="bi bi-diagram-3"></i> Lihat Detail FSM
+                                        </button>
+                                    </div>
+                                    <div class="card-body py-2 px-3">
+                                        <!-- HORIZONTAL STEPPER PERSIS MOCKUP detail_MoU.png -->
+                                        <div class="stepper-wrap position-relative py-1 px-2 mb-2">
+                                            <!-- Connecting line background -->
+                                            <div class="position-absolute" style="top: 17px; left: 8%; right: 8%; height: 3px; background-color: #e2e8f0; z-index: 1;"></div>
+                                            <!-- Active progress line -->
+                                            @php
+                                                $progressWidth = match($stepRank) {
+                                                    1 => '0%',
+                                                    2 => '20%',
+                                                    3 => '40%',
+                                                    4 => '80%',
+                                                    5 => '100%',
+                                                    default => '0%'
+                                                };
+                                            @endphp
+                                            <div class="position-absolute" style="top: 17px; left: 8%; width: {{ $progressWidth }}; height: 3px; background-color: #22c55e; z-index: 1; transition: width 0.3s ease;"></div>
+
+                                            <div class="d-flex justify-content-between position-relative" style="z-index: 2;">
+                                                <!-- Node 1: Draft -->
+                                                <div class="text-center" style="width: 75px;">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
+                                                        <i class="bi bi-check"></i>
+                                                    </div>
+                                                    <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Draft</div>
+                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') }}</div>
+                                                </div>
+
+                                                <!-- Node 2: Verifikasi Unit -->
+                                                <div class="text-center" style="width: 85px;">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
+                                                        <i class="bi bi-check"></i>
+                                                    </div>
+                                                    <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Verifikasi Unit</div>
+                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') }}</div>
+                                                </div>
+
+                                                <!-- Node 3: Review LPPM -->
+                                                <div class="text-center" style="width: 80px;">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: {{ $stepRank >= 3 ? '#22c55e' : '#e2e8f0' }}; color: {{ $stepRank >= 3 ? '#ffffff' : '#64748b' }} !important;">
+                                                        <i class="bi {{ $stepRank >= 3 ? 'bi-check' : 'bi-circle' }}"></i>
+                                                    </div>
+                                                    <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Review LPPM</div>
+                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ $currentDoc->date_approved ? \Carbon\Carbon::parse($currentDoc->date_approved)->subDay()->format('d M Y') : '-' }}</div>
+                                                </div>
+
+                                                <!-- Node 4: Persetujuan Pimpinan -->
+                                                <div class="text-center" style="width: 100px;">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: {{ $stepRank >= 4 ? '#22c55e' : '#e2e8f0' }}; color: {{ $stepRank >= 4 ? '#ffffff' : '#64748b' }} !important;">
+                                                        <i class="bi {{ $stepRank >= 4 ? 'bi-check' : 'bi-circle' }}"></i>
+                                                    </div>
+                                                    <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Persetujuan Pimpinan</div>
+                                                    <div class="text-muted" style="font-size: 0.65rem;">{{ $currentDoc->date_approved ? \Carbon\Carbon::parse($currentDoc->date_approved)->format('d M Y') : '-' }}</div>
+                                                </div>
+
+                                                <!-- Node 5: Active -->
+                                                <div class="text-center" style="width: 75px;">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: {{ $currentDoc->status === 'ACTIVE' || $stepRank >= 4 ? '#22c55e' : '#e2e8f0' }}; color: {{ $currentDoc->status === 'ACTIVE' || $stepRank >= 4 ? '#ffffff' : '#64748b' }} !important; border: 2px solid #bbf7d0;">
+                                                        <i class="bi bi-calendar-check"></i>
+                                                    </div>
+                                                    <div class="fw-bold text-success mt-1" style="font-size: 0.72rem;">Active</div>
+                                                </div>
+
+                                                <!-- Node 6: Selesai -->
+                                                <div class="text-center" style="width: 75px;">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
+                                                        <i class="bi bi-circle"></i>
+                                                    </div>
+                                                    <div class="text-muted mt-1" style="font-size: 0.72rem;">Selesai</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Ambang Batas Peringatan</div>
-                                            <div class="fw-bold text-dark mt-1">{{ $currentDoc->warning_threshold ?: 'H-90 Hari (3 Bulan)' }}</div>
+
+                                        <!-- Single Line Alert Strip -->
+                                        <div class="alert alert-success d-flex align-items-center py-1 px-2.5 mb-0 rounded-2" style="font-size: 0.78rem; background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;">
+                                            <i class="bi bi-check-circle-fill me-2 fs-6 text-success"></i>
+                                            <span>Dokumen telah disahkan dan sedang berlaku (Active).</span>
                                         </div>
-                                        <div class="col-12">
-                                            <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Ruang Lingkup</div>
-                                            <div class="fw-semibold text-secondary mt-1">{{ $currentDoc->scope ?: 'Kerja sama kemitraan Tridharma' }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- KARTU 3: DOKUMEN TURUNAN -->
+                                <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
+                                    <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
+                                            <i class="bi bi-layers text-primary"></i> Dokumen Turunan
+                                            <span class="badge rounded-pill fw-medium px-2 py-0.5" style="background-color: #e0e7ff; color: #4338ca; font-size: 0.7rem;">
+                                                {{ $childDocs->count() }} Dokumen
+                                            </span>
                                         </div>
-                                        @if (!empty($currentDoc->description))
-                                            <div class="col-12">
-                                                <div class="text-muted fw-semibold" style="font-size: 0.72rem;">Deskripsi / Urgensi</div>
-                                                <div class="text-secondary mt-1">{{ $currentDoc->description }}</div>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive border-0 shadow-none mb-0">
+                                            <table class="table table-hover align-middle mb-0" style="font-size: 0.76rem;">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-3 py-1 text-muted fw-semibold" style="width: 40px;">No.</th>
+                                                        <th class="py-1 text-muted fw-semibold">Nomor Dokumen</th>
+                                                        <th class="py-1 text-muted fw-semibold">Jenis</th>
+                                                        <th class="py-1 text-muted fw-semibold">Unit Pelaksana</th>
+                                                        <th class="py-1 text-muted fw-semibold">Status</th>
+                                                        <th class="pe-3 py-1 text-end text-muted fw-semibold" style="width: 80px;">Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @forelse ($childDocs as $cIdx => $cDoc)
+                                                        <tr>
+                                                            <td class="ps-3 py-1 text-muted">{{ $cIdx + 1 }}</td>
+                                                            <td class="py-1 fw-bold text-dark">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</td>
+                                                            <td class="py-1">
+                                                                @if (stripos($cDoc->doc_type, 'MoA') !== false)
+                                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;">MoA / PKS</span>
+                                                                @else
+                                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;">IA</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="py-1 text-secondary">{{ $cDoc->unit }}</td>
+                                                            <td class="py-1">
+                                                                @if ($cDoc->status === 'ACTIVE')
+                                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;"><i class="bi bi-check me-0.5"></i> ACTIVE</span>
+                                                                @else
+                                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;"><i class="bi bi-clock me-0.5"></i> {{ $cDoc->status }}</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="pe-3 py-1 text-end">
+                                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat Detail">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </a>
+                                                                <div class="dropdown d-inline-block">
+                                                                    <button class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs dropdown-toggle dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                        <i class="bi bi-three-dots"></i>
+                                                                    </button>
+                                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1">
+                                                                        <li><a class="dropdown-item py-1 px-3" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}"><i class="bi bi-eye me-1.5"></i> Detail Dokumen</a></li>
+                                                                        <li><a class="dropdown-item py-1 px-3" href="{{ route('simkerma.verify', ['reg_id' => $cDoc->reg_id]) }}" target="_blank"><i class="bi bi-qr-code-scan me-1.5"></i> Verifikasi QR</a></li>
+                                                                    </ul>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="6" class="text-center text-muted py-2 small">Belum ada dokumen turunan terdaftar.</td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- KOLOM KANAN (4-5 COLS) -->
+                            <div class="col-lg-4">
+
+                                <!-- KARTU 1: DOKUMEN & LAMPIRAN -->
+                                <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
+                                    <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
+                                            <i class="bi bi-paperclip text-primary"></i> Dokumen &amp; Lampiran
+                                        </div>
+                                    </div>
+                                    <div class="card-body py-2 px-3">
+                                        <!-- 1. Draf Naskah PDF -->
+                                        <div class="d-flex align-items-center justify-content-between py-1 px-2 border rounded-2 mb-1.5 bg-light" style="font-size: 0.76rem;">
+                                            <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                                                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background-color: #fee2e2; color: #dc2626;">
+                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                </div>
+                                                <div class="text-truncate">
+                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">Draf MoU &ndash; {{ $currentDoc->partner_name }}.pdf</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">1,2 MB &bull; Diunggah {{ \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') }}</div>
+                                                </div>
                                             </div>
+                                            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                <a href="{{ asset($currentDoc->draft_file ?: 'templates/Template_MoU_UNIPAR.docx') }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ asset($currentDoc->draft_file ?: 'templates/Template_MoU_UNIPAR.docx') }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- 2. Naskah Final Bertandatangan -->
+                                        <div class="d-flex align-items-center justify-content-between py-1 px-2 border rounded-2 mb-1.5 bg-light" style="font-size: 0.76rem;">
+                                            <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                                                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background-color: #fee2e2; color: #dc2626;">
+                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                </div>
+                                                <div class="text-truncate">
+                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">MoU Final (Bertandatangan).pdf</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">2,4 MB &bull; Diunggah {{ $currentDoc->date_signed ? \Carbon\Carbon::parse($currentDoc->date_signed)->format('d M Y') : '03 Nov 2026' }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                <a href="{{ asset($currentDoc->signed_file ?: ($currentDoc->draft_file ?: 'templates/Template_MoU_UNIPAR.docx')) }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ asset($currentDoc->signed_file ?: ($currentDoc->draft_file ?: 'templates/Template_MoU_UNIPAR.docx')) }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- 3. Notula Pembahasan (Word) -->
+                                        <div class="d-flex align-items-center justify-content-between py-1 px-2 border rounded-2 mb-0 bg-light" style="font-size: 0.76rem;">
+                                            <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                                                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background-color: #e0f2fe; color: #0284c7;">
+                                                    <i class="bi bi-file-earmark-word-fill"></i>
+                                                </div>
+                                                <div class="text-truncate">
+                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">Notula Pembahasan.docx</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">412 KB &bull; Diunggah 02 Nov 2026</div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                <a href="{{ asset('templates/Template_MoU_UNIPAR.docx') }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ asset('templates/Template_MoU_UNIPAR.docx') }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- KARTU 2: AKTIVITAS TERAKHIR -->
+                                <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
+                                    <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
+                                            <i class="bi bi-clock-history text-primary"></i> Aktivitas Terakhir
+                                        </div>
+                                    </div>
+                                    <div class="card-body py-2 px-3">
+                                        <!-- Vertical Activity Timeline Matching UI/detail_MoU.png -->
+                                        <div class="activity-timeline position-relative ps-3" style="border-left: 2px solid #e2e8f0; margin-left: 8px;">
+                                            @php
+                                                $recentTrails = $currentDoc->auditTrails->sortByDesc('id')->take(5);
+                                            @endphp
+
+                                            @if ($recentTrails->isNotEmpty())
+                                                @foreach ($recentTrails as $rIdx => $rTrail)
+                                                    @php
+                                                        $dotColor = match($rTrail->event) {
+                                                            'ACTIVATE', 'VERIFY' => '#22c55e',
+                                                            'SUBMIT' => '#3b82f6',
+                                                            'RETURN_TO_DRAFT', 'TRIGGER_WARNING' => '#eab308',
+                                                            'CANCEL', 'EXPIRE' => '#ef4444',
+                                                            default => '#3b82f6'
+                                                        };
+                                                        $dotIcon = match($rTrail->event) {
+                                                            'ACTIVATE' => 'bi-check',
+                                                            'VERIFY' => 'bi-shield-check',
+                                                            'SUBMIT' => 'bi-send',
+                                                            'RETURN_TO_DRAFT' => 'bi-arrow-return-left',
+                                                            default => 'bi-circle'
+                                                        };
+                                                    @endphp
+                                                    <div class="position-relative {{ $loop->last ? 'mb-0' : 'mb-2' }} ps-2">
+                                                        <div class="position-absolute rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 18px; height: 18px; left: -18px; top: 1px; background-color: {{ $dotColor }}; font-size: 0.65rem;">
+                                                            <i class="bi {{ $dotIcon }}"></i>
+                                                        </div>
+                                                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">{{ $rTrail->notes ?: $rTrail->event }}</div>
+                                                        <div class="text-muted" style="font-size: 0.68rem;">oleh {{ $rTrail->actor }} ({{ $rTrail->role }}) &bull; {{ $rTrail->timestamp_wita }}</div>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <!-- Mockup Standard Timeline Items -->
+                                                <div class="position-relative mb-2 ps-2">
+                                                    <div class="position-absolute rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 18px; height: 18px; left: -18px; top: 1px; background-color: #22c55e; font-size: 0.65rem;">
+                                                        <i class="bi bi-check"></i>
+                                                    </div>
+                                                    <div class="fw-bold text-dark" style="font-size: 0.76rem;">Dokumen diaktifkan (Active)</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">oleh Rektor &bull; 03 Nov 2026, 10.24</div>
+                                                </div>
+
+                                                <div class="position-relative mb-2 ps-2">
+                                                    <div class="position-absolute rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 18px; height: 18px; left: -18px; top: 1px; background-color: #3b82f6; font-size: 0.65rem;">
+                                                        <i class="bi bi-file-earmark-check"></i>
+                                                    </div>
+                                                    <div class="fw-bold text-dark" style="font-size: 0.76rem;">Disetujui oleh Pimpinan</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">oleh Rektor &bull; 03 Nov 2026, 10.21</div>
+                                                </div>
+
+                                                <div class="position-relative mb-2 ps-2">
+                                                    <div class="position-absolute rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 18px; height: 18px; left: -18px; top: 1px; background-color: #8b5cf6; font-size: 0.65rem;">
+                                                        <i class="bi bi-search"></i>
+                                                    </div>
+                                                    <div class="fw-bold text-dark" style="font-size: 0.76rem;">Direview oleh LPPM</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">oleh Kepala LPPM &bull; 02 Nov 2026, 15.37</div>
+                                                </div>
+
+                                                <div class="position-relative mb-2 ps-2">
+                                                    <div class="position-absolute rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 18px; height: 18px; left: -18px; top: 1px; background-color: #22c55e; font-size: 0.65rem;">
+                                                        <i class="bi bi-check"></i>
+                                                    </div>
+                                                    <div class="fw-bold text-dark" style="font-size: 0.76rem;">Diverifikasi oleh Unit</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">oleh Kaprodi Teknik Informatika &bull; 01 Nov 2026, 14.20</div>
+                                                </div>
+
+                                                <div class="position-relative mb-0 ps-2">
+                                                    <div class="position-absolute rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 18px; height: 18px; left: -18px; top: 1px; background-color: #94a3b8; font-size: 0.65rem;">
+                                                        <i class="bi bi-plus"></i>
+                                                    </div>
+                                                    <div class="fw-bold text-dark" style="font-size: 0.76rem;">Pengajuan dibuat</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">oleh Staf Prodi &bull; 01 Nov 2026, 09.16</div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: DOKUMEN & LAMPIRAN DETAIL -->
+                    <div class="tab-pane fade" id="tab-docs-pane" role="tabpanel">
+                        <div class="card border rounded-3 p-3 bg-white mb-2 shadow-2xs">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-files text-primary me-1"></i> Manajemen Berkas &amp; Pratinjau Naskah</h6>
+                                <button type="button" class="btn btn-primary btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#uploadDocModal_{{ $currentDoc->id }}">
+                                    <i class="bi bi-upload me-1"></i> Unggah Berkas Baru
+                                </button>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="p-2 border rounded-2 bg-light">
+                                        <h6 class="fw-bold text-dark mb-1 small"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>Naskah Draf Pengusul</h6>
+                                        @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
+                                            <div class="ratio ratio-16x9 border bg-white mb-1.5 rounded-1 overflow-hidden" style="max-height: 250px;">
+                                                <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Draf"></iframe>
+                                            </div>
+                                            <div class="d-flex gap-1.5">
+                                                <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-outline-secondary btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
+                                                <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-secondary btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-download me-1"></i>Unduh PDF</a>
+                                            </div>
+                                        @else
+                                            <div class="text-muted py-3 text-center small">Berkas naskah draf belum diunggah.</div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 border rounded-2 bg-light">
+                                        <h6 class="fw-bold text-dark mb-1 small"><i class="bi bi-file-earmark-check text-success me-1"></i>Naskah Asli / Terverifikasi QR Code</h6>
+                                        @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
+                                            <div class="ratio ratio-16x9 border bg-white mb-1.5 rounded-1 overflow-hidden" style="max-height: 250px;">
+                                                <iframe src="{{ asset($currentDoc->signed_file) }}" title="Preview Naskah Asli"></iframe>
+                                            </div>
+                                            <div class="d-flex gap-1.5">
+                                                <a href="{{ asset($currentDoc->signed_file) }}" target="_blank" class="btn btn-outline-success btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
+                                                <a href="{{ asset($currentDoc->signed_file) }}" download class="btn btn-success btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-download me-1"></i>Unduh Naskah Asli</a>
+                                            </div>
+                                        @elseif ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)) && in_array($currentDoc->status, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']))
+                                            <div class="ratio ratio-16x9 border bg-white mb-1.5 rounded-1 overflow-hidden" style="max-height: 250px;">
+                                                <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Naskah QR Code"></iframe>
+                                            </div>
+                                            <div class="d-flex gap-1.5">
+                                                <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-outline-primary btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
+                                                <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-primary btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-download me-1"></i>Unduh Naskah Ber-QR</a>
+                                            </div>
+                                        @else
+                                            <div class="text-muted py-3 text-center small">Naskah asli bertandatangan basah belum diunggah. Naskah dapat diunggah pada tahap status VERIFIED &rarr; ACTIVE.</div>
                                         @endif
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- KARTU 2: ALUR PROSES (FSM) -->
-                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
-                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                                    <h6 class="fw-bold text-dark mb-0">Alur Proses (FSM)</h6>
-                                    <button type="button" class="btn btn-outline-primary btn-sm px-3 py-1 fw-semibold" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}">
-                                        <i class="bi bi-sliders me-1"></i> Lihat Detail FSM
-                                    </button>
-                                </div>
-                                <div class="card-body p-4">
-
-                                    <!-- Stepper 5 Tahap Sesuai Mockup -->
-                                    <div class="p-3 bg-light rounded-3 border mb-3">
-                                        <div class="d-flex align-items-center justify-content-between position-relative px-2">
-                                            <!-- Garis Background Stepper -->
-                                            <div class="position-absolute top-50 start-0 translate-middle-y w-100 bg-secondary bg-opacity-25" style="height: 3px; z-index: 1;"></div>
-                                            <!-- Garis Progress Aktif -->
-                                            <div class="position-absolute top-50 start-0 translate-middle-y bg-primary" style="height: 3px; z-index: 1; width: {{ max(0, min(100, ($stepRank - 1) * 25)) }}%;"></div>
-
-                                            @php
-                                                $steps = [
-                                                    1 => ['label' => 'Draft', 'sub' => 'Disusun oleh pengusul'],
-                                                    2 => ['label' => 'Review', 'sub' => 'Pemeriksaan legalitas'],
-                                                    3 => ['label' => 'Verifikasi', 'sub' => 'Stempel QR Code sah'],
-                                                    4 => ['label' => 'Active', 'sub' => 'Tanda tangan & berlaku'],
-                                                    5 => ['label' => 'Selesai', 'sub' => 'Arsip / evaluasi'],
-                                                ];
-                                            @endphp
-
-                                            @foreach ($steps as $sNum => $sInfo)
-                                                @php
-                                                    $isDone = ($stepRank > $sNum);
-                                                    $isCurrent = ($stepRank === $sNum);
-                                                    $circleBg = $isDone ? 'bg-success text-white shadow-sm' : ($isCurrent ? 'bg-primary text-white shadow ring-2 ring-primary' : 'bg-white text-muted border border-secondary');
-                                                @endphp
-                                                <div class="text-center position-relative" style="z-index: 2; width: 18%;">
-                                                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle fw-bold {{ $circleBg }}" style="width: 38px; height: 38px; font-size: 0.85rem;">
-                                                        @if ($isDone)
-                                                            <i class="bi bi-check-lg fs-5"></i>
-                                                        @else
-                                                            {{ $sNum }}
-                                                        @endif
-                                                    </div>
-                                                    <div class="mt-2">
-                                                        <div class="small fw-bold {{ $isCurrent ? 'text-primary' : ($isDone ? 'text-dark' : 'text-muted') }}">{{ $sInfo['label'] }}</div>
-                                                        <div class="text-muted d-none d-md-block" style="font-size: 0.68rem;">{{ $sInfo['sub'] }}</div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-
-                                    <!-- Status Box & Direct Transition Action -->
-                                    <div class="alert alert-light border d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 py-2 px-3 mb-0">
-                                        <div>
-                                            <div class="small text-muted mb-0">Status Siklus FSM Saat Ini:</div>
-                                            <div class="d-flex align-items-center gap-2 mt-1">
-                                                <span class="badge {{ $stepperList[$currentDoc->status][1] ?? 'bg-secondary' }} px-3 py-1 fw-bold fs-6">
-                                                    {{ $currentDoc->status }}
-                                                </span>
-                                                <span class="small text-secondary">
-                                                    @if ($currentDoc->status === 'DRAFT')
-                                                        Naskah draf sedang disusun oleh Unit Pengusul. Siap diajukan ke meja pemeriksaan review pimpinan.
-                                                    @elseif ($currentDoc->status === 'REVIEW')
-                                                        Naskah dalam tahap pemeriksaan legalitas dan substansi oleh LPPM / Biro Hukum UNIPAR.
-                                                    @elseif ($currentDoc->status === 'VERIFIED')
-                                                        Naskah telah lolos verifikasi sah dan stempel QR Code resmi telah diterbitkan. Menunggu pengunggahan naskah asli bertandatangan basah.
-                                                    @elseif ($currentDoc->status === 'ACTIVE')
-                                                        Dokumen telah berlaku aktif secara hukum dan terdaftar resmi di pangkalan data SIMKERMA UNIPAR.
-                                                    @elseif ($currentDoc->status === 'WARNING')
-                                                        Masa berlaku dokumen memasuki periode ambang peringatan dini (H-90 Hari). Segera ajukan perpanjangan/reaktivasi.
-                                                    @elseif ($currentDoc->status === 'EXPIRED')
-                                                        Masa berlaku dokumen telah kedaluwarsa. Dapat direaktivasi kembali ke status DRAFT.
-                                                    @elseif ($currentDoc->status === 'CANCELLED')
-                                                        Dokumen ini telah dibatalkan secara permanen.
-                                                    @endif
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="text-nowrap">
-                                            <button type="button" class="btn btn-dark btn-sm fw-bold px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}">
-                                                <i class="bi bi-sliders me-1 text-warning"></i> Kelola Transisi FSM
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            <!-- KARTU 3: DOKUMEN TURUNAN -->
-                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
-                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <h6 class="fw-bold text-dark mb-0">Dokumen Turunan</h6>
-                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold rounded-pill px-2 py-0" style="font-size: 0.72rem;">{{ $childDocs->count() }} Dokumen</span>
-                                        </div>
-                                        <div class="text-muted small" style="font-size: 0.76rem;">Dokumen turunan dari MoU ini (MoA dan IA)</div>
-                                    </div>
-                                    <div class="dropdown">
-                                        <button class="btn btn-outline-primary btn-sm fw-semibold dropdown-toggle px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-plus-lg me-1"></i> Tambah Turunan
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
-                                            <li><a class="dropdown-item py-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}"><i class="bi bi-file-earmark-ruled me-2 text-primary"></i> + Tambah MoA / PKS</a></li>
-                                            <li><a class="dropdown-item py-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}"><i class="bi bi-file-earmark-check me-2 text-success"></i> + Tambah IA (Implementation)</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="card-body p-0">
-                                    @if ($childDocs->isNotEmpty())
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle mb-0 small">
-                                                <thead class="table-light text-muted" style="font-size: 0.75rem;">
-                                                    <tr>
-                                                        <th class="ps-3">Jenis</th>
-                                                        <th>Nomor Dokumen</th>
-                                                        <th>Judul Dokumen</th>
-                                                        <th>Unit Pelaksana</th>
-                                                        <th>Status</th>
-                                                        <th class="text-end pe-3">Aksi</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($childDocs as $cDoc)
-                                                        <tr>
-                                                            <td class="ps-3">
-                                                                <span class="badge {{ stripos($cDoc->doc_type, 'MoA') !== false ? 'bg-primary' : 'bg-success' }} py-1 px-2" style="font-size: 0.7rem;">
-                                                                    {{ $cDoc->doc_type }}
-                                                                </span>
-                                                            </td>
-                                                            <td class="fw-bold font-monospace text-dark" style="font-size: 0.78rem;">
-                                                                {{ $cDoc->doc_number ?: $cDoc->doc_id }}
-                                                            </td>
-                                                            <td style="max-width: 250px;">
-                                                                <div class="text-truncate fw-semibold text-dark" title="{{ $cDoc->title }}">{{ $cDoc->title }}</div>
-                                                                <div class="text-muted" style="font-size: 0.7rem;">Mitra: {{ $cDoc->partner_name }}</div>
-                                                            </td>
-                                                            <td>
-                                                                <span class="text-secondary" style="font-size: 0.75rem;">{{ $cDoc->unit }}</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="badge {{ $stepperList[$cDoc->status][1] ?? 'bg-secondary' }} py-1 px-2" style="font-size: 0.7rem;">
-                                                                    {{ $cDoc->status }}
-                                                                </span>
-                                                            </td>
-                                                            <td class="text-end pe-3">
-                                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0 px-2 fw-semibold" style="font-size: 0.72rem;">
-                                                                    <i class="bi bi-eye me-1"></i> Detail
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @else
-                                        <div class="p-4 text-center text-muted">
-                                            <i class="bi bi-diagram-3 fs-3 d-block mb-2 text-secondary opacity-50"></i>
-                                            <div class="fw-semibold text-dark small">Belum Ada Dokumen Turunan Terdaftar</div>
-                                            <div class="small text-muted mb-3" style="font-size: 0.75rem;">MoU ini belum memiliki naskah turunan MoA (Perjanjian Kerja Sama) atau IA (Implementation Arrangement).</div>
-                                            <div class="d-flex justify-content-center gap-2">
-                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}" class="btn btn-outline-primary btn-sm fw-semibold">
-                                                    <i class="bi bi-plus-lg me-1"></i> Tambah MoA / PKS
-                                                </a>
-                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-outline-success btn-sm fw-semibold">
-                                                    <i class="bi bi-plus-lg me-1"></i> Tambah IA
-                                                </a>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-
                         </div>
+                    </div>
 
-                        <!-- KOLOM KANAN (4 COLS) -->
-                        <div class="col-lg-4">
-
-                            <!-- KARTU 1: DOKUMEN & LAMPIRAN -->
-                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
-                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="fw-bold text-dark mb-0">Dokumen &amp; Lampiran</h6>
-                                        <div class="text-muted small" style="font-size: 0.76rem;">Berkas naskah dan lampiran terkait</div>
-                                    </div>
+                    <!-- TAB 3: DOKUMEN TURUNAN DETAIL -->
+                    <div class="tab-pane fade" id="tab-deriv-pane" role="tabpanel">
+                        <div class="card border rounded-3 p-3 bg-white mb-2 shadow-2xs">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark small">Daftar Dokumen Turunan (MoA &amp; IA)</h6>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Naskah turunan pelaksanaan yang berinduk secara hukum ke dokumen MoU ini</div>
                                 </div>
-                                <div class="card-body p-3">
-                                    <!-- 1. Draf Naskah PDF -->
-                                    <div class="p-3 bg-light rounded-3 border mb-2 d-flex align-items-center justify-content-between gap-2">
-                                        <div class="d-flex align-items-center gap-2 text-truncate">
-                                            <div class="bg-danger bg-opacity-10 text-danger rounded-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
-                                            </div>
-                                            <div class="text-truncate">
-                                                <div class="fw-bold text-dark text-truncate small" title="{{ basename($currentDoc->draft_file ?: 'draf_mou.pdf') }}">
-                                                    {{ basename($currentDoc->draft_file ?: 'draf_mou.pdf') }}
-                                                </div>
-                                                <div class="text-muted" style="font-size: 0.7rem;">
-                                                    PDF &bull; {{ $currentDoc->paper_size ?: 'A4' }} &bull; Draf Pengusul
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                            @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
-                                                <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-light btn-sm border py-1 px-2" title="Buka / Preview PDF" style="font-size: 0.75rem;">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-light btn-sm border py-1 px-2" title="Unduh Berkas" style="font-size: 0.75rem;">
-                                                    <i class="bi bi-download"></i>
-                                                </a>
-                                            @else
-                                                <span class="badge bg-secondary bg-opacity-25 text-dark" style="font-size: 0.68rem;">Draf Awal</span>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    <!-- 2. Naskah Resmi Berstempel QR Code / Naskah Asli -->
-                                    <div class="p-3 bg-light rounded-3 border mb-2 d-flex align-items-center justify-content-between gap-2">
-                                        <div class="d-flex align-items-center gap-2 text-truncate">
-                                            <div class="bg-primary bg-opacity-10 text-primary rounded-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                <i class="bi bi-file-earmark-check-fill fs-5"></i>
-                                            </div>
-                                            <div class="text-truncate">
-                                                <div class="fw-bold text-dark text-truncate small">
-                                                    {{ $currentDoc->signed_file ? basename($currentDoc->signed_file) : 'Naskah_Resmi_QR_' . strtolower(str_replace([' ', '/', '-'], '_', $currentDoc->doc_id)) . '.pdf' }}
-                                                </div>
-                                                <div class="text-muted" style="font-size: 0.7rem;">
-                                                    @if ($currentDoc->signed_file)
-                                                        <span class="text-success fw-semibold"><i class="bi bi-patch-check-fill me-1"></i>Naskah Asli Bertandatangan</span>
-                                                    @elseif ($currentDoc->status === 'ACTIVE' || $currentDoc->status === 'VERIFIED')
-                                                        <span class="text-primary fw-semibold"><i class="bi bi-qr-code me-1"></i>Terverifikasi QR Code</span>
-                                                    @else
-                                                        <span class="text-muted fst-italic">Menunggu Transisi VERIFIED</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                            @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
-                                                <a href="{{ asset($currentDoc->signed_file) }}" target="_blank" class="btn btn-light btn-sm border py-1 px-2" title="Buka Naskah Asli" style="font-size: 0.75rem;">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ asset($currentDoc->signed_file) }}" download class="btn btn-light btn-sm border py-1 px-2" title="Unduh Naskah Asli" style="font-size: 0.75rem;">
-                                                    <i class="bi bi-download"></i>
-                                                </a>
-                                            @elseif ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)) && in_array($currentDoc->status, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']))
-                                                <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-light btn-sm border py-1 px-2" title="Buka PDF Ber-QR Code" style="font-size: 0.75rem;">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-light btn-sm border py-1 px-2" title="Unduh Naskah PDF" style="font-size: 0.75rem;">
-                                                    <i class="bi bi-download"></i>
-                                                </a>
-                                            @else
-                                                <span class="badge bg-secondary bg-opacity-25 text-secondary" style="font-size: 0.68rem;">Belum Terbit</span>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    <!-- 3. Template Word Draf (.docx) -->
-                                    <div class="p-3 bg-light rounded-3 border mb-3 d-flex align-items-center justify-content-between gap-2">
-                                        <div class="d-flex align-items-center gap-2 text-truncate">
-                                            <div class="bg-primary bg-opacity-10 text-primary rounded-2 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                <i class="bi bi-file-earmark-word-fill fs-5"></i>
-                                            </div>
-                                            <div class="text-truncate">
-                                                <div class="fw-bold text-dark text-truncate small">Template_MoU_UNIPAR.docx</div>
-                                                <div class="text-muted" style="font-size: 0.7rem;">DOCX &bull; Template Format Baku</div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                            <a href="{{ asset('templates/Template_MoU_UNIPAR.docx') }}" download="Template_MoU_UNIPAR.docx" class="btn btn-light btn-sm border py-1 px-2" title="Unduh Template Word" style="font-size: 0.75rem;">
-                                                <i class="bi bi-download"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <!-- Tombol Unggah Naskah / Dokumen Baru -->
-                                    <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-semibold py-2" data-bs-toggle="modal" data-bs-target="#uploadDocModal_{{ $currentDoc->id }}">
-                                        <i class="bi bi-upload me-1"></i> Unggah Revisi / Naskah Asli
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- KARTU 2: AKTIVITAS TERAKHIR -->
-                            <div class="card border rounded-3 shadow-sm mb-4 bg-white">
-                                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="fw-bold text-dark mb-0">Aktivitas Terakhir</h6>
-                                        <div class="text-muted small" style="font-size: 0.76rem;">Catatan rekam jejak audit FSM</div>
-                                    </div>
-                                    <a href="#tab-audit-pane" data-bs-toggle="tab" data-bs-target="#tab-audit-pane" class="text-decoration-none small fw-semibold text-primary" onclick="document.getElementById('tab-audit-btn').click();">
-                                        Lihat Semua ({{ $currentDoc->auditTrails->count() }})
+                                <div class="d-flex gap-1.5">
+                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}" class="btn btn-primary btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;">
+                                        <i class="bi bi-plus-lg me-1"></i> + Tambah MoA / PKS
+                                    </a>
+                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-success btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;">
+                                        <i class="bi bi-plus-lg me-1"></i> + Tambah IA
                                     </a>
                                 </div>
-                                <div class="card-body p-3">
-                                    @if ($currentDoc->auditTrails->isNotEmpty())
-                                        <div class="timeline position-relative ps-3" style="border-left: 2px solid #e2e8f0; margin-left: 8px;">
-                                            @foreach ($currentDoc->auditTrails->take(5) as $tIndex => $trail)
-                                                <div class="position-relative mb-3 ps-2">
-                                                    <!-- Dot Indicator -->
-                                                    <div class="position-absolute rounded-circle {{ $tIndex === 0 ? 'bg-primary ring-2' : 'bg-secondary' }}" style="width: 10px; height: 10px; left: -14px; top: 5px;"></div>
-                                                    
-                                                    <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
-                                                        <span class="badge bg-light text-dark border fw-bold" style="font-size: 0.68rem;">
-                                                            {{ $trail->event }}
+                            </div>
+                            @if ($childDocs->isNotEmpty())
+                                <div class="table-responsive border-0">
+                                    <table class="table table-bordered table-hover align-middle mb-0" style="font-size: 0.76rem;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="py-1">Jenis</th>
+                                                <th class="py-1">Nomor Dokumen</th>
+                                                <th class="py-1">Judul Naskah</th>
+                                                <th class="py-1">Unit Pelaksana</th>
+                                                <th class="py-1">Mitra</th>
+                                                <th class="py-1">Status FSM</th>
+                                                <th class="py-1 text-end">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($childDocs as $cDoc)
+                                                <tr>
+                                                    <td class="py-1">
+                                                        @if (stripos($cDoc->doc_type, 'MoA') !== false)
+                                                            <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;">MoA / PKS</span>
+                                                        @else
+                                                            <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;">IA</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="py-1 fw-bold text-dark">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</td>
+                                                    <td class="py-1 text-truncate" style="max-width: 250px;">{{ $cDoc->title }}</td>
+                                                    <td class="py-1 text-secondary">{{ $cDoc->unit }}</td>
+                                                    <td class="py-1 text-dark">{{ $cDoc->partner_name }}</td>
+                                                    <td class="py-1">
+                                                        <span class="badge {{ $stepperList[$cDoc->status][1] ?? 'bg-secondary' }} px-2 py-0.5" style="font-size: 0.7rem;">
+                                                            {{ $cDoc->status }}
                                                         </span>
-                                                        <span class="text-muted" style="font-size: 0.68rem;">
-                                                            {{ $trail->timestamp_wita }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="small fw-semibold text-dark" style="font-size: 0.78rem;">
-                                                        {{ $trail->actor }} <span class="badge bg-secondary-subtle text-secondary py-0 px-1" style="font-size: 0.65rem;">{{ $trail->role }}</span>
-                                                    </div>
-                                                    <div class="text-muted mt-1 text-break" style="font-size: 0.72rem; line-height: 1.35;">
-                                                        {{ $trail->notes }}
-                                                    </div>
-                                                </div>
+                                                    </td>
+                                                    <td class="py-1 text-end">
+                                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0.5 px-2" style="font-size: 0.72rem;">
+                                                            Detail
+                                                        </a>
+                                                    </td>
+                                                </tr>
                                             @endforeach
-                                        </div>
-                                    @else
-                                        <div class="text-muted text-center py-3 small">
-                                            Belum ada rekaman audit untuk dokumen ini.
-                                        </div>
-                                    @endif
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </div>
-
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- TAB 2: DOKUMEN & LAMPIRAN DETAIL -->
-                <div class="tab-pane fade" id="tab-docs-pane" role="tabpanel">
-                    <div class="card border rounded-3 shadow-sm p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold mb-0">Manajemen Berkas &amp; Pratinjau Naskah</h6>
-                            <button type="button" class="btn btn-primary btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#uploadDocModal_{{ $currentDoc->id }}">
-                                <i class="bi bi-upload me-1"></i> Unggah Berkas Baru
-                            </button>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="p-3 border rounded-3 bg-light">
-                                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Naskah Draf Pengusul</h6>
-                                    @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
-                                        <div class="ratio ratio-16x9 border bg-white mb-2">
-                                            <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Draf"></iframe>
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
-                                            <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-secondary btn-sm"><i class="bi bi-download me-1"></i>Unduh PDF</a>
-                                        </div>
-                                    @else
-                                        <div class="text-muted py-4 text-center small">Berkas naskah draf belum diunggah.</div>
-                                    @endif
+                            @else
+                                <div class="text-center py-4 bg-light rounded-2 border">
+                                    <i class="bi bi-diagram-3 text-muted fs-3"></i>
+                                    <div class="fw-semibold text-dark mt-1 small">Belum Ada Dokumen Turunan Terdaftar</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Gunakan tombol di atas untuk menambahkan perjanjian kerja sama turunan (MoA / IA)</div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="p-3 border rounded-3 bg-light">
-                                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-file-earmark-check text-success me-2"></i>Naskah Asli / Terverifikasi QR Code</h6>
-                                    @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
-                                        <div class="ratio ratio-16x9 border bg-white mb-2">
-                                            <iframe src="{{ asset($currentDoc->signed_file) }}" title="Preview Naskah Asli"></iframe>
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <a href="{{ asset($currentDoc->signed_file) }}" target="_blank" class="btn btn-outline-success btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
-                                            <a href="{{ asset($currentDoc->signed_file) }}" download class="btn btn-success btn-sm"><i class="bi bi-download me-1"></i>Unduh Naskah Asli</a>
-                                        </div>
-                                    @elseif ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)) && in_array($currentDoc->status, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']))
-                                        <div class="ratio ratio-16x9 border bg-white mb-2">
-                                            <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Naskah QR Code"></iframe>
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
-                                            <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-primary btn-sm"><i class="bi bi-download me-1"></i>Unduh Naskah Ber-QR</a>
-                                        </div>
-                                    @else
-                                        <div class="text-muted py-4 text-center small">Naskah asli bertandatangan basah belum diunggah. Naskah dapat diunggah pada tahap status VERIFIED &rarr; ACTIVE.</div>
-                                    @endif
-                                </div>
-                            </div>
+                            @endif
                         </div>
                     </div>
-                </div>
 
-                <!-- TAB 3: DOKUMEN TURUNAN DETAIL -->
-                <div class="tab-pane fade" id="tab-deriv-pane" role="tabpanel">
-                    <div class="card border rounded-3 shadow-sm p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h6 class="fw-bold mb-0">Daftar Dokumen Turunan (MoA &amp; IA)</h6>
-                                <div class="text-muted small">Naskah turunan pelaksanaan yang berinduk secara hukum ke dokumen MoU ini</div>
+                    <!-- TAB 4: PELAKSANAAN KEGIATAN -->
+                    <div class="tab-pane fade" id="tab-act-pane" role="tabpanel">
+                        <div class="card border rounded-3 p-3 bg-white mb-2 shadow-2xs">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-calendar2-check text-primary me-1"></i> Catatan Pelaksanaan Kerja Sama (IKU 6)</h6>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Kegiatan riil operasional yang mengimplementasikan kerja sama ini</div>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#createActivityModal">
+                                    <i class="bi bi-plus-lg me-1"></i> Catat Kegiatan Baru
+                                </button>
                             </div>
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}" class="btn btn-primary btn-sm fw-semibold">
-                                    <i class="bi bi-plus-lg me-1"></i> + Tambah MoA / PKS
-                                </a>
-                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-success btn-sm fw-semibold">
-                                    <i class="bi bi-plus-lg me-1"></i> + Tambah IA
-                                </a>
-                            </div>
-                        </div>
-                        @if ($childDocs->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover align-middle mb-0 small">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Jenis</th>
-                                            <th>Nomor Dokumen</th>
-                                            <th>Judul Naskah</th>
-                                            <th>Unit Pelaksana</th>
-                                            <th>Mitra</th>
-                                            <th>Status FSM</th>
-                                            <th class="text-end">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($childDocs as $cDoc)
+                            @if ($currentDoc->activities->isNotEmpty())
+                                <div class="table-responsive border-0">
+                                    <table class="table table-bordered table-hover align-middle mb-0" style="font-size: 0.76rem;">
+                                        <thead class="table-light">
                                             <tr>
-                                                <td><span class="badge {{ stripos($cDoc->doc_type, 'MoA') !== false ? 'bg-primary' : 'bg-success' }}">{{ $cDoc->doc_type }}</span></td>
-                                                <td class="font-monospace fw-bold">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</td>
-                                                <td>{{ $cDoc->title }}</td>
-                                                <td>{{ $cDoc->unit }}</td>
-                                                <td>{{ $cDoc->partner_name }}</td>
-                                                <td><span class="badge {{ $stepperList[$cDoc->status][1] ?? 'bg-secondary' }}">{{ $cDoc->status }}</span></td>
-                                                <td class="text-end">
-                                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0 px-2">
-                                                        <i class="bi bi-eye me-1"></i> Detail
-                                                    </a>
-                                                </td>
+                                                <th class="py-1">Nama Kegiatan</th>
+                                                <th class="py-1">Bentuk Implementasi</th>
+                                                <th class="py-1">Tanggal</th>
+                                                <th class="py-1">Unit Pelaksana</th>
+                                                <th class="py-1">Realisasi Anggaran</th>
+                                                <th class="py-1">Status</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="text-center py-4 text-muted">
-                                <i class="bi bi-diagram-3 fs-2 d-block mb-2 text-secondary opacity-50"></i>
-                                Belum ada naskah MoA atau IA yang berinduk pada dokumen ini.
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- TAB 4: PELAKSANAAN KEGIATAN -->
-                <div class="tab-pane fade" id="tab-act-pane" role="tabpanel">
-                    <div class="card border rounded-3 shadow-sm p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h6 class="fw-bold mb-0">Realisasi Kegiatan Pelaksanaan Kerja Sama</h6>
-                                <div class="text-muted small">Kegiatan implementasi Tridharma yang teregistrasi di Menu 5</div>
-                            </div>
-                            <a href="{{ route('simkerma.index', ['menu' => 5]) }}" class="btn btn-outline-primary btn-sm fw-semibold">
-                                <i class="bi bi-box-arrow-up-right me-1"></i> Buka Menu 5 Pemantauan
-                            </a>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($currentDoc->activities as $act)
+                                                <tr>
+                                                    <td class="py-1 fw-bold text-dark">{{ $act->title }}</td>
+                                                    <td class="py-1"><span class="badge bg-light text-dark border">{{ $act->type }}</span></td>
+                                                    <td class="py-1">{{ \Carbon\Carbon::parse($act->activity_date)->format('d M Y') }}</td>
+                                                    <td class="py-1">{{ $act->unit }}</td>
+                                                    <td class="py-1 text-dark fw-semibold">Rp {{ number_format($act->budget_spent, 0, ',', '.') }}</td>
+                                                    <td class="py-1"><span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5">{{ $act->status }}</span></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="text-center py-4 bg-light rounded-2 border">
+                                    <i class="bi bi-calendar-x text-muted fs-3"></i>
+                                    <div class="fw-semibold text-dark mt-1 small">Belum Ada Catatan Pelaksanaan</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Klik tombol "Catat Kegiatan Baru" untuk merekam implementasi Tri Dharma perguruan tinggi.</div>
+                                </div>
+                            @endif
                         </div>
-                        @if ($currentDoc->activities->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover align-middle mb-0 small">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Nama Kegiatan</th>
-                                            <th>Bentuk Tridharma</th>
-                                            <th>Periode Pelaksanaan</th>
-                                            <th>Status Pelaksanaan</th>
-                                            <th>Luaran &amp; Capaian</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($currentDoc->activities as $act)
+                    </div>
+
+                    <!-- TAB 5: RIWAYAT & AUDIT DETAIL -->
+                    <div class="tab-pane fade" id="tab-audit-pane" role="tabpanel">
+                        <div class="card border rounded-3 p-3 bg-white mb-2 shadow-2xs">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-shield-lock text-primary me-1"></i> Jejak Audit Relasional FSM (Immutable Audit Trail)</h6>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Catatan mutlak setiap transisi status dan aksi pejabat berwenang di Universitas Parna Raya</div>
+                                </div>
+                                <span class="badge bg-light text-dark border font-monospace py-1 px-2" style="font-size: 0.72rem;">
+                                    Total: {{ $currentDoc->auditTrails->count() }} Rekaman
+                                </span>
+                            </div>
+                            @if ($currentDoc->auditTrails->isNotEmpty())
+                                <div class="table-responsive border-0">
+                                    <table class="table table-bordered table-striped align-middle mb-0" style="font-size: 0.76rem;">
+                                        <thead class="table-dark">
                                             <tr>
-                                                <td class="fw-bold text-dark">{{ $act->title }}</td>
-                                                <td><span class="badge bg-secondary-subtle text-secondary border">{{ $act->activity_type ?: 'Tridharma' }}</span></td>
-                                                <td>{{ $act->start_date }} s/d {{ $act->end_date ?: '-' }}</td>
-                                                <td>
-                                                    @php
-                                                        $stClass = match($act->execution_status) {
-                                                            'SELESAI' => 'bg-success',
-                                                            'SEDANG_BERJALAN' => 'bg-primary',
-                                                            'BELUM_DIMULAI' => 'bg-warning text-dark',
-                                                            default => 'bg-secondary',
-                                                        };
-                                                    @endphp
-                                                    <span class="badge {{ $stClass }}">{{ $act->execution_status }}</span>
-                                                </td>
-                                                <td>{{ $act->outcome_target ?: '-' }}</td>
+                                                <th class="py-1" style="width: 50px;">#</th>
+                                                <th class="py-1">Waktu (WITA)</th>
+                                                <th class="py-1">Aktor</th>
+                                                <th class="py-1">Peran</th>
+                                                <th class="py-1">Event Transisi</th>
+                                                <th class="py-1">Dari Status</th>
+                                                <th class="py-1">Ke Status</th>
+                                                <th class="py-1">Catatan Verifikasi / Disposisi</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="text-center py-4 text-muted">
-                                <i class="bi bi-list-task fs-2 d-block mb-2 text-secondary opacity-50"></i>
-                                Belum ada data kegiatan pelaksanaan yang dicatatkan untuk dokumen ini.
-                            </div>
-                        @endif
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($currentDoc->auditTrails->sortByDesc('id') as $aIdx => $trail)
+                                                <tr>
+                                                    <td class="py-1 text-muted">{{ $aIdx + 1 }}</td>
+                                                    <td class="py-1 font-monospace text-nowrap">{{ $trail->timestamp_wita }}</td>
+                                                    <td class="py-1 fw-bold text-dark">{{ $trail->actor }}</td>
+                                                    <td class="py-1"><span class="badge bg-secondary-subtle text-secondary py-0 px-1">{{ $trail->role }}</span></td>
+                                                    <td class="py-1"><span class="badge bg-primary text-white font-monospace py-0 px-1">{{ $trail->event }}</span></td>
+                                                    <td class="py-1"><span class="badge bg-light text-dark border">{{ $trail->from_status }}</span></td>
+                                                    <td class="py-1"><span class="badge bg-success-subtle text-success border border-success-subtle">{{ $trail->to_status }}</span></td>
+                                                    <td class="py-1 text-muted">{{ $trail->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="text-center py-4 bg-light rounded-2 border">
+                                    <i class="bi bi-clock-history text-muted fs-3"></i>
+                                    <div class="fw-semibold text-dark mt-1 small">Belum Ada Rekaman Jejak Audit</div>
+                                </div>
+                            @endif
+                        </div>
                     </div>
-                </div>
 
-                <!-- TAB 5: RIWAYAT & AUDIT DETAIL -->
-                <div class="tab-pane fade" id="tab-audit-pane" role="tabpanel">
-                    <div class="card border rounded-3 shadow-sm p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h6 class="fw-bold mb-0">Rekam Jejak Audit &amp; Transisi FSM</h6>
-                                <div class="text-muted small">Catatan kronologis perubahan status, pengguna, dan disposisi resmi institusi</div>
-                            </div>
-                            <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
-                                Total: {{ $currentDoc->auditTrails->count() }} Rekaman
-                            </span>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover align-middle mb-0 small">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Waktu (WITA)</th>
-                                        <th>Aktor &amp; Peran</th>
-                                        <th>Event FSM</th>
-                                        <th>Status Sebelum &rarr; Sesudah</th>
-                                        <th>Catatan Disposisi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($currentDoc->auditTrails as $trail)
-                                        <tr>
-                                            <td class="font-monospace text-nowrap">{{ $trail->timestamp_wita }}</td>
-                                            <td>
-                                                <div class="fw-bold text-dark">{{ $trail->actor }}</div>
-                                                <span class="badge bg-secondary-subtle text-secondary py-0 px-1" style="font-size: 0.65rem;">{{ $trail->role }}</span>
-                                            </td>
-                                            <td><span class="badge bg-dark">{{ $trail->event }}</span></td>
-                                            <td class="text-nowrap">
-                                                <span class="badge bg-light text-secondary border">{{ $trail->from_status }}</span>
-                                                <i class="bi bi-arrow-right mx-1 text-muted"></i>
-                                                <span class="badge bg-primary">{{ $trail->to_status }}</span>
-                                            </td>
-                                            <td>{{ $trail->notes }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center py-3 text-muted">Belum ada jejak audit.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
 
             </div>
 
-            <!-- MODAL EDIT INFORMASI UMUM -->
-            <div class="modal fade" id="editInfoModal_{{ $currentDoc->id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content border-0 shadow-lg">
-                        <form method="POST" action="{{ route('simkerma.update-document') }}" class="small">
+            <!-- ===================================================================================== -->
+            <!-- MODAL EDIT INFORMASI UMUM DOKUMEN                                                     -->
+            <!-- ===================================================================================== -->
+            <div class="modal fade" id="editInfoModal_{{ $currentDoc->id }}" tabindex="-1" aria-labelledby="editInfoModalLabel_{{ $currentDoc->id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header py-2 px-3 bg-light border-bottom">
+                            <h6 class="modal-title fw-bold text-dark" id="editInfoModalLabel_{{ $currentDoc->id }}"><i class="bi bi-pencil-square text-primary me-1.5"></i> Edit Informasi Kerja Sama</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="POST" action="{{ route('simkerma.update-document') }}">
                             @csrf
                             <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
-                            <div class="modal-header bg-dark text-white py-3">
-                                <h6 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Informasi Dokumen {{ $currentDoc->doc_id }}</h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body p-4">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Judul / Topik Kerja Sama :</label>
-                                    <input type="text" name="title" class="form-control" value="{{ $currentDoc->title }}" required>
+                            <div class="modal-body p-3 small">
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold mb-0.5">Judul / Ruang Lingkup</label>
+                                    <input type="text" name="title" class="form-control form-control-sm" value="{{ $currentDoc->title }}" required>
                                 </div>
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Unit Pengusul :</label>
-                                        <input type="text" name="unit" class="form-control" value="{{ $currentDoc->unit }}" required>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label text-muted fw-semibold mb-0.5">Unit Pengusul</label>
+                                        <input type="text" name="unit" class="form-control form-control-sm" value="{{ $currentDoc->unit }}" required>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Nama Mitra :</label>
-                                        <input type="text" name="partner_name" class="form-control" value="{{ $currentDoc->partner_name }}" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Penandatangan UNIPAR :</label>
-                                        <input type="text" name="first_party_signer" class="form-control" value="{{ $currentDoc->first_party_signer }}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Penandatangan Mitra :</label>
-                                        <input type="text" name="second_party_signer" class="form-control" value="{{ $currentDoc->second_party_signer }}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Tanggal Mulai :</label>
-                                        <input type="date" name="start_date" class="form-control" value="{{ $currentDoc->start_date }}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Tanggal Berakhir :</label>
-                                        <input type="date" name="end_date" class="form-control" value="{{ $currentDoc->end_date }}">
+                                    <div class="col-6">
+                                        <label class="form-label text-muted fw-semibold mb-0.5">Mitra Kerja Sama</label>
+                                        <input type="text" name="partner_name" class="form-control form-control-sm" value="{{ $currentDoc->partner_name }}" required>
                                     </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Ruang Lingkup :</label>
-                                    <textarea name="scope" class="form-control" rows="2">{{ $currentDoc->scope }}</textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Deskripsi Ringkas :</label>
-                                    <textarea name="description" class="form-control" rows="2">{{ $currentDoc->description }}</textarea>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label text-muted fw-semibold mb-0.5">Tanggal Mulai</label>
+                                        <input type="date" name="start_date" class="form-control form-control-sm" value="{{ $currentDoc->start_date }}">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-muted fw-semibold mb-0.5">Tanggal Berakhir</label>
+                                        <input type="date" name="end_date" class="form-control form-control-sm" value="{{ $currentDoc->end_date }}">
+                                    </div>
                                 </div>
                             </div>
-                            <div class="modal-footer bg-light">
-                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                                <button type="submit" class="btn btn-primary btn-sm fw-bold px-3"><i class="bi bi-save me-1"></i>Simpan Perubahan</button>
+                            <div class="modal-footer py-2 px-3 bg-light border-top">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary btn-sm fw-semibold"><i class="bi bi-check-lg me-1"></i> Simpan Perubahan</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- MODAL UNGGAH BERKAS REVISI / NASKAH ASLI -->
-            <div class="modal fade" id="uploadDocModal_{{ $currentDoc->id }}" tabindex="-1" aria-hidden="true">
+            <!-- ===================================================================================== -->
+            <!-- MODAL UNGGAH BERKAS DOKUMEN                                                           -->
+            <!-- ===================================================================================== -->
+            <div class="modal fade" id="uploadDocModal_{{ $currentDoc->id }}" tabindex="-1" aria-labelledby="uploadDocModalLabel_{{ $currentDoc->id }}" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content border-0 shadow-lg">
-                        <form method="POST" action="{{ route('simkerma.upload-document-file') }}" enctype="multipart/form-data" class="small">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header py-2 px-3 bg-light border-bottom">
+                            <h6 class="modal-title fw-bold text-dark" id="uploadDocModalLabel_{{ $currentDoc->id }}"><i class="bi bi-cloud-arrow-up text-primary me-1.5"></i> Unggah Berkas Naskah</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="POST" action="{{ route('simkerma.upload-document-file') }}" enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
-                            <div class="modal-header bg-dark text-white py-3">
-                                <h6 class="modal-title fw-bold"><i class="bi bi-upload me-2"></i>Unggah Berkas Dokumen {{ $currentDoc->doc_id }}</h6>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body p-4">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Jenis Berkas :</label>
-                                    <select name="file_type" class="form-select" required>
-                                        <option value="draft">Draf Revisi (PDF)</option>
-                                        <option value="signed">Naskah Asli Bertandatangan Basah (PDF)</option>
+                            <div class="modal-body p-3 small">
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold mb-0.5">Jenis Berkas</label>
+                                    <select name="file_type" class="form-select form-select-sm" required>
+                                        <option value="draft">Naskah Draf Pengusul (PDF/DOCX)</option>
+                                        <option value="signed">Naskah Asli Bertandatangan Basah &amp; Bermeterai (PDF)</option>
                                     </select>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Pilih Berkas PDF :</label>
-                                    <input type="file" name="file" class="form-control" accept=".pdf" required>
-                                    <div class="form-text text-muted">Format berkas harus berekstensi .pdf.</div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold mb-0.5">Pilih Berkas</label>
+                                    <input type="file" name="file" class="form-control form-control-sm" required accept=".pdf,.doc,.docx">
                                 </div>
                             </div>
-                            <div class="modal-footer bg-light">
-                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                                <button type="submit" class="btn btn-primary btn-sm fw-bold px-3"><i class="bi bi-upload me-1"></i>Unggah Sekarang</button>
+                            <div class="modal-footer py-2 px-3 bg-light border-top">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary btn-sm fw-semibold"><i class="bi bi-upload me-1"></i> Unggah Berkas</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- MODAL FSM TRANSITION UNTUK DOKUMEN YANG SEDANG DILIHAT DETAILNYA -->
-            @php
-                $doc = $currentDoc;
-            @endphp
-            <div class="modal fade" id="fsmModal_{{ $doc->id }}" tabindex="-1" aria-labelledby="fsmModalLabel_{{ $doc->id }}" aria-hidden="true">
+            <!-- ===================================================================================== -->
+            <!-- MODAL FSM WORKFLOW ENGINE INTERAKTIF UNTUK DOKUMEN INI                                 -->
+            <!-- ===================================================================================== -->
+            <div class="modal fade" id="fsmModal_{{ $currentDoc->id }}" tabindex="-1" aria-labelledby="fsmModalLabel_{{ $currentDoc->id }}" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content border-0 shadow-lg">
-                        <div class="modal-header bg-dark text-white py-3">
+                        <div class="modal-header bg-dark text-white py-2 px-3">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-warning text-dark fw-bold">{{ $doc->doc_id }}</span>
+                                <span class="badge bg-warning text-dark fw-bold">{{ $currentDoc->doc_id }}</span>
                                 <div>
-                                    <h6 class="modal-title fw-bold mb-0" id="fsmModalLabel_{{ $doc->id }}">{{ $doc->partner_name }}</h6>
-                                    <small class="text-white-50">{{ $doc->doc_number ?: 'Registrasi: ' . $doc->reg_id }} &bull; {{ $doc->doc_type }}</small>
+                                    <h6 class="modal-title fw-bold mb-0" id="fsmModalLabel_{{ $currentDoc->id }}">{{ $currentDoc->partner_name }}</h6>
+                                    <small class="text-white-50">{{ $currentDoc->doc_number ?: 'Registrasi: ' . $currentDoc->reg_id }} &bull; {{ $currentDoc->doc_type }}</small>
                                 </div>
                             </div>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
-                        <div class="modal-body p-4">
-                            <!-- Stepper Mini Siklus Status FSM Dokumen Ini -->
-                            <div class="p-2 bg-light rounded border mb-3">
+                        <div class="modal-body p-3">
+                            <!-- Posisi Siklus Hidup FSM -->
+                            <div class="p-2 bg-light rounded border mb-2.5">
                                 <div class="small fw-bold text-muted mb-1"><i class="bi bi-diagram-2 me-1"></i>Posisi Siklus Hidup FSM:</div>
-                                <div class="d-flex align-items-center overflow-x-auto gap-1 py-1" style="font-size: 0.68rem;">
-                                    @foreach ($stepperList as $stKey => $stMeta)
-                                        @php $isThisActive = ($stKey === $doc->status); @endphp
-                                        <span class="badge {{ $isThisActive ? 'bg-dark text-white border border-warning shadow-sm fw-bold' : 'bg-white text-muted border' }}">
-                                            {{ $stMeta[0] }}
+                                <div class="d-flex flex-wrap align-items-center gap-1.5">
+                                    @foreach ($stepperList as $stKey => $stData)
+                                        <span class="badge {{ $stKey === $currentDoc->status ? $stData[1] . ' shadow-sm py-1 px-2' : 'bg-light text-muted border py-1 px-2' }}" style="font-size: 0.72rem;">
+                                            <i class="bi {{ $stData[0] }} me-1"></i> {{ $stKey }}
                                         </span>
                                         @if (!$loop->last)
-                                            <i class="bi bi-chevron-right text-muted" style="font-size: 0.6rem;"></i>
+                                            <i class="bi bi-chevron-right text-muted" style="font-size: 0.65rem;"></i>
                                         @endif
                                     @endforeach
                                 </div>
                             </div>
 
-                            <!-- Form Eksekusi Transisi Status FSM -->
-                            <div class="card border mb-3">
-                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
-                                    <div class="fw-bold small text-dark"><i class="bi bi-arrow-repeat me-1 text-primary"></i> Eksekusi Transisi Siklus Status FSM</div>
-                                    <span class="badge bg-primary" style="font-size: 0.72rem;">Status Saat Ini: {{ $doc->status }}</span>
+                            <!-- Form Eksekusi Transisi FSM -->
+                            <form method="POST" action="{{ route('simkerma.transition') }}" id="fsmForm_{{ $currentDoc->id }}" enctype="multipart/form-data">
+                                @csrf
+                                <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
+
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark mb-0.5">Wewenang Peran Eksekutor (RBAC):</label>
+                                        <select name="actor_role" class="form-select form-select-sm" required>
+                                            <option value="{{ $activeRole }}" selected>{{ $activeRole }} (Peran Sesi Aktif)</option>
+                                            <option value="UNIT">UNIT (Unit Kerja / Prodi Pengusul)</option>
+                                            <option value="LEGAL">LEGAL (Bagian Hukum / Pemeriksa Draf)</option>
+                                            <option value="LEADER">LEADER (Pimpinan: Rektor / Warek)</option>
+                                            <option value="ADMIN">ADMIN (Staf Pengelola SIM-KERMA)</option>
+                                            <option value="MASTER">MASTER (Hak Akses Administrator Penuh)</option>
+                                            <option value="SYSTEM">SYSTEM (Cron Scheduler / Task Engine)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark mb-0.5">Nama Pejabat / Validator:</label>
+                                        <input type="text" name="actor_name" class="form-control form-control-sm" value="{{ auth()->check() ? auth()->user()->name : 'Pejabat UNIPAR' }}" required>
+                                    </div>
                                 </div>
-                                <div class="card-body p-3 small">
-                                    @php
-                                        $currAvail = app(\App\Services\FSMWorkflowEngineService::class)->getAvailableEvents($doc->status);
-                                    @endphp
 
-                                    @if (count($currAvail) > 0)
-                                        <form method="POST" action="{{ route('simkerma.transition') }}" enctype="multipart/form-data">
-                                            @csrf
-                                            <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-                                            <input type="hidden" name="redirect_view" value="detail">
-
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold text-dark">Pilih Aksi Transisi Status Resmi (State Transition) :</label>
-                                                <select name="event" class="form-select form-select-sm" required onchange="handleTransitionEventChange(this, '{{ $doc->id }}')">
-                                                    <option value="">-- Pilih Event Transisi Status FSM yang Diizinkan --</option>
-                                                    @foreach ($currAvail as $evCode => $evMeta)
-                                                        @php
-                                                            $evRoles = (array)($evMeta['roles'] ?? []);
-                                                            $roleMatch = ($activeRole === 'MASTER' || in_array($activeRole, $evRoles, true));
-                                                            $rolesStr = implode(', ', $evRoles);
-                                                            $targetStatus = $evMeta['to'] ?? '';
-                                                        @endphp
-                                                        <option value="{{ $evCode }}" data-target="{{ $targetStatus }}" data-role="{{ $rolesStr }}" {{ !$roleMatch ? 'disabled' : '' }}>
-                                                            [{{ $evCode }}] &rarr; Status Baru: {{ $targetStatus }} (Wewenang: {{ $rolesStr }}) {{ !$roleMatch ? '[Peran Tidak Sesuai]' : '' }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                <div class="form-text text-muted" style="font-size: 0.72rem;">Peran Anda saat ini: <strong>{{ $activeRole }}</strong>. Aksi terkunci jika peran Anda bukan aktor berwenang.</div>
-                                            </div>
-
-                                            <!-- Field Khusus untuk ACTIVATE: Upload Naskah Asli Bertandatangan & Bermeterai -->
-                                            <div id="activateUploadGroup_{{ $doc->id }}" class="mb-3 p-3 bg-light rounded border" style="display: none;">
-                                                <div class="fw-bold text-dark mb-1"><i class="bi bi-file-earmark-check text-success me-1"></i>Unggah Naskah Asli Bertandatangan &amp; Bermeterai (Wajib):</div>
-                                                <div class="small text-muted mb-2">Untuk mengaktifkan dokumen secara sah (VERIFIED &rarr; ACTIVE), pengusul/admin wajib mengunggah naskah PDF asli yang telah dibubuhi tanda tangan basah dan meterai sah kedua belah pihak.</div>
-                                                <input type="file" name="signed_file" class="form-control form-control-sm" accept=".pdf">
-                                            </div>
-
-                                            <!-- Field Khusus untuk RENEW: Upload Naskah Draf Baru untuk Kembali ke DRAFT -->
-                                            <div id="renewUploadGroup_{{ $doc->id }}" class="mb-3 p-3 bg-light rounded border" style="display: none;">
-                                                <div class="fw-bold text-dark mb-1"><i class="bi bi-arrow-repeat text-warning me-1"></i>Unggah Naskah Draf Perpanjangan / Reaktivasi Baru (PDF):</div>
-                                                <div class="small text-muted mb-2">Perpanjangan dokumen kembali ke siklus awal (<strong>DRAFT</strong>). Unggah naskah draf kerja sama terbaru untuk ditelaah kembali.</div>
-                                                <input type="file" name="draft_file" class="form-control form-control-sm" accept=".pdf">
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold text-dark">Catatan Disposisi / Rekam Jejak Audit :</label>
-                                                <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Tuliskan catatan verifikasi, disposisi, atau justifikasi perpanjangan..." required></textarea>
-                                            </div>
-
-                                            <button type="submit" class="btn btn-dark btn-sm fw-bold px-3 py-2 shadow-sm">
-                                                <i class="bi bi-check-circle me-1 text-success"></i> Proses Transisi Status FSM
-                                            </button>
-                                        </form>
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold text-dark mb-0.5">Pilih Aksi / Event Transisi FSM yang Sah:</label>
+                                    @if (!empty($availableEvents))
+                                        <div class="d-flex flex-column gap-1.5">
+                                            @foreach ($availableEvents as $eKey => $eData)
+                                                <label class="p-2 border rounded-2 d-flex align-items-center justify-content-between cursor-pointer hover-shadow transition-all bg-white" style="cursor: pointer;">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <input class="form-check-input mt-0" type="radio" name="event" value="{{ $eKey }}" required {{ $loop->first ? 'checked' : '' }}>
+                                                        <div>
+                                                            <div class="fw-bold text-dark small">
+                                                                <i class="bi {{ $eData['icon'] }} me-1 text-primary"></i> {{ $eData['label'] }}
+                                                            </div>
+                                                            <div class="text-muted" style="font-size: 0.7rem;">
+                                                                Transisi status: <span class="badge bg-secondary-subtle text-secondary">{{ $currentDoc->status }}</span> &rarr; <span class="badge bg-primary-subtle text-primary fw-bold">{{ $eData['to'] }}</span> &bull; Wewenang: {{ implode(', ', $eData['roles']) }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <span class="badge bg-light text-dark border font-monospace" style="font-size: 0.7rem;">{{ $eKey }}</span>
+                                                </label>
+                                            @endforeach
+                                        </div>
                                     @else
-                                        <div class="alert alert-secondary py-2 mb-0">
-                                            <i class="bi bi-info-circle me-1"></i> Status <strong>{{ $doc->status }}</strong> adalah status terminal/terkunci pada alur saat ini. Tidak ada transisi langsung yang tersedia.
+                                        <div class="alert alert-secondary py-2 px-3 small mb-0">
+                                            <i class="bi bi-lock-fill me-1"></i> Tidak ada transisi status lanjutan yang diizinkan dari status <strong>{{ $currentDoc->status }}</strong>.
                                         </div>
                                     @endif
                                 </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer bg-light py-2">
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+
+                                <div class="mb-2">
+                                    <label class="form-label small fw-bold text-dark mb-0.5">Catatan Disposisi / Hasil Telaah (Terekam di Audit Trail):</label>
+                                    <textarea name="notes" rows="2" class="form-control form-control-sm" placeholder="Masukkan catatan resmi verifikasi..."></textarea>
+                                </div>
+
+                                <div class="modal-footer py-2 px-0 bg-transparent border-top mt-2 d-flex justify-content-between">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                                    @if (!empty($availableEvents))
+                                        <button type="submit" class="btn btn-primary btn-sm fw-bold px-3">
+                                            <i class="bi bi-play-circle-fill me-1"></i> Eksekusi Transisi FSM
+                                        </button>
+                                    @endif
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
 
-        @else
+
+@else
 
             {{-- ================================================================================= --}}
             {{-- VERSI 2.0: TABEL LENGKAP SEMUA PENGAJUAN KERJA SAMA DENGAN DEDICATED QR CODE CELL --}}
@@ -2633,12 +2637,12 @@
                     <table class="table table-wireframe table-hover align-middle mb-0 small">
                         <thead>
                             <tr>
-                                <th style="min-width: 170px;">Nomor Dokumen &amp; Jenis</th>
-                                <th style="min-width: 180px;">Mitra Kerja Sama</th>
-                                <th style="min-width: 200px;">Unit Pengusul &amp; Ruang Lingkup</th>
-                                <th style="min-width: 140px;">Masa Berlaku &amp; Peringatan</th>
-                                <th style="min-width: 155px;" class="text-center">Status</th>
-                                <th style="min-width: 150px;" class="text-end">Aksi &amp; Disposisi</th>
+                                <th style="min-width: 150px;">Nomor Dokumen &amp; Jenis</th>
+                                <th style="min-width: 150px;">Mitra Kerja Sama</th>
+                                <th style="min-width: 170px;">Unit Pengusul &amp; Ruang Lingkup</th>
+                                <th style="min-width: 120px;">Masa Berlaku &amp; Peringatan</th>
+                                <th style="min-width: 120px;" class="text-center">Status</th>
+                                <th style="min-width: 120px;" class="text-end">Aksi &amp; Disposisi</th>
                             </tr>
                         </thead>
                         <tbody id="documentsTableBody">
@@ -3564,14 +3568,14 @@
                 <table class="table table-wireframe table-hover align-middle mb-0 small" id="activityTable">
                     <thead class="bg-light">
                         <tr>
-                            <th style="min-width: 250px;">Daftar Kegiatan &amp; Dokumen Rujukan (Menu 04)</th>
-                            <th style="min-width: 170px;">Mitra &amp; Unit PJ</th>
-                            <th style="min-width: 140px;">Target &amp; Realisasi</th>
-                            <th style="min-width: 160px;">Peserta / Pihak Terlibat</th>
-                            <th style="min-width: 170px;">Luaran IKU 6</th>
-                            <th style="min-width: 130px;">Kontribusi / Anggaran</th>
-                            <th style="min-width: 110px;">Bukti Berkas</th>
-                            <th style="min-width: 130px;" class="text-center">Status &amp; QR FSM</th>
+                            <th style="min-width: 190px;">Daftar Kegiatan &amp; Dokumen Rujukan (Menu 04)</th>
+                            <th style="min-width: 130px;">Mitra &amp; Unit PJ</th>
+                            <th style="min-width: 110px;">Target &amp; Realisasi</th>
+                            <th style="min-width: 120px;">Peserta / Pihak Terlibat</th>
+                            <th style="min-width: 130px;">Luaran IKU 6</th>
+                            <th style="min-width: 100px;">Kontribusi / Anggaran</th>
+                            <th style="min-width: 90px;">Bukti Berkas</th>
+                            <th style="min-width: 105px;" class="text-center">Status &amp; QR FSM</th>
                         </tr>
                     </thead>
                     <tbody>

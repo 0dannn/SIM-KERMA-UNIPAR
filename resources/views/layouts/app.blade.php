@@ -32,13 +32,34 @@
             --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
         }
 
-        /* Tipografi & Latar Utama: Public Sans */
+        /* Tipografi & Latar Utama: Public Sans (Full 1080p Layout Anti-Horizontal Scroll) */
+        html, body {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
         body {
             font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-surface);
             font-size: 0.88rem;
             color: #334155;
             letter-spacing: -0.01em;
+        }
+
+        .app-layout-wrapper {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .main-content-wrapper {
+            min-width: 0;
+            max-width: 100%;
+            width: 100%;
+            overflow-x: hidden;
         }
         
         /* Layout Sidebar (Sesuai UI_Reference: #1e2430, Flat Dark Slate Elegan - Ramping 238px / 15% lebih hemat ruang) */
@@ -113,6 +134,13 @@
             border: 1px solid var(--border-color);
             background-color: #ffffff;
             box-shadow: var(--card-shadow);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
+        .table-responsive > .table {
+            width: 100%;
+            margin-bottom: 0 !important;
         }
         .table, .table-wireframe {
             margin-bottom: 0 !important;
@@ -315,12 +343,73 @@
                 box-shadow: none !important;
             }
         }
-    </style>
+    
+        /* Scoped 1080p Viewport Optimization for Detail Dokumen (Matching UI/detail_MoU.png) */
+        .detail-viewport-1080p {
+            max-width: 100%;
+        }
+        
+        .detail-viewport-1080p .btn-primary {
+            background-color: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+            color: #ffffff !important;
+            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3) !important;
+        }
+        .detail-viewport-1080p .btn-primary:hover,
+        .detail-viewport-1080p .btn-primary:focus {
+            background-color: #2563eb !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4) !important;
+        }
+.detail-viewport-1080p .card {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+            margin-bottom: 8px !important;
+            background-color: #ffffff !important;
+        }
+        .detail-viewport-1080p .card-header {
+            padding: 6px 12px !important;
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            border-top-left-radius: 8px !important;
+            border-top-right-radius: 8px !important;
+        }
+        .detail-viewport-1080p .card-body {
+            padding: 8px 12px !important;
+        }
+        .detail-viewport-1080p .table thead th {
+            padding: 5px 8px !important;
+            font-size: 0.72rem !important;
+            background-color: #f8fafc !important;
+            color: #64748b !important;
+            font-weight: 600 !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+        .detail-viewport-1080p .table tbody td {
+            padding: 5px 8px !important;
+            font-size: 0.76rem !important;
+            vertical-align: middle !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .detail-viewport-1080p .nav-tabs .nav-link {
+            padding: 5px 12px !important;
+            font-size: 0.8rem !important;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .detail-viewport-1080p .nav-tabs .nav-link.active {
+            color: #2563eb !important;
+            font-weight: 600 !important;
+            border-color: transparent transparent #2563eb !important;
+            border-bottom-width: 2px !important;
+        }
+</style>
     @stack('styles')
 </head>
 <body>
 
-<div class="d-flex flex-column flex-lg-row">
+<div class="d-flex flex-column flex-lg-row app-layout-wrapper">
 
     <!-- ========================================================================================= -->
     <!-- SIDEBAR NAVIGASI RESMI                                                                    -->
@@ -397,10 +486,10 @@
     <!-- ========================================================================================= -->
     <!-- AREA KONTEN UTAMA (RESPONSIF TERHADAP MENU AKTIF)                                         -->
     <!-- ========================================================================================= -->
-    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+    <div class="flex-grow-1 d-flex flex-column min-vh-100 main-content-wrapper">
 
         <!-- TOP BAR HEADER -->
-        <header class="bg-white border-bottom py-3 px-4 shadow-sm">
+        <header class="bg-white border-bottom {{ request()->query('view') === 'detail' ? 'py-2 px-3 px-xl-4' : 'py-3 px-3 px-xl-4' }} shadow-sm">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                 <div>
                     <h4 class="mb-0 fw-bold text-dark text-uppercase">{{ $current['title'] }}</h4>
@@ -432,7 +521,7 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item text-danger small d-flex align-items-center gap-2" href="{{ route('logout') }}">
-                                            <i class="bi bi-box-arrow-right"></i> Keluar (Logout)
+                                             <i class="bi bi-box-arrow-right"></i> Keluar (Logout)
                                         </a>
                                     </li>
                                 </ul>
@@ -448,7 +537,7 @@
         </header>
 
         <!-- KONTEN FITUR SESUAI MENU -->
-        <main class="p-4 flex-grow-1">
+        <main class="{{ request()->query('view') === 'detail' ? 'px-3 py-2 px-xl-4 py-xl-2' : 'p-3 p-xl-4' }} flex-grow-1" style="min-width: 0; width: 100%;">
 
             @if ($current['id'] != 4)
             <!-- KOTAK INFORMASI SPESIFIKASI DOKUMEN RESMI -->
@@ -469,6 +558,7 @@
 
         </main>
 
+        @if (request()->query('view') !== 'detail')
         <!-- FOOTER INFORMASI DOKUMEN RESMI -->
         <footer class="bg-white border-top py-3 px-4 text-muted small d-flex flex-column flex-sm-row justify-content-between align-items-center gap-1">
             <div>
@@ -478,6 +568,7 @@
                 Program Studi Teknik Informatika, Universitas Parna Raya Manado
             </div>
         </footer>
+        @endif
 
     </div>
 
