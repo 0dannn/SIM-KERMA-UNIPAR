@@ -1066,30 +1066,6 @@
                 </div>
                 <div class="card-body p-4">
 
-                    <!-- Banner Unduh Template Dokumen Word Draf MoU Resmi -->
-                    <div class="card border-primary-subtle bg-primary-subtle bg-opacity-10 mb-4 shadow-sm">
-                        <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="bg-primary text-white p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; min-width: 48px;">
-                                    <i class="bi bi-file-earmark-word-fill fs-3"></i>
-                                </div>
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-1">
-                                        Template Dokumen Naskah Draf MoU Resmi (.docx) &mdash; Format Baku UNIPAR
-                                    </h6>
-                                    <p class="text-muted small mb-0">
-                                        Unduh template naskah Word resmi ini sebagai acuan penyusunan naskah MoU, lalu simpan draf Anda dalam format <strong>PDF</strong>. Naskah draf awal akan ditelaah oleh Tim Legal institusi pada tahapan <strong>SUBMIT &rarr; REVIEW</strong> sebelum verifikasi dan pengesahan resmi institusi.
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="text-nowrap">
-                                <a href="{{ asset('templates/Template_MoU_UNIPAR.docx') }}" class="btn btn-primary btn-sm fw-bold px-3 py-2 shadow-sm" download="Template_MoU_UNIPAR.docx">
-                                    <i class="bi bi-download me-1"></i> Unduh Template Draf (.docx)
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
                     <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="small">
                         @csrf
                         <input type="hidden" name="doc_type" value="MoU">
@@ -1101,76 +1077,43 @@
                                 Judul / Topik Kerja Sama MoU : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Judul atau topik naskah Nota Kesepahaman (MoU)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="title" class="form-control" required>
-                                </div>
+                                <input type="text" name="title" class="form-control" required>
                             </div>
                         </div>
 
-                        <!-- 2. JENIS DOKUMEN (LOCKED KE MOU) -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Jenis Dokumen :
-                            </label>
-                            <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Dokumen ini berjenis Nota Kesepahaman (MoU) sebagai dokumen payung induk institusi." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-primary px-3 py-2 fs-6 fw-semibold">
-                                            <i class="bi bi-bookmark-fill me-1"></i> MoU (Memorandum of Understanding / Nota Kesepahaman Induk)
-                                        </span>
-                                        <small class="text-muted fst-italic">&mdash; Dokumen Induk / Payung Hukum Kemitraan</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. IDENTITAS PIHAK PERTAMA (UNIPAR) -->
+                        <!-- 2. IDENTITAS PIHAK PERTAMA (UNIPAR) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Unit Pengusul (Pihak I) : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih unit pengusul di lingkungan Universitas Parna Raya" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <select name="unit" class="form-select" required>
-                                        <option>Program Studi Teknik Informatika</option>
-                                        <option>Fakultas Ilmu Komputer</option>
-                                        <option>Fakultas Ekonomi dan Bisnis</option>
-                                        <option>LPPM Universitas Parna Raya</option>
-                                        <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
-                                        <option>Rektorat Universitas Parna Raya</option>
-                                    </select>
-                                </div>
+                                <select name="unit" class="form-select" required>
+                                    <option>Program Studi Teknik Informatika</option>
+                                    <option>Fakultas Ilmu Komputer</option>
+                                    <option>Fakultas Ekonomi dan Bisnis</option>
+                                    <option>LPPM Universitas Parna Raya</option>
+                                    <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
+                                    <option>Rektorat Universitas Parna Raya</option>
+                                </select>
                             </div>
                         </div>
 
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Penandatangan Pihak I (UNIPAR) :
+                                Penandatangan Pihak I :
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Khusus naskah Nota Kesepahaman (MoU), penandatangan pihak UNIPAR terkunci mutlak kepada Rektor Universitas Parna Raya sesuai kewenangan statuta perguruan tinggi." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="first_party_signer" class="form-control bg-light" value="Rektor Universitas Parna Raya" readonly>
-                                </div>
-                                <div class="form-text text-muted">
-                                    <i class="bi bi-lock-fill text-secondary me-1"></i> Terkunci (read-only): Naskah MoU induk institusi wajib ditandatangani oleh Rektor Universitas Parna Raya.
-                                </div>
+                                <input type="text" name="first_party_signer" class="form-control">
                             </div>
                         </div>
 
-                        <!-- 4. IDENTITAS PIHAK KEDUA (MITRA) -->
+                        <!-- 3. IDENTITAS PIHAK KEDUA (MITRA) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Nama Mitra (Pihak II) : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nama instansi atau institusi mitra kerja sama" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="partner_name" class="form-control" list="partnerDatalist" required>
-                                </div>
+                                <input type="text" name="partner_name" class="form-control" list="partnerDatalist" required>
                                 <datalist id="partnerDatalist">
                                     @foreach ($partners as $p)
                                         <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
@@ -1184,18 +1127,15 @@
                                 Kategori / Sektor Mitra : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih kategori sektor mitra: Perguruan Tinggi, DUDI / Swasta, BUMN, Instansi Pemerintah, dll." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <select name="category" class="form-select" required>
-                                        <option value="Perguruan Tinggi" selected>Perguruan Tinggi</option>
-                                        <option value="DUDI / Swasta">DUDI / Swasta</option>
-                                        <option value="BUMN">BUMN</option>
-                                        <option value="Instansi Pemerintah">Instansi Pemerintah</option>
-                                        <option value="Lembaga Keagamaan / Komunitas">Lembaga Keagamaan / Komunitas</option>
-                                        <option value="Kesehatan">Kesehatan</option>
-                                        <option value="Lainnya">Lainnya</option>
-                                    </select>
-                                </div>
+                                <select name="category" class="form-select" required>
+                                    <option value="Perguruan Tinggi" selected>Perguruan Tinggi</option>
+                                    <option value="DUDI / Swasta">DUDI / Swasta</option>
+                                    <option value="BUMN">BUMN</option>
+                                    <option value="Instansi Pemerintah">Instansi Pemerintah</option>
+                                    <option value="Lembaga Keagamaan / Komunitas">Lembaga Keagamaan / Komunitas</option>
+                                    <option value="Kesehatan">Kesehatan</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
                             </div>
                         </div>
 
@@ -1204,10 +1144,7 @@
                                 Penandatangan Pihak II (Mitra) :
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pimpinan atau penandatangan resmi dari pihak mitra" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="second_party_signer" class="form-control">
-                                </div>
+                                <input type="text" name="second_party_signer" class="form-control">
                             </div>
                         </div>
 
@@ -1217,92 +1154,32 @@
                                 <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nomor registrasi dokumen dari pihak mitra (opsional pada inisiasi draf, wajib saat transisi pengesahan/ACTIVE)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="partner_doc_number" class="form-control">
-                                </div>
+                                <input type="text" name="partner_doc_number" class="form-control">
                                 <div class="form-text text-muted">
                                     Opsional pada fase inisiasi DRAFT/SUBMIT. Wajib dilengkapi saat penandatanganan fisik naskah (ACTIVE).
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 5. RUANG LINGKUP TRIDHARMA -->
-                        <div class="row mb-3 align-items-start">
-                            <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
-                                Ruang Lingkup Tridharma / Kemitraan : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <div class="d-flex align-items-start gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih satu atau lebih bidang Tridharma Perguruan Tinggi yang dicakup dalam Nota Kesepahaman ini" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <div class="card p-3 border rounded bg-white w-100 shadow-sm">
-                                        <div class="row g-2">
-                                            <div class="col-sm-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="scope[]" value="Pendidikan" id="scopePendidikan" checked>
-                                                    <label class="form-check-label fw-semibold text-dark" for="scopePendidikan">
-                                                        <i class="bi bi-book-half text-primary me-1"></i> Pendidikan
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="scope[]" value="Penelitian" id="scopePenelitian" checked>
-                                                    <label class="form-check-label fw-semibold text-dark" for="scopePenelitian">
-                                                        <i class="bi bi-journal-code text-primary me-1"></i> Penelitian
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="scope[]" value="Pengabdian kepada Masyarakat" id="scopePengabdian" checked>
-                                                    <label class="form-check-label fw-semibold text-dark" for="scopePengabdian">
-                                                        <i class="bi bi-people-fill text-primary me-1"></i> Pengabdian kepada Masyarakat
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="scope[]" value="Pengembangan SDM" id="scopeSDM" checked>
-                                                    <label class="form-check-label fw-semibold text-dark" for="scopeSDM">
-                                                        <i class="bi bi-person-gear text-primary me-1"></i> Pengembangan SDM
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="form-text text-muted mt-2">
-                                            Multi-select: Centang ruang lingkup kemitraan Tridharma yang disepakati bersama mitra.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 6. UPLOAD DRAFT DOKUMEN MOU (PDF) -->
+                        <!-- 4. UPLOAD DRAFT DOKUMEN MOU (PDF) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Upload Draf Naskah MoU (PDF) : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah berkas naskah draf awal Nota Kesepahaman (MoU) dalam format PDF (.pdf) untuk ditelaah dan diverifikasi oleh Bagian Legal." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
-                                </div>
+                                <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
                                 <div class="form-text text-muted">Format berkas: <strong>PDF (.pdf)</strong>. Berkas draf awal untuk ditelaah dan diverifikasi oleh Bagian Kerja Sama/Legal.</div>
                             </div>
                         </div>
 
-                        <!-- 7. PERIODE BERLAKU (NORMALISASI: MULAI & MASA BERLAKU TAHUN -> BERAKHIR COMPUTED) -->
+                        <!-- 5. PERIODE BERLAKU (NORMALISASI: MULAI & MASA BERLAKU TAHUN -> BERAKHIR COMPUTED) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Tanggal Mulai Berlaku :
                                 <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Tanggal dimulainya masa berlaku kesepahaman bersama (opsional pada fase inisiasi DRAFT/SUBMIT)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="date" name="start_date" id="inputStartDate" class="form-control" onchange="calculateEndDate()">
-                                </div>
+                                <input type="date" name="start_date" id="inputStartDate" class="form-control" onchange="calculateEndDate()">
                                 <div class="form-text text-muted">Opsional pada tahap draf awal; wajib ditetapkan saat transisi pengesahan/ACTIVE.</div>
                             </div>
                         </div>
@@ -1313,14 +1190,11 @@
                                 <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Masa berlaku MoU dalam satuan tahun (umumnya 3 - 5 tahun). Bersifat opsional saat draf awal." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <div class="input-group">
-                                        <input type="number" min="1" max="10" name="validity_years" id="inputValidityYears" class="form-control" oninput="calculateEndDate()">
-                                        <span class="input-group-text bg-light text-muted">Tahun</span>
-                                    </div>
-                                    <input type="hidden" name="validity" id="inputValidity">
+                                <div class="input-group">
+                                    <input type="number" min="1" max="10" name="validity_years" id="inputValidityYears" class="form-control" oninput="calculateEndDate()">
+                                    <span class="input-group-text bg-light text-muted">Tahun</span>
                                 </div>
+                                <input type="hidden" name="validity" id="inputValidity">
                                 <div class="form-text text-muted">Masa berlaku standar naskah MoU perguruan tinggi berkisar antara 3 hingga 5 tahun.</div>
                             </div>
                         </div>
@@ -1330,26 +1204,20 @@
                                 Tanggal Berakhir :
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Tanggal berakhir dihitung otomatis berdasarkan Tanggal Mulai ditambah Masa Berlaku (Tahun)." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="date" name="end_date" id="inputEndDate" class="form-control bg-light" readonly>
-                                </div>
+                                <input type="date" name="end_date" id="inputEndDate" class="form-control bg-light" readonly>
                                 <div class="form-text text-muted">
                                     <i class="bi bi-calculator me-1"></i> Terkalkulasi otomatis (read-only): <em>Tanggal Mulai</em> + <em>Masa Berlaku (Tahun)</em>.
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 8. NARAHUBUNG (PIC) KEDUA PIHAK -->
+                        <!-- 6. NARAHUBUNG (PIC) KEDUA PIHAK -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 PIC Pihak Pertama (UNIPAR) :
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nama dan kontak narahubung resmi pihak UNIPAR" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="pic_first_party" class="form-control">
-                                </div>
+                                <input type="text" name="pic_first_party" class="form-control">
                             </div>
                         </div>
 
@@ -1358,23 +1226,17 @@
                                 PIC Pihak Kedua (Mitra) :
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nama dan kontak narahubung resmi pihak mitra" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="pic_second_party" class="form-control">
-                                </div>
+                                <input type="text" name="pic_second_party" class="form-control">
                             </div>
                         </div>
 
-                        <!-- 9. DESKRIPSI / URGENSI KERJA SAMA -->
+                        <!-- 7. DESKRIPSI / URGENSI KERJA SAMA -->
                         <div class="row mb-4 align-items-start">
                             <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
                                 Deskripsi / Urgensi Kerja Sama :
                             </label>
                             <div class="col-md-9">
-                                <div class="d-flex align-items-start gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Ringkasan latar belakang pengajuan, target luaran strategis, serta urgensi kemitraan" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <textarea name="description" class="form-control" rows="3"></textarea>
-                                </div>
+                                <textarea name="description" class="form-control" rows="3"></textarea>
                             </div>
                         </div>
 

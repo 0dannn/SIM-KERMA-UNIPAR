@@ -337,12 +337,7 @@ class SimkermaController extends Controller
 
         $title = $request->input('title', 'Kerja Sama ' . $docType . ' dengan ' . $partnerName);
 
-        // Khusus dokumen MoU: Penandatangan Pihak I terkunci mutlak ke Rektor Universitas Parna Raya
-        if ($docType === 'MoU') {
-            $firstPartySigner = 'Rektor Universitas Parna Raya';
-        } else {
-            $firstPartySigner = $request->input('first_party_signer') ?: 'Rektor Universitas Parna Raya';
-        }
+        $firstPartySigner = $request->input('first_party_signer');
 
         $secondPartySigner = $request->input('second_party_signer');
         $picFirstParty = $request->input('pic_first_party');
