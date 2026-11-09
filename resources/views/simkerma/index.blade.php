@@ -1057,7 +1057,7 @@
                             <i class="bi bi-file-earmark-plus text-primary me-2"></i> Pengajuan MoU (Nota Kesepahaman Baru)
                         </h5>
                         <div class="small text-muted">
-                            Pengajuan naskah Nota Kesepahaman (MoU) induk kemitraan institusi diterbitkan dengan status awal <strong>DRAFT</strong> lengkap dengan QR Code registrasi resmi.
+                            Pengajuan naskah Nota Kesepahaman (MoU) induk kemitraan institusi diterbitkan dengan status awal <strong>DRAFT</strong> untuk penelaahan internal naskah.
                         </div>
                     </div>
                     <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm fw-semibold">
@@ -1078,7 +1078,7 @@
                                         Template Dokumen Naskah Draf MoU Resmi (.docx) &mdash; Format Baku UNIPAR
                                     </h6>
                                     <p class="text-muted small mb-0">
-                                        Unduh template naskah Word resmi ini sebagai acuan penyusunan naskah MoU, lalu simpan draf final Anda dalam format <strong>PDF</strong>. Saat draf diajukan (<strong>SUBMIT &rarr; REVIEW</strong>), sistem secara otomatis menyematkan stempel QR Code resmi langsung ke naskah PDF pada <strong>ujung kanan bawah halaman terakhir</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>).
+                                        Unduh template naskah Word resmi ini sebagai acuan penyusunan naskah MoU, lalu simpan draf Anda dalam format <strong>PDF</strong>. Naskah draf awal akan ditelaah oleh Tim Legal institusi pada tahapan <strong>SUBMIT &rarr; REVIEW</strong> sebelum verifikasi dan pengesahan resmi institusi.
                                     </p>
                                 </div>
                             </div>
@@ -1126,23 +1126,7 @@
                             </div>
                         </div>
 
-                        <!-- 3. UKURAN KERTAS DOKUMEN (A4 / F4) -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Ukuran Kertas Dokumen : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih format kertas naskah: A4 (210 x 297 mm) atau F4 / Folio (215 x 330 mm). Sistem menempatkan QR Code di ujung kanan bawah halaman terakhir sesuai ukuran kertas yang dipilih." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <select name="paper_size" class="form-select" required>
-                                        <option value="A4" selected>Kertas A4 (210 &times; 297 mm) &mdash; Standar Nasional</option>
-                                        <option value="F4">Kertas F4 / Folio (215 &times; 330 mm)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4. IDENTITAS PIHAK PERTAMA (UNIPAR) -->
+                        <!-- 3. IDENTITAS PIHAK PERTAMA (UNIPAR) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Unit Pengusul (Pihak I) : <span class="text-danger">*</span>
@@ -1168,13 +1152,16 @@
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Penandatangan naskah MoU dari pihak UNIPAR (biasanya Rektor)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="first_party_signer" class="form-control" value="Rektor Universitas Parna Raya">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Khusus naskah Nota Kesepahaman (MoU), penandatangan pihak UNIPAR terkunci mutlak kepada Rektor Universitas Parna Raya sesuai kewenangan statuta perguruan tinggi." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="first_party_signer" class="form-control bg-light" value="Rektor Universitas Parna Raya" readonly>
+                                </div>
+                                <div class="form-text text-muted">
+                                    <i class="bi bi-lock-fill text-secondary me-1"></i> Terkunci (read-only): Naskah MoU induk institusi wajib ditandatangani oleh Rektor Universitas Parna Raya.
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 5. IDENTITAS PIHAK KEDUA (MITRA) -->
+                        <!-- 4. IDENTITAS PIHAK KEDUA (MITRA) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Nama Mitra (Pihak II) : <span class="text-danger">*</span>
@@ -1226,53 +1213,115 @@
 
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nomor Naskah Mitra (Jika Ada) :
+                                Nomor Naskah Mitra :
+                                <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nomor registrasi dokumen dari pihak mitra (kosongkan jika belum ada)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="partner_doc_number" class="form-control" placeholder="Kosongkan jika belum ada nomor resmi mitra">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Nomor registrasi dokumen dari pihak mitra (opsional pada inisiasi draf, wajib saat transisi pengesahan/ACTIVE)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="text" name="partner_doc_number" class="form-control" placeholder="Kosongkan jika belum ada nomor resmi mitra (dapat diisi saat ACTIVE)">
+                                </div>
+                                <div class="form-text text-muted">
+                                    Opsional pada fase inisiasi DRAFT/SUBMIT. Wajib dilengkapi saat penandatanganan fisik naskah (ACTIVE).
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 6. RUANG LINGKUP TRIDHARMA -->
+                        <!-- 5. RUANG LINGKUP TRIDHARMA -->
                         <div class="row mb-3 align-items-start">
                             <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
                                 Ruang Lingkup Tridharma / Kemitraan : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-start gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Ruang lingkup kemitraan Tridharma Perguruan Tinggi" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <textarea name="scope" class="form-control" rows="3" placeholder="Contoh: Kerja sama kemitraan penyelenggaraan Tridharma Perguruan Tinggi meliputi Pendidikan, Penelitian kolaboratif, Pengabdian kepada Masyarakat, dan Program Merdeka Belajar Kampus Merdeka (MBKM)..." required></textarea>
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0 pt-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Pilih satu atau lebih bidang Tridharma Perguruan Tinggi yang dicakup dalam Nota Kesepahaman ini" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <div class="card p-3 border rounded bg-white w-100 shadow-sm">
+                                        <div class="row g-2">
+                                            <div class="col-sm-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="scope[]" value="Pendidikan" id="scopePendidikan" checked>
+                                                    <label class="form-check-label fw-semibold text-dark" for="scopePendidikan">
+                                                        <i class="bi bi-book-half text-primary me-1"></i> Pendidikan
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="scope[]" value="Penelitian" id="scopePenelitian" checked>
+                                                    <label class="form-check-label fw-semibold text-dark" for="scopePenelitian">
+                                                        <i class="bi bi-journal-code text-primary me-1"></i> Penelitian
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="scope[]" value="Pengabdian kepada Masyarakat" id="scopePengabdian" checked>
+                                                    <label class="form-check-label fw-semibold text-dark" for="scopePengabdian">
+                                                        <i class="bi bi-people-fill text-primary me-1"></i> Pengabdian kepada Masyarakat
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="scope[]" value="Pengembangan SDM" id="scopeSDM" checked>
+                                                    <label class="form-check-label fw-semibold text-dark" for="scopeSDM">
+                                                        <i class="bi bi-person-gear text-primary me-1"></i> Pengembangan SDM
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-text text-muted mt-2">
+                                            Multi-select: Centang ruang lingkup kemitraan Tridharma yang disepakati bersama mitra.
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 7. UPLOAD DRAFT DOKUMEN MOU (PDF) -->
+                        <!-- 6. UPLOAD DRAFT DOKUMEN MOU (PDF) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Upload Draf Naskah MoU (PDF) : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Wajib unggah naskah draf kerja sama dalam format PDF (.pdf). Dokumen ini yang akan dibubuhi stempel QR Code resmi di bagian ujung kanan bawah halaman terakhir saat diajukan ke telaah pimpinan." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah berkas naskah draf awal Nota Kesepahaman (MoU) dalam format PDF (.pdf) untuk ditelaah dan diverifikasi oleh Bagian Legal." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
                                     <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
                                 </div>
-                                <div class="form-text text-muted">Format berkas: <strong>PDF (.pdf)</strong>. Naskah ini akan dibubuhi stempel QR Code resmi pada transisi SUBMIT.</div>
+                                <div class="form-text text-muted">Format berkas: <strong>PDF (.pdf)</strong>. Berkas draf awal untuk ditelaah dan diverifikasi oleh Bagian Kerja Sama/Legal.</div>
                             </div>
                         </div>
 
-                        <!-- 8. PERIODE BERLAKU & AMBANG PERINGATAN -->
+                        <!-- 7. PERIODE BERLAKU (NORMALISASI: MULAI & MASA BERLAKU TAHUN -> BERAKHIR COMPUTED) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Tanggal Mulai Berlaku :
+                                <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Tanggal dimulainya masa berlaku kesepahaman bersama" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="date" name="start_date" id="inputStartDate" class="form-control" value="{{ date('Y-m-d') }}" onchange="calculateDuration()">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Tanggal dimulainya masa berlaku kesepahaman bersama (opsional pada fase inisiasi DRAFT/SUBMIT)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="date" name="start_date" id="inputStartDate" class="form-control" onchange="calculateEndDate()">
                                 </div>
+                                <div class="form-text text-muted">Opsional pada tahap draf awal; wajib ditetapkan saat transisi pengesahan/ACTIVE.</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Masa Berlaku (Tahun) :
+                                <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Masa berlaku MoU dalam satuan tahun (umumnya 3 - 5 tahun). Bersifat opsional saat draf awal." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <div class="input-group">
+                                        <input type="number" min="1" max="10" name="validity_years" id="inputValidityYears" class="form-control" placeholder="Contoh: 3 atau 5" oninput="calculateEndDate()">
+                                        <span class="input-group-text bg-light text-muted">Tahun</span>
+                                    </div>
+                                    <input type="hidden" name="validity" id="inputValidity">
+                                </div>
+                                <div class="form-text text-muted">Masa berlaku standar naskah MoU perguruan tinggi berkisar antara 3 hingga 5 tahun.</div>
                             </div>
                         </div>
 
@@ -1282,41 +1331,16 @@
                             </label>
                             <div class="col-md-9">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Tanggal berakhirnya masa berlaku kesepahaman bersama (standar MoU: 3 - 5 tahun)" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="date" name="end_date" id="inputEndDate" class="form-control" value="{{ date('Y-m-d', strtotime('+5 years')) }}" onchange="calculateDuration()">
+                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Tanggal berakhir dihitung otomatis berdasarkan Tanggal Mulai ditambah Masa Berlaku (Tahun)." style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
+                                    <input type="date" name="end_date" id="inputEndDate" class="form-control bg-light" readonly>
+                                </div>
+                                <div class="form-text text-muted">
+                                    <i class="bi bi-calculator me-1"></i> Terkalkulasi otomatis (read-only): <em>Tanggal Mulai</em> + <em>Masa Berlaku (Tahun)</em>.
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Masa Berlaku Perjanjian :
-                            </label>
-                            <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Dihitung otomatis dari tanggal mulai dan tanggal berakhir" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <input type="text" name="validity" id="inputValidity" class="form-control" value="5 Tahun">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Ambang Batas Peringatan Dini :
-                            </label>
-                            <div class="col-md-9">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-question-circle-fill text-primary flex-shrink-0" data-bs-toggle="tooltip" data-bs-placement="top" title="Peringatan dini otomatis sebelum naskah kedaluwarsa" style="cursor: pointer; font-size: 1.15rem;" role="button" tabindex="0"></i>
-                                    <select name="warning_threshold" class="form-select">
-                                        <option value="H-90 Hari (3 Bulan)" selected>H-90 Hari (3 Bulan) &mdash; Sesuai Klausul Baku UNIPAR</option>
-                                        <option value="H-60 Hari (2 Bulan)">H-60 Hari (2 Bulan) &mdash; Standar Kemendikbudristek</option>
-                                        <option value="H-30 Hari (1 Bulan)">H-30 Hari (1 Bulan) &mdash; Kemitraan Singkat</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 9. NARAHUBUNG (PIC) KEDUA PIHAK -->
+                        <!-- 8. NARAHUBUNG (PIC) KEDUA PIHAK -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 PIC Pihak Pertama (UNIPAR) :
@@ -1341,7 +1365,7 @@
                             </div>
                         </div>
 
-                        <!-- 10. DESKRIPSI / URGENSI KERJA SAMA -->
+                        <!-- 9. DESKRIPSI / URGENSI KERJA SAMA -->
                         <div class="row mb-4 align-items-start">
                             <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
                                 Deskripsi / Urgensi Kerja Sama :
@@ -1358,7 +1382,7 @@
                         <div class="row pt-2">
                             <div class="col-md-9 offset-md-3">
                                 <button type="submit" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
-                                    <i class="bi bi-save me-1"></i> Simpan Sebagai DRAF MoU (Terbitkan QR Code)
+                                    <i class="bi bi-save me-1"></i> Simpan Sebagai DRAF MoU
                                 </button>
                                 <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary ms-2 px-3 py-2">Batal</a>
                             </div>
@@ -1368,32 +1392,36 @@
             </div>
 
             <script>
-            function calculateDuration() {
+            function calculateEndDate() {
                 const startEl = document.getElementById('inputStartDate');
+                const yearsEl = document.getElementById('inputValidityYears');
                 const endEl = document.getElementById('inputEndDate');
                 const validityEl = document.getElementById('inputValidity');
-                if (!startEl || !endEl || !validityEl) return;
-                if (!startEl.value || !endEl.value) return;
 
-                const d1 = new Date(startEl.value);
-                const d2 = new Date(endEl.value);
-                if (d2 <= d1) return;
+                if (!startEl || !yearsEl || !endEl) return;
 
-                let months = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
-                if (d2.getDate() < d1.getDate()) {
-                    months--;
+                const years = parseInt(yearsEl.value, 10);
+                if (validityEl) {
+                    validityEl.value = (years && !isNaN(years)) ? (years + ' Tahun') : '';
                 }
 
-                if (months >= 12) {
-                    const years = Math.floor(months / 12);
-                    const remMonths = months % 12;
-                    validityEl.value = years + ' Tahun' + (remMonths > 0 ? ' ' + remMonths + ' Bulan' : '');
-                } else if (months > 0) {
-                    validityEl.value = months + ' Bulan';
-                } else {
-                    const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-                    validityEl.value = diffDays + ' Hari';
+                if (!startEl.value || isNaN(years) || years <= 0) {
+                    endEl.value = '';
+                    return;
                 }
+
+                const startDate = new Date(startEl.value);
+                if (isNaN(startDate.getTime())) {
+                    endEl.value = '';
+                    return;
+                }
+
+                const endDate = new Date(startDate);
+                endDate.setFullYear(endDate.getFullYear() + years);
+                const yyyy = endDate.getFullYear();
+                const mm = String(endDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(endDate.getDate()).padStart(2, '0');
+                endEl.value = `${yyyy}-${mm}-${dd}`;
             }
             document.addEventListener('DOMContentLoaded', function() {
                 if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
@@ -1802,7 +1830,11 @@
                                                         <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Masa Berlaku</td>
                                                         <td class="py-0.5 px-1 text-muted">:</td>
                                                         <td class="text-dark fw-medium py-0.5">
-                                                            {{ \Carbon\Carbon::parse($currentDoc->start_date)->translatedFormat('d F Y') }} &ndash; {{ \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') }} ({{ trim(str_ireplace("Tahun", "", $currentDoc->validity ?: "1")) }} Tahun)
+                                                            @if (!empty($currentDoc->start_date) && !empty($currentDoc->end_date))
+                                                                {{ \Carbon\Carbon::parse($currentDoc->start_date)->translatedFormat('d F Y') }} &ndash; {{ \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') }} ({{ trim(str_ireplace("Tahun", "", $currentDoc->validity ?: "1")) }} Tahun)
+                                                            @else
+                                                                <span class="text-muted fst-italic">{{ $currentDoc->validity ? $currentDoc->validity . ' (Tanggal Belum Ditetapkan)' : 'Belum Ditetapkan (Fase Draf)' }}</span>
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -3216,8 +3248,22 @@
                                                                             <input type="text" name="doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->doc_number }}">
                                                                         </div>
                                                                         <div class="col-sm-6">
-                                                                            <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">Nomor Naskah Pihak II (Mitra):</label>
-                                                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->partner_doc_number }}" placeholder="Nomor resmi dari pihak mitra">
+                                                                            <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">Nomor Naskah Pihak II (Mitra): <span class="text-danger">*</span></label>
+                                                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->partner_doc_number }}" placeholder="Nomor resmi dari pihak mitra" required>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row g-2 mb-2">
+                                                                        <div class="col-sm-6">
+                                                                            <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">
+                                                                                <i class="bi bi-calendar-event text-primary me-1"></i> Tanggal Mulai Berlaku: <span class="text-danger">*</span>
+                                                                            </label>
+                                                                            <input type="date" name="start_date" class="form-control form-control-sm bg-white" value="{{ $doc->start_date ? \Carbon\Carbon::parse($doc->start_date)->format('Y-m-d') : date('Y-m-d') }}" required>
+                                                                        </div>
+                                                                        <div class="col-sm-6">
+                                                                            <label class="form-label fw-bold text-dark" style="font-size: 0.75rem;">
+                                                                                <i class="bi bi-hourglass-split text-primary me-1"></i> Masa Berlaku Dokumen: <span class="text-danger">*</span>
+                                                                            </label>
+                                                                            <input type="text" name="validity" class="form-control form-control-sm bg-white" value="{{ $doc->validity ?: '5 Tahun' }}" placeholder="Contoh: 3 Tahun atau 5 Tahun" required>
                                                                         </div>
                                                                     </div>
                                                                     <div class="row g-2 mb-2">

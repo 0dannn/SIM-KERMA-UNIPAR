@@ -336,17 +336,33 @@ class SimkermaController extends Controller
         $activeRole = session('active_role', 'MASTER');
 
         $title = $request->input('title', 'Kerja Sama ' . $docType . ' dengan ' . $partnerName);
-        $firstPartySigner = $request->input('first_party_signer');
+
+        // Khusus dokumen MoU: Penandatangan Pihak I terkunci mutlak ke Rektor Universitas Parna Raya
+        if ($docType === 'MoU') {
+            $firstPartySigner = 'Rektor Universitas Parna Raya';
+        } else {
+            $firstPartySigner = $request->input('first_party_signer') ?: 'Rektor Universitas Parna Raya';
+        }
+
         $secondPartySigner = $request->input('second_party_signer');
         $picFirstParty = $request->input('pic_first_party');
         $picSecondParty = $request->input('pic_second_party');
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = $request->input('start_date') ?: null;
+        $endDate = $request->input('end_date') ?: null;
         $nominalValue = $request->input('nominal_value');
         $description = $request->input('description');
 
+        // Normalisasi Masa Berlaku (Tahun) & Tanggal Berakhir Otomatis
+        $validityYears = $request->input('validity_years');
         $validity = $request->input('validity');
-        if (empty($validity)) {
+        if (!empty($validityYears)) {
+            $validity = ((int)$validityYears) . ' Tahun';
+            if ($startDate && empty($endDate)) {
+                try {
+                    $endDate = \Carbon\Carbon::parse($startDate)->addYears((int)$validityYears)->format('Y-m-d');
+                } catch (\Exception $e) {}
+            }
+        } elseif (empty($validity)) {
             if ($startDate && $endDate) {
                 try {
                     $start = \Carbon\Carbon::parse($startDate);
@@ -359,19 +375,33 @@ class SimkermaController extends Controller
                         $validity = ($months > 0 ? $months : 1) . ' Bulan';
                     }
                 } catch (\Exception $e) {
-                    $validity = '1 Tahun';
+                    $validity = null;
                 }
             } else {
-                $validity = '1 Tahun';
+                $validity = null;
             }
         }
+
+        // Ruang Lingkup Tridharma / Kemitraan (Multi-select Checkbox)
+        $rawScope = $request->input('scope');
+        if (is_array($rawScope) && count($rawScope) > 0) {
+            $scope = implode(', ', $rawScope);
+        } elseif (is_string($rawScope) && trim($rawScope) !== '') {
+            $scope = trim($rawScope);
+        } else {
+            $scope = 'Pendidikan, Penelitian, Pengabdian kepada Masyarakat, Pengembangan SDM';
+        }
+
+        // Default Ukuran Kertas Dokumen (A4) dan Ambang Batas Peringatan Dini (H-90)
+        $paperSize = $request->input('paper_size', 'A4') ?: 'A4';
+        $warningThreshold = 'H-90 Hari (3 Bulan)';
 
         $doc = DB::transaction(function () use (
             $request, $newId, $regId, $typePrefix, $docType, $partnerName,
             $partnerDocNumber, $parentMou, $activeRole, $title,
             $firstPartySigner, $secondPartySigner, $picFirstParty,
             $picSecondParty, $startDate, $endDate, $nominalValue,
-            $description, $validity
+            $description, $validity, $scope, $paperSize, $warningThreshold
         ) {
             do {
                 $docNumber = sprintf('%03d/UNIPAR/%s/X/2026', rand(360, 499), $typePrefix);
@@ -381,7 +411,7 @@ class SimkermaController extends Controller
                 'doc_id' => $newId,
                 'reg_id' => $regId,
                 'doc_number' => $docNumber,
-                'partner_doc_number' => $partnerDocNumber,
+                'partner_doc_number' => $partnerDocNumber ?: null,
                 'track' => 'Jalur 1: Kemitraan Bertahap',
                 'title' => $title,
                 'unit' => $request->input('unit') ?: 'Program Studi Teknik Informatika',
@@ -393,15 +423,15 @@ class SimkermaController extends Controller
                 'pic_first_party' => $picFirstParty,
                 'pic_second_party' => $picSecondParty,
                 'doc_type' => $docType,
-                'paper_size' => $request->input('paper_size') ?: 'A4',
+                'paper_size' => $paperSize,
                 'parent_mou' => $parentMou ?: '-',
-                'scope' => $request->input('scope') ?: 'Kerja sama kemitraan Tridharma',
+                'scope' => $scope,
                 'description' => $description,
-                'validity' => $validity ?: '1 Tahun',
-                'start_date' => $startDate ?: null,
-                'end_date' => $endDate ?: null,
+                'validity' => $validity,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
                 'nominal_value' => $nominalValue,
-                'warning_threshold' => $request->input('warning_threshold') ?: 'H-90 Hari (3 Bulan)',
+                'warning_threshold' => $warningThreshold,
                 'status' => 'DRAFT',
                 'draft_file' => 'draf_' . strtolower(str_replace(' ', '_', $newId)) . '.pdf',
                 'notes' => 'Penyusunan naskah draf awal oleh unit pengusul.',
@@ -432,7 +462,7 @@ class SimkermaController extends Controller
                 'event' => 'CREATE_DRAFT',
                 'from_status' => '-',
                 'to_status' => 'DRAFT',
-                'notes' => 'Penyusunan naskah draf baru ' . $docType . ' bersama ' . $partnerName . ($parentMou !== '-' ? ' (Menginduk ke: ' . $parentMou . ')' : '') . '. QR Code registrasi resmi diterbitkan dalam status DRAFT.',
+                'notes' => 'Penyusunan naskah draf baru ' . $docType . ' bersama ' . $partnerName . ($parentMou !== '-' ? ' (Menginduk ke: ' . $parentMou . ')' : '') . '. Berkas draf siap diajukan untuk penelaahan legal.',
                 'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
             ]);
 
@@ -449,7 +479,7 @@ class SimkermaController extends Controller
                     'pic_name' => $picSecondParty ?: 'Narahubung Kemitraan',
                     'pic_title' => 'Divisi Kerja Sama',
                     'pic_contact' => '0812-4400-5500',
-                    'profile_desc' => 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR dengan ruang lingkup: ' . $request->input('scope', 'Kerja sama kemitraan Tridharma'),
+                    'profile_desc' => 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR dengan ruang lingkup: ' . $scope,
                     'status_verification' => 'Terverifikasi Sah'
                 ]
             );
@@ -462,7 +492,7 @@ class SimkermaController extends Controller
         return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id])
             ->with('flash', [
                 'type' => 'success',
-                'msg' => 'Dokumen ' . $docType . ' baru ' . $doc->doc_id . ' (' . $doc->doc_number . ') berhasil dibuat dengan status DRAFT. QR Code registrasi telah terbit resmi.'
+                'msg' => 'Dokumen ' . $docType . ' baru ' . $doc->doc_id . ' (' . $doc->doc_number . ') berhasil dibuat dengan status DRAFT.'
             ]);
     }
 
@@ -625,9 +655,24 @@ class SimkermaController extends Controller
                 $additionalData['partner_doc_number'] = $request->input('partner_doc_number');
             }
 
-            // Catat masa berlaku baru jika perpanjangan
+            // Catat masa berlaku baru jika perpanjangan atau aktivasi
             if ($request->filled('new_validity')) {
                 $additionalData['validity'] = $request->input('new_validity');
+            } elseif ($request->filled('validity')) {
+                $additionalData['validity'] = $request->input('validity');
+            }
+            if ($request->filled('start_date')) {
+                $additionalData['start_date'] = $request->input('start_date');
+            }
+            if ($request->filled('end_date')) {
+                $additionalData['end_date'] = $request->input('end_date');
+            } elseif ($request->filled('start_date') && ($request->filled('validity') || $request->filled('new_validity'))) {
+                try {
+                    $vVal = $request->input('validity') ?: $request->input('new_validity');
+                    preg_match('/(\d+)/', (string)$vVal, $vm);
+                    $vYears = isset($vm[1]) ? (int)$vm[1] : 1;
+                    $additionalData['end_date'] = \Carbon\Carbon::parse($request->input('start_date'))->addYears($vYears)->format('Y-m-d');
+                } catch (\Throwable $e) {}
             }
             if ($request->filled('date_signed')) {
                 $additionalData['date_signed'] = $request->input('date_signed');

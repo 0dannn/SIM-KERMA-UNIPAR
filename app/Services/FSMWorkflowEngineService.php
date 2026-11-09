@@ -182,8 +182,42 @@ class FSMWorkflowEngineService
                 }
             }
 
-            // Jika masuk status ACTIVE: set tanggal tanda tangan & catat scan fisik
+            // Jika masuk status ACTIVE: validasi kelengkapan data pengesahan (Nomor Naskah Mitra, Tanggal Mulai, Masa Berlaku)
             if ($newStatus === 'ACTIVE') {
+                $finalPartnerDocNum = !empty($additionalData['partner_doc_number']) ? $additionalData['partner_doc_number'] : $document->partner_doc_number;
+                if (empty($finalPartnerDocNum)) {
+                    throw new IllegalTransitionException(
+                        "Pengesahan naskah (ACTIVE) gagal: 'Nomor Naskah Mitra' (Pihak II) wajib diisi sebelum dokumen disahkan dan diaktifkan."
+                    );
+                }
+
+                $finalStartDate = !empty($additionalData['start_date']) ? $additionalData['start_date'] : $document->start_date;
+                if (empty($finalStartDate)) {
+                    throw new IllegalTransitionException(
+                        "Pengesahan naskah (ACTIVE) gagal: 'Tanggal Mulai' berlaku dokumen wajib ditetapkan sebelum pengesahan."
+                    );
+                }
+
+                $finalValidity = !empty($additionalData['validity']) ? $additionalData['validity'] : $document->validity;
+                if (empty($finalValidity)) {
+                    throw new IllegalTransitionException(
+                        "Pengesahan naskah (ACTIVE) gagal: 'Masa Berlaku' dokumen wajib ditetapkan sebelum pengesahan."
+                    );
+                }
+
+                $document->partner_doc_number = $finalPartnerDocNum;
+                $document->start_date = $finalStartDate;
+                $document->validity = $finalValidity;
+                if (!empty($additionalData['end_date'])) {
+                    $document->end_date = $additionalData['end_date'];
+                } elseif (empty($document->end_date)) {
+                    try {
+                        preg_match('/(\d+)/', (string)$finalValidity, $vm);
+                        $vYears = isset($vm[1]) ? (int)$vm[1] : 1;
+                        $document->end_date = \Carbon\Carbon::parse($finalStartDate)->addYears($vYears)->format('Y-m-d');
+                    } catch (\Throwable $e) {}
+                }
+
                 if (empty($document->date_approved)) {
                     $document->date_approved = now()->toDateString();
                 }
