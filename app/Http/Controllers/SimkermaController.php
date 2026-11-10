@@ -1172,6 +1172,33 @@ class SimkermaController extends Controller
      */
     public function storeLegacy(Request $request)
     {
+        // Validasi field wajib pencatatan kerja sama lampau
+        $firstPartySigner = trim((string)$request->input('first_party_signer'));
+        $secondPartySigner = trim((string)$request->input('second_party_signer'));
+
+        if (empty($firstPartySigner) || empty($secondPartySigner)) {
+            return redirect()->back()->with('flash', [
+                'type' => 'danger',
+                'msg' => 'Gagal menyimpan: Penandatangan Pihak I dan Penandatangan Pihak II wajib diisi.'
+            ]);
+        }
+
+        if (!$request->hasFile('signed_file')) {
+            return redirect()->back()->with('flash', [
+                'type' => 'danger',
+                'msg' => 'Gagal menyimpan: Berkas Scan Naskah Asli (PDF) wajib diunggah untuk pencatatan kerja sama lampau.'
+            ]);
+        }
+
+        $uploadedFile = $request->file('signed_file');
+        $ext = strtolower($uploadedFile->getClientOriginalExtension());
+        if ($ext !== 'pdf') {
+            return redirect()->back()->with('flash', [
+                'type' => 'danger',
+                'msg' => 'Gagal menyimpan: Berkas Scan Naskah Asli harus berformat PDF.'
+            ]);
+        }
+
         [$newId, $regId] = $this->generateUniqueDocId();
         $docType = $request->input('doc_type', 'MoU');
         $partnerName = $request->input('partner_name', 'Mitra Lampau');
@@ -1236,8 +1263,6 @@ class SimkermaController extends Controller
 
         $paperSize = $request->input('paper_size', 'A4') ?: 'A4';
         $warningThreshold = 'H-90 Hari (3 Bulan)';
-        $firstPartySigner = $request->input('first_party_signer') ?: ($docType === 'MoU' ? 'Rektor Universitas Parna Raya' : 'Dekan Fakultas');
-        $secondPartySigner = $request->input('second_party_signer') ?: 'Pimpinan Mitra Terkait';
         $unit = $request->input('unit') ?: 'Biro Kerja Sama & Urusan Internasional (BKUI)';
         $category = $request->input('category') ?: 'DUDI / Swasta';
         $parentMou = $request->input('parent_mou') ?: '-';

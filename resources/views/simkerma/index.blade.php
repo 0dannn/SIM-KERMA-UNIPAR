@@ -1573,16 +1573,16 @@
                         <!-- 7. PENANDATANGAN PIHAK I & PIHAK II -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Penandatangan Pihak I :
+                                Penandatangan Pihak I : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-4">
-                                <input type="text" name="first_party_signer" class="form-control" value="Rektor Universitas Parna Raya">
+                                <input type="text" name="first_party_signer" class="form-control" value="Rektor Universitas Parna Raya" required>
                             </div>
                             <label class="col-md-2 col-form-label fw-bold text-dark text-md-end">
-                                Penandatangan Pihak II :
+                                Penandatangan Pihak II : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-3">
-                                <input type="text" name="second_party_signer" class="form-control">
+                                <input type="text" name="second_party_signer" class="form-control" required>
                             </div>
                         </div>
 
@@ -1647,10 +1647,10 @@
                         <!-- 10. UPLOAD SCAN NASKAH ASLI (PDF) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Scan Naskah Asli (PDF) :
+                                Scan Naskah Asli (PDF) : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
-                                <input type="file" name="signed_file" class="form-control" accept=".pdf">
+                                <input type="file" name="signed_file" class="form-control" accept=".pdf" required>
                                 <div class="text-muted mt-1" style="font-size: 0.72rem;">
                                     Unggah berkas scan naskah asli bertandatangan fisik (format PDF) untuk diarsipkan dalam repositori digital institusi.
                                 </div>
