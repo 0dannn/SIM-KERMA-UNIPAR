@@ -1066,7 +1066,7 @@
                 </div>
                 <div class="card-body p-4">
 
-                    <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="small">
+                    <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="form-kerma-submission">
                         @csrf
                         <input type="hidden" name="doc_type" value="MoU">
                         <input type="hidden" name="parent_mou" value="-">
@@ -1316,7 +1316,7 @@
                 </div>
                 <div class="card-body p-4">
 
-                    <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="small">
+                    <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="form-kerma-submission">
                         @csrf
                         <input type="hidden" name="parent_mou" value="{{ $prefillParentDocNumber ?: $prefillParentId }}">
 
@@ -1468,7 +1468,7 @@
                 </div>
                 <div class="card-body p-4">
 
-                    <form method="POST" action="{{ route('simkerma.store-legacy') }}" enctype="multipart/form-data" class="small">
+                    <form method="POST" action="{{ route('simkerma.store-legacy') }}" enctype="multipart/form-data" class="form-kerma-submission">
                         @csrf
 
                         <!-- 1. JENIS DOKUMEN -->

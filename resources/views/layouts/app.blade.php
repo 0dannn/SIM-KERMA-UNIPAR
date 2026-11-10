@@ -404,7 +404,23 @@
             border-color: transparent transparent #2563eb !important;
             border-bottom-width: 2px !important;
         }
-</style>
+
+        /* Tipografi Nama Field Lebih Jelas pada Formulir Pengajuan & Dokumen Lampau */
+        .form-kerma-submission .col-form-label {
+            font-size: 0.94rem !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+            letter-spacing: -0.01em;
+            line-height: 1.35;
+        }
+        .form-kerma-submission .form-control,
+        .form-kerma-submission .form-select {
+            font-size: 0.88rem !important;
+        }
+        .form-kerma-submission .form-check-label {
+            font-size: 0.88rem !important;
+        }
+    </style>
     @stack('styles')
 </head>
 <body>
