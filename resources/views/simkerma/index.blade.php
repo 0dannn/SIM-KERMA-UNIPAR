@@ -1351,20 +1351,7 @@
                             </div>
                         </div>
 
-                        <!-- 3. UKURAN KERTAS DOKUMEN -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Ukuran Kertas Dokumen : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <select name="paper_size" class="form-select" required>
-                                    <option value="A4" selected>Kertas A4 (210 &times; 297 mm) &mdash; Standar</option>
-                                    <option value="F4">Kertas F4 / Folio (215 &times; 330 mm)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- 4. IDENTITAS UNIT PELAKSANA -->
+                        <!-- 3. IDENTITAS UNIT PELAKSANA -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Unit Pelaksana (Pihak I) : <span class="text-danger">*</span>
@@ -1381,7 +1368,7 @@
                             </div>
                         </div>
 
-                        <!-- 5. MITRA (PREFILLED DARI INDUK) -->
+                        <!-- 4. MITRA (PREFILLED DARI INDUK) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Nama Mitra (Pihak II) : <span class="text-danger">*</span>
@@ -1400,7 +1387,7 @@
                             </div>
                         </div>
 
-                        <!-- 6. RUANG LINGKUP SPESIFIK -->
+                        <!-- 5. RUANG LINGKUP SPESIFIK -->
                         <div class="row mb-3 align-items-start">
                             <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
                                 Ruang Lingkup Spesifik : <span class="text-danger">*</span>
@@ -1410,7 +1397,7 @@
                             </div>
                         </div>
 
-                        <!-- 7. NOMINAL / NILAI DANA -->
+                        <!-- 6. NOMINAL / NILAI DANA -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Nilai Anggaran / Dana (Jika Ada) :
@@ -1420,7 +1407,7 @@
                             </div>
                         </div>
 
-                        <!-- 8. UPLOAD DRAFT PDF -->
+                        <!-- 7. UPLOAD DRAFT PDF -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Upload Draf Dokumen (PDF) : <span class="text-danger">*</span>
@@ -1430,7 +1417,7 @@
                             </div>
                         </div>
 
-                        <!-- 9. TANGGAL & DURASI -->
+                        <!-- 8. TANGGAL & DURASI -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Periode Berlaku :
