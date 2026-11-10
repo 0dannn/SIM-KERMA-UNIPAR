@@ -1576,7 +1576,7 @@
                                 Penandatangan Pihak I : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-4">
-                                <input type="text" name="first_party_signer" class="form-control" value="Rektor Universitas Parna Raya" required>
+                                <input type="text" name="first_party_signer" class="form-control" required>
                             </div>
                             <label class="col-md-2 col-form-label fw-bold text-dark text-md-end">
                                 Penandatangan Pihak II : <span class="text-danger">*</span>
