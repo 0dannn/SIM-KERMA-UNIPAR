@@ -65,6 +65,7 @@ class SimkermaController extends Controller
         $viewMode = $request->query('view', 'list');
         $isCreatingNew = ($viewMode === 'new' || $viewMode === 'new_mou');
         $isCreatingDerive = ($viewMode === 'new_derive');
+        $isCreatingLegacy = ($viewMode === 'legacy' || $viewMode === 'new_legacy');
         $isViewingDetail = ($viewMode === 'detail' && $currentDoc !== null);
 
         // Pre-fill Turunan Dokumen (Hierarki IKU 6)
@@ -136,6 +137,7 @@ class SimkermaController extends Controller
             'viewMode',
             'isCreatingNew',
             'isCreatingDerive',
+            'isCreatingLegacy',
             'isViewingDetail',
             'prefillParentId',
             'prefillDeriveType',
@@ -1163,5 +1165,211 @@ class SimkermaController extends Controller
                 'type' => 'success',
                 'msg' => 'Berkas ' . ($fileType === 'signed' ? 'naskah asli' : 'draf revisi') . ' berhasil diunggah.'
             ]);
+    }
+
+    /**
+     * Simpan Pencatatan Dokumen Kerja Sama Lampau (Legacy / Pra-Sistem)
+     */
+    public function storeLegacy(Request $request)
+    {
+        [$newId, $regId] = $this->generateUniqueDocId();
+        $docType = $request->input('doc_type', 'MoU');
+        $partnerName = $request->input('partner_name', 'Mitra Lampau');
+        $docNumber = $request->input('doc_number');
+        if (empty($docNumber)) {
+            $prefix = ($docType === 'MoU') ? 'MoU' : (($docType === 'IA') ? 'IA' : 'MoA');
+            $docNumber = sprintf('%03d/UNIPAR/%s/LEGACY/%s', rand(100, 299), $prefix, date('Y'));
+        }
+        $partnerDocNumber = $request->input('partner_doc_number');
+        $title = $request->input('title', 'Kerja Sama ' . $docType . ' dengan ' . $partnerName);
+        $activeRole = session('active_role', 'MASTER');
+
+        $startDate = $request->input('start_date') ?: null;
+        $endDate = $request->input('end_date') ?: null;
+        $validityYears = $request->input('validity_years');
+        $validity = $request->input('validity');
+
+        if (!empty($validityYears)) {
+            $validity = ((int)$validityYears) . ' Tahun';
+            if ($startDate && empty($endDate)) {
+                try {
+                    $endDate = \Carbon\Carbon::parse($startDate)->addYears((int)$validityYears)->format('Y-m-d');
+                } catch (\Exception $e) {}
+            }
+        } elseif (empty($validity)) {
+            if ($startDate && $endDate) {
+                try {
+                    $start = \Carbon\Carbon::parse($startDate);
+                    $end = \Carbon\Carbon::parse($endDate);
+                    $years = $start->diffInYears($end);
+                    if ($years >= 1) {
+                        $validity = $years . ' Tahun';
+                    } else {
+                        $months = $start->diffInMonths($end);
+                        $validity = ($months > 0 ? $months : 1) . ' Bulan';
+                    }
+                } catch (\Exception $e) {
+                    $validity = '3 Tahun';
+                }
+            } else {
+                $validity = '3 Tahun';
+            }
+        }
+
+        // Tentukan Status Awal Dokumen Lampau:
+        // Jika tanggal berakhir sudah lewat -> EXPIRED, jika masih berlaku -> ACTIVE
+        $today = now()->format('Y-m-d');
+        $initialStatus = 'ACTIVE';
+        if ($endDate && $endDate < $today) {
+            $initialStatus = 'EXPIRED';
+        }
+
+        // Ruang Lingkup Tridharma / Kemitraan (Multi-select Checkbox)
+        $rawScope = $request->input('scope');
+        if (is_array($rawScope) && count($rawScope) > 0) {
+            $scope = implode(', ', $rawScope);
+        } elseif (is_string($rawScope) && trim($rawScope) !== '') {
+            $scope = trim($rawScope);
+        } else {
+            $scope = 'Pendidikan, Penelitian, Pengabdian kepada Masyarakat, Pengembangan SDM';
+        }
+
+        $paperSize = $request->input('paper_size', 'A4') ?: 'A4';
+        $warningThreshold = 'H-90 Hari (3 Bulan)';
+        $firstPartySigner = $request->input('first_party_signer') ?: ($docType === 'MoU' ? 'Rektor Universitas Parna Raya' : 'Dekan Fakultas');
+        $secondPartySigner = $request->input('second_party_signer') ?: 'Pimpinan Mitra Terkait';
+        $unit = $request->input('unit') ?: 'Biro Kerja Sama & Urusan Internasional (BKUI)';
+        $category = $request->input('category') ?: 'DUDI / Swasta';
+        $parentMou = $request->input('parent_mou') ?: '-';
+
+        $doc = DB::transaction(function () use (
+            $request, $newId, $regId, $docType, $partnerName, $docNumber,
+            $partnerDocNumber, $parentMou, $activeRole, $title,
+            $firstPartySigner, $secondPartySigner, $startDate, $endDate,
+            $validity, $scope, $paperSize, $warningThreshold, $initialStatus,
+            $unit, $category
+        ) {
+            $document = Document::create([
+                'doc_id' => $newId,
+                'reg_id' => $regId,
+                'doc_number' => $docNumber,
+                'partner_doc_number' => $partnerDocNumber ?: null,
+                'track' => 'Dokumen Lampau (Legacy)',
+                'title' => $title,
+                'unit' => $unit,
+                'first_party_signer' => $firstPartySigner,
+                'collab_unit' => null,
+                'partner_name' => $partnerName,
+                'partner_category' => $category,
+                'second_party_signer' => $secondPartySigner,
+                'pic_first_party' => $request->input('pic_first_party'),
+                'pic_second_party' => $request->input('pic_second_party'),
+                'doc_type' => $docType,
+                'paper_size' => $paperSize,
+                'parent_mou' => $parentMou ?: '-',
+                'scope' => $scope,
+                'description' => $request->input('description') ?: 'Dokumen kerja sama lampau yang telah ditandatangani sebelum implementasi SIMKERMA UNIPAR.',
+                'validity' => $validity,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'date_approved' => $startDate,
+                'date_signed' => $startDate,
+                'nominal_value' => $request->input('nominal_value'),
+                'warning_threshold' => $warningThreshold,
+                'status' => $initialStatus,
+                'is_legacy' => true,
+                'draft_file' => 'legacy_' . strtolower(str_replace([' ', '/', '-'], '_', $newId)) . '.pdf',
+                'signed_file' => null,
+                'notes' => 'Pencatatan arsip kerja sama lampau (pra-sistem).',
+            ]);
+
+            // Handle Berkas Upload Scan Asli (PDF)
+            if ($request->hasFile('signed_file')) {
+                $uploaded = $request->file('signed_file');
+                $ext = strtolower($uploaded->getClientOriginalExtension());
+                $dest = public_path('uploads/documents');
+                if (!file_exists($dest)) {
+                    mkdir($dest, 0777, true);
+                }
+                $filename = 'signed_legacy_' . strtolower(str_replace([' ', '/', '-'], '_', $newId)) . '_' . time() . '.' . $ext;
+                $uploaded->move($dest, $filename);
+                $document->signed_file = 'uploads/documents/' . $filename;
+                $document->save();
+            }
+
+            AuditTrail::create([
+                'document_id' => $document->id,
+                'actor' => 'Pencatatan Dokumen Lampau (' . $activeRole . ')',
+                'role' => $activeRole,
+                'event' => 'RECORD_HISTORICAL_DATA',
+                'from_status' => '-',
+                'to_status' => $initialStatus,
+                'notes' => 'Pencatatan naskah kerja sama lampau (pra-sistem) ' . $docType . ' bersama ' . $partnerName . ' (' . $docNumber . '). Status awal ditetapkan: ' . $initialStatus . '.',
+                'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
+            ]);
+
+            // Sinkronisasi otomatis ke Master Data Mitra (Menu 2)
+            Partner::firstOrCreate(
+                ['name' => $partnerName],
+                [
+                    'category' => $category,
+                    'scope_coverage' => (stripos($partnerName, 'international') !== false || stripos($category, 'luar') !== false) ? 'Internasional' : 'Dalam Negeri (Nasional/Lokal)',
+                    'city' => 'Kota Manado',
+                    'address' => 'Kawasan Bisnis & Industri Perwakilan Sulawesi Utara, Kota Manado',
+                    'phone' => '(0431) 880-1234',
+                    'email' => 'kemitraan@' . (\Illuminate\Support\Str::slug($partnerName) ?: 'mitra') . '.co.id',
+                    'pic_name' => $request->input('pic_second_party') ?: 'Narahubung Kemitraan',
+                    'pic_title' => 'Divisi Kerja Sama',
+                    'pic_contact' => '0812-4400-5500',
+                    'profile_desc' => 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR dengan ruang lingkup: ' . $scope,
+                    'status_verification' => 'Terverifikasi Sah'
+                ]
+            );
+
+            return $document;
+        });
+
+        session(['selected_doc_id' => $doc->doc_id]);
+
+        return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id])
+            ->with('flash', [
+                'type' => 'success',
+                'msg' => 'Kerja sama lampau ' . $doc->doc_id . ' (' . $doc->doc_number . ') berhasil dicatat dengan status ' . $doc->status . '.'
+            ]);
+    }
+
+    /**
+     * Reaktivasi / Perpanjangan Dokumen Kembali ke Status DRAFT
+     */
+    public function renewDraft(Request $request)
+    {
+        $docId = $request->input('doc_id');
+        $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
+        $activeRole = session('active_role', 'MASTER');
+        $actorTitle = match ($activeRole) {
+            'LEGAL' => 'Tim Telaah Legal',
+            'LEADER' => 'Pimpinan Rektorat',
+            'SYSTEM' => 'Scheduler Otomasi',
+            'MASTER' => 'Role Master (Super Admin)',
+            'ADMIN' => 'Administrator SIMKERMA',
+            default => 'Unit Pengusul (' . $document->unit . ')',
+        };
+
+        $notes = $request->input('notes', 'Inisiasi perpanjangan / reaktivasi naskah kerja sama kembali ke status DRAFT.');
+
+        try {
+            $this->fsmService->transition($document, 'RENEW', $activeRole, $actorTitle, $notes);
+            return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id])
+                ->with('flash', [
+                    'type' => 'success',
+                    'msg' => 'Dokumen ' . $document->doc_id . ' berhasil diperpanjang / direaktivasi kembali ke status DRAFT. Anda dapat memperbarui draf dan ketentuan naskah.'
+                ]);
+        } catch (\Exception $e) {
+            return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id])
+                ->with('flash', [
+                    'type' => 'danger',
+                    'msg' => 'Gagal memperbarui status: ' . $e->getMessage()
+                ]);
+        }
     }
 }

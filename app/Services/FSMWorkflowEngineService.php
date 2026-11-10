@@ -77,6 +77,13 @@ class FSMWorkflowEngineService
                 'label' => 'Picu Peringatan Dini Masa Berlaku (H-90)',
                 'icon' => 'bi-bell-fill',
                 'btn' => 'btn-warning text-dark'
+            ],
+            'RENEW' => [
+                'to' => 'DRAFT',
+                'roles' => ['UNIT', 'LEADER', 'LEGAL', 'ADMIN', 'MASTER'],
+                'label' => 'Inisiasi Draf Adendum / Perpanjangan (Kembali ke Draf)',
+                'icon' => 'bi-arrow-repeat',
+                'btn' => 'btn-primary'
             ]
         ],
         'WARNING' => [
@@ -245,7 +252,9 @@ class FSMWorkflowEngineService
                 } elseif ($newStatus === 'DRAFT' && $event === 'RENEW') {
                     $auditNote = ($currentStatus === 'WARNING')
                         ? 'Inisiasi draf adendum perpanjangan masa aktif (Dokumen kembali ke status DRAFT untuk penyusunan dan penelaahan klausul baru)'
-                        : 'Inisiasi draf reaktivasi pemulihan naskah kedaluwarsa (Dokumen kembali ke status DRAFT untuk penelaahan ulang)';
+                        : (($currentStatus === 'ACTIVE')
+                            ? 'Inisiasi draf adendum perpanjangan dini (Dokumen kembali ke status DRAFT untuk penyusunan klausul perpanjangan)'
+                            : 'Inisiasi draf reaktivasi pemulihan naskah kedaluwarsa (Dokumen kembali ke status DRAFT untuk penelaahan ulang)');
                 } elseif ($newStatus === 'CANCELLED') {
                     $auditNote = 'Pengusulan naskah dibatalkan secara permanen oleh pengusul';
                 } elseif ($newStatus === 'WARNING') {
