@@ -1,594 +1,633 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'SIMKERMA UNIPAR - Sistem Informasi Dokumen Kerja Sama' }}</title>
-    
-    <!-- Google Fonts: Public Sans -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $title ?? 'SIM-KERMA UNIPAR - Sistem Informasi Dokumen Kerja Sama' }}</title>
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{{ asset('partial/images/favicon.ico') }}">
+
+    <!-- Google Fonts: IBM Plex Sans & Public Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap 5.3.3 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons 1.11.3 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Preloader CSS -->
+    <link rel="stylesheet" href="{{ asset('partial/css/preloader.min.css') }}" type="text/css" />
+
+    <!-- Bootstrap CSS (Minia theme) -->
+    <link href="{{ asset('partial/css/bootstrap.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+
+    <!-- Icons CSS (Boxicons, Feather, Material Design, FontAwesome) -->
+    <link href="{{ asset('partial/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
+    <!-- Bootstrap Icons (Supplementary) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- App CSS (Minia theme) -->
+    <link href="{{ asset('partial/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
+
+    <!-- SweetAlert2 CSS -->
+    <link href="{{ asset('partial/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+
     <style>
-        :root {
-            /* Palette Warna Eksak Sesuai UI_Reference */
-            --brand-primary: #ea580c;        /* Oranye Hangat Utama */
-            --brand-primary-hover: #c2410c;  /* Oranye Saat Hover */
-            --brand-primary-light: #fff7ed;  /* Oranye Muda Latar Belakang */
-            --brand-primary-subtle: #ffedd5; /* Oranye Lembut Batas */
-            --brand-navy: #1e2430;           /* Slate Gelap Elegan untuk Sidebar */
-            --brand-navy-dark: #161b24;
-            --brand-slate: #334155;
-            --bg-surface: #f8fafc;           /* Latar Utama Abu-abu Bersih */
-            --border-color: #e2e8f0;         /* Garis Batas Kontainer Halus */
-            --border-subtle: #f1f5f9;
-            --card-radius: 12px;
-            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Tipografi & Latar Utama: Public Sans (Full 1080p Layout Anti-Horizontal Scroll) */
-        html, body {
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-            margin: 0;
-            padding: 0;
-        }
+        /* Penyesuaian Tema Minia & Harmonisasi Komponen SIM-KERMA UNIPAR */
         body {
-            font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-surface);
-            font-size: 0.88rem;
-            color: #334155;
-            letter-spacing: -0.01em;
+            font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f4f5f8;
+            color: #495057;
         }
 
-        .app-layout-wrapper {
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-            min-height: 100vh;
+        /* Branding Navbar */
+        .navbar-brand-box {
+            background: #2a3042 !important;
+            border-right: 1px solid #32394e !important;
+            box-shadow: none !important;
+        }
+        .navbar-brand-box .logo-txt {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffffff !important;
+            letter-spacing: 0.8px;
         }
 
-        .main-content-wrapper {
-            min-width: 0;
-            max-width: 100%;
-            width: 100%;
-            overflow-x: hidden;
+        /* Topbar & Search */
+        #page-topbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e9e9ef;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
         }
-        
-        /* Layout Sidebar (Sesuai UI_Reference: #1e2430, Flat Dark Slate Elegan - Ramping 238px / 15% lebih hemat ruang) */
-        .sidebar-container {
-            width: 238px;
-            min-height: 100vh;
-            background-color: var(--brand-navy) !important;
-            background-image: none !important;
-            border-right: 1px solid #161b24;
+        .app-search .form-control {
+            border-radius: 20px;
+            padding-left: 18px;
+            padding-right: 45px;
+            background-color: #f3f3f9;
+            font-size: 0.84rem;
         }
-        @media (max-width: 991.98px) {
-            .sidebar-container {
-                width: 100%;
-                min-height: auto;
-            }
-        }
-        
-        /* Navigasi Sidebar */
-        .sidebar-nav .nav-link {
-            color: #94a3b8;
-            padding: 9px 12px;
-            border-radius: 8px;
-            margin-bottom: 3px;
-            font-size: 0.83rem;
-            font-weight: 500;
+        .app-search .btn {
+            border-radius: 20px;
+            width: 34px;
+            height: 34px;
+            padding: 0;
             display: flex;
             align-items: center;
-            transition: all 0.15s ease-in-out;
+            justify-content: center;
+        }
+
+        /* Vertical Sidebar Styling Sesuai Minia kerma_lama */
+        body[data-sidebar="dark"] .vertical-menu {
+            background: #2a3042 !important;
+            border-right: 1px solid #32394e;
+        }
+        body[data-sidebar="dark"] #sidebar-menu ul li.menu-title {
+            color: #7b8190 !important;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            padding: 14px 20px 6px;
+        }
+        body[data-sidebar="dark"] #sidebar-menu ul li a {
+            color: #a6b0cf;
+            font-size: 0.84rem;
+            font-weight: 500;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
             text-decoration: none;
         }
-        .sidebar-nav .nav-link:hover {
-            color: #ffffff;
-            background-color: rgba(255, 255, 255, 0.06);
+        body[data-sidebar="dark"] #sidebar-menu ul li a i {
+            font-size: 1.15rem;
+            min-width: 1.75rem;
+            color: #79859c;
+            transition: all 0.2s ease;
         }
-        .sidebar-nav .nav-link.active {
+        body[data-sidebar="dark"] #sidebar-menu ul li a:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+        body[data-sidebar="dark"] #sidebar-menu ul li a:hover i {
+            color: #ffffff;
+        }
+        body[data-sidebar="dark"] #sidebar-menu ul li a.active,
+        body[data-sidebar="dark"] #sidebar-menu ul li.mm-active > a {
             color: #ffffff !important;
-            background-color: var(--brand-primary) !important;
+            background-color: #5156be !important;
             font-weight: 600;
-            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+            box-shadow: 0 2px 6px rgba(81, 86, 190, 0.4);
         }
-        
-        /* Brand Icon Box (Oranye Sesuai UI_Reference) */
-        .brand-icon-box {
-            background-color: var(--brand-primary) !important;
-            background-image: none !important;
-            color: #ffffff;
-            border-radius: 8px !important;
-            box-shadow: 0 2px 6px rgba(234, 88, 12, 0.35);
+        body[data-sidebar="dark"] #sidebar-menu ul li a.active i,
+        body[data-sidebar="dark"] #sidebar-menu ul li.mm-active > a i {
+            color: #ffffff !important;
         }
-        
-        /* Komponen Card & Container (Sesuai UI_Reference: Radius 12px, border #e2e8f0, soft shadow) */
+
+        /* Sidebar Footer / User Identity */
+        .sidebar-bottom-profile {
+            background-color: rgba(0, 0, 0, 0.18);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 14px 18px;
+            margin-top: auto;
+        }
+
+        /* Cards & Containers */
         .card, .card-wireframe {
-            border: 1px solid var(--border-color) !important;
-            border-radius: var(--card-radius) !important;
-            box-shadow: var(--card-shadow) !important;
-            background-color: #ffffff !important;
+            background-color: #ffffff;
+            border: 1px solid #e9e9ef !important;
+            border-radius: 8px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+            margin-bottom: 20px;
         }
         .card-header {
             background-color: #ffffff !important;
-            border-bottom: 1px solid var(--border-subtle) !important;
-            border-top-left-radius: var(--card-radius) !important;
-            border-top-right-radius: var(--card-radius) !important;
-            padding: 14px 18px !important;
+            border-bottom: 1px solid #f3f3f9 !important;
+            padding: 14px 20px !important;
+            border-top-left-radius: 8px !important;
+            border-top-right-radius: 8px !important;
         }
         .card-body {
             padding: 20px !important;
         }
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0;
+        }
 
-        /* Komponen Tabel (Sesuai UI_Reference: Header #f8fafc, teks #475569, padding lega, border halus) */
+        /* Tabel Sesuai Desain Eksak kerma_lama */
         .table-responsive {
-            border-radius: var(--card-radius);
-            border: 1px solid var(--border-color);
+            border: 1px solid #e9e9ef !important;
+            border-radius: 6px;
             background-color: #ffffff;
-            box-shadow: var(--card-shadow);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            max-width: 100%;
+            margin-bottom: 1rem;
         }
-        .table-responsive > .table {
-            width: 100%;
+        .table, .table-wireframe, .table-bordered {
             margin-bottom: 0 !important;
+            color: #495057;
+            border: 1px solid #e9e9ef !important;
+            border-collapse: collapse !important;
         }
-        .table, .table-wireframe {
-            margin-bottom: 0 !important;
-        }
-        .table thead th, .table-wireframe thead th, .table-wireframe th {
-            background-color: #f8fafc !important;
-            color: #475569 !important;
-            font-size: 0.77rem !important;
+        .table thead th, .table-wireframe thead th, .table-bordered thead th {
+            background-color: #f8f9fa !important;
+            color: #495057 !important;
             font-weight: 600 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.03em !important;
-            padding: 12px 16px !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            border-top: none !important;
+            font-size: 0.81rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 11px 14px !important;
+            border: 1px solid #e9e9ef !important;
             vertical-align: middle;
         }
-        .table tbody td, .table-wireframe tbody td {
-            padding: 13px 16px !important;
-            border-bottom: 1px solid var(--border-subtle) !important;
+        .table tbody td, .table-wireframe tbody td, .table-bordered tbody td {
+            padding: 11px 14px !important;
+            border: 1px solid #e9e9ef !important;
+            font-size: 0.84rem;
             vertical-align: middle;
-            color: #1e293b;
+            color: #495057;
         }
-        .table tbody tr:last-child td, .table-wireframe tbody tr:last-child td {
-            border-bottom: none !important;
+        .table tbody tr:nth-of-type(odd), .table-wireframe tbody tr:nth-of-type(odd) {
+            background-color: #ffffff;
+        }
+        .table tbody tr:nth-of-type(even), .table-wireframe tbody tr:nth-of-type(even) {
+            background-color: #fafbfe;
         }
         .table tbody tr:hover, .table-wireframe tbody tr:hover {
-            background-color: #fafbfc !important;
+            background-color: #f1f5f9 !important;
         }
 
-        /* Tombol & Aksi (Warna Oranye UI_Reference) */
-        .btn {
-            border-radius: 8px !important;
+        /* Form Labels & Controls */
+        .form-label {
             font-weight: 500;
-            transition: all 0.15s ease-in-out;
+            color: #495057;
+            font-size: 0.84rem;
+            margin-bottom: 6px;
         }
-        .btn-primary {
-            background-color: var(--brand-primary) !important;
-            border-color: var(--brand-primary) !important;
-            color: #ffffff !important;
-            font-weight: 600;
-            box-shadow: 0 1px 3px rgba(234, 88, 12, 0.25);
-        }
-        .btn-primary:hover, .btn-primary:focus {
-            background-color: var(--brand-primary-hover) !important;
-            border-color: var(--brand-primary-hover) !important;
-            color: #ffffff !important;
-            box-shadow: 0 2px 6px rgba(234, 88, 12, 0.35);
-        }
-        .btn-outline-primary {
-            color: var(--brand-primary) !important;
-            border-color: #fdba74 !important;
-            background-color: #ffffff !important;
-        }
-        .btn-outline-primary:hover, .btn-outline-primary:focus {
-            background-color: var(--brand-primary) !important;
-            border-color: var(--brand-primary) !important;
-            color: #ffffff !important;
-        }
-        .text-primary {
-            color: var(--brand-primary) !important;
-        }
-        .bg-primary {
-            background-color: var(--brand-primary) !important;
-        }
-        .border-primary {
-            border-color: var(--brand-primary) !important;
-        }
-
-        /* Form Controls & Inputs */
         .form-control, .form-select {
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 8px !important;
-            font-size: 0.85rem !important;
-            padding: 8px 12px !important;
-            color: #1e293b;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            padding: 7px 12px;
+            color: #495057;
         }
         .form-control:focus, .form-select:focus {
-            border-color: var(--brand-primary) !important;
-            box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15) !important;
+            border-color: #5156be;
+            box-shadow: 0 0 0 0.15rem rgba(81, 86, 190, 0.2);
         }
 
-        /* Status Badges & Pills (Pastel Halus + Rounded-Pill dari UI_Reference) */
-        .badge {
-            font-weight: 600;
-            border-radius: 9999px !important;
+        /* Tombol & Aksi (Minia Theme) */
+        .btn {
+            border-radius: 6px;
+            font-size: 0.84rem;
+            font-weight: 500;
+            padding: 6px 14px;
+            transition: all 0.2s;
+        }
+        .btn-sm {
             padding: 4px 10px;
-            letter-spacing: 0.01em;
+            font-size: 0.76rem;
+            border-radius: 4px;
         }
-        .badge.bg-success, .badge-status-active {
-            background-color: #dcfce7 !important;
-            color: #15803d !important;
-            border: 1px solid #bbf7d0 !important;
+        .btn-primary {
+            background-color: #5156be !important;
+            border-color: #5156be !important;
+            color: #ffffff !important;
         }
-        .badge.bg-info, .badge-status-process {
-            background-color: #e0f2fe !important;
-            color: #0369a1 !important;
-            border: 1px solid #bae6fd !important;
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #4549a2 !important;
+            border-color: #4549a2 !important;
+            color: #ffffff !important;
         }
-        .badge.bg-warning, .badge.bg-warning-subtle, .badge-status-warning {
-            background-color: #fef3c7 !important;
-            color: #b45309 !important;
-            border: 1px solid #fde68a !important;
+        .btn-success {
+            background-color: #2ab57d !important;
+            border-color: #2ab57d !important;
         }
-        .badge.bg-danger, .badge-status-expired {
-            background-color: #fee2e2 !important;
-            color: #dc2626 !important;
-            border: 1px solid #fecaca !important;
+        .btn-info {
+            background-color: #4ba6ef !important;
+            border-color: #4ba6ef !important;
+            color: #ffffff !important;
         }
-        .badge.bg-secondary {
-            background-color: #f1f5f9 !important;
-            color: #475569 !important;
-            border: 1px solid #e2e8f0 !important;
+        .btn-warning {
+            background-color: #ffbf53 !important;
+            border-color: #ffbf53 !important;
+            color: #212529 !important;
         }
-        .badge.bg-dark {
-            background-color: #1e293b !important;
-            color: #f8fafc !important;
-            border-radius: 6px !important;
-        }
-        .badge.bg-light {
-            background-color: #f8fafc !important;
-            color: #334155 !important;
-            border: 1px solid #e2e8f0 !important;
+        .btn-danger {
+            background-color: #fd625e !important;
+            border-color: #fd625e !important;
         }
 
-        /* Pastel Circular Icons untuk Stat Cards (Sesuai UI_Reference) */
-        .bg-success-subtle { background-color: #dcfce7 !important; color: #16a34a !important; }
-        .bg-primary-subtle { background-color: #e0f2fe !important; color: #0284c7 !important; }
-        .bg-warning-subtle { background-color: #fef3c7 !important; color: #d97706 !important; }
-        .bg-info-subtle    { background-color: #eff6ff !important; color: #2563eb !important; }
-        .bg-danger-subtle  { background-color: #fee2e2 !important; color: #dc2626 !important; }
-        .bg-dark-subtle    { background-color: #f1f5f9 !important; color: #334155 !important; }
+        /* Badges & Soft Badges */
+        .badge {
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            letter-spacing: 0.02em;
+        }
+        .badge.bg-primary { background-color: #5156be !important; }
+        .badge.bg-success { background-color: #2ab57d !important; }
+        .badge.bg-info    { background-color: #4ba6ef !important; }
+        .badge.bg-warning { background-color: #ffbf53 !important; color: #212529 !important; }
+        .badge.bg-danger  { background-color: #fd625e !important; }
+        .badge.bg-secondary { background-color: #74788d !important; }
+        .badge-soft-primary { background-color: rgba(81, 86, 190, 0.12) !important; color: #5156be !important; }
+        .badge-soft-success { background-color: rgba(42, 181, 125, 0.12) !important; color: #2ab57d !important; }
+        .badge-soft-info    { background-color: rgba(75, 166, 239, 0.12) !important; color: #4ba6ef !important; }
+        .badge-soft-warning { background-color: rgba(255, 191, 83, 0.15) !important; color: #ffbf53 !important; }
+        .badge-soft-danger  { background-color: rgba(253, 98, 94, 0.12)  !important; color: #fd625e !important; }
+        .badge-soft-secondary { background-color: rgba(116, 120, 141, 0.12) !important; color: #74788d !important; }
+
+        /* Subtle helpers */
+        .bg-soft-primary { background-color: rgba(81, 86, 190, 0.1) !important; }
+        .bg-soft-success { background-color: rgba(42, 181, 125, 0.1) !important; }
+        .bg-soft-warning { background-color: rgba(255, 191, 83, 0.1) !important; }
+        .bg-soft-danger  { background-color: rgba(253, 98, 94, 0.1) !important; }
+        .bg-soft-info    { background-color: rgba(75, 166, 239, 0.1) !important; }
+        .bg-soft-secondary { background-color: rgba(116, 120, 141, 0.1) !important; }
 
         .tag-wireframe {
             font-size: 0.72rem;
-            font-weight: 600;
+            font-weight: 500;
             padding: 3px 8px;
-            background-color: #f1f5f9;
-            color: #475569;
-            border-radius: 6px;
-            border: 1px solid #cbd5e1;
+            background-color: #f1f3f7;
+            color: #495057;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
         }
-        
-        /* Upload Box */
+
+        /* Upload Dashed Box */
         .upload-dashed-box {
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            background-color: #f8fafc;
-            padding: 18px;
+            border: 2px dashed #ced4da;
+            border-radius: 6px;
+            background-color: #fafbfe;
+            padding: 20px;
             text-align: center;
-            color: #64748b;
+            color: #74788d;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.2s ease;
         }
         .upload-dashed-box:hover {
-            border-color: var(--brand-primary);
-            background-color: var(--brand-primary-light);
-            color: var(--brand-primary);
-        }
-        
-        /* Tabs Styling */
-        .nav-pills .nav-link.active {
-            background-color: var(--brand-primary) !important;
-            color: #ffffff !important;
-            box-shadow: 0 1px 3px rgba(234, 88, 12, 0.3);
-            border-radius: 8px;
-        }
-        .nav-pills .nav-link {
-            color: #64748b;
-            border-radius: 8px;
+            border-color: #5156be;
+            background-color: rgba(81, 86, 190, 0.04);
+            color: #5156be;
         }
 
-        /* Pagination Sesuai UI_Reference */
-        .pagination .page-item .page-link {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin: 0 2px;
-            color: #334155;
-            font-size: 0.85rem;
-            padding: 6px 12px;
-        }
-        .pagination .page-item.active .page-link {
-            background-color: var(--brand-primary) !important;
-            border-color: var(--brand-primary) !important;
-            color: #ffffff !important;
-            font-weight: 600;
+        /* Tipografi Form Submission */
+        .form-kerma-submission .col-form-label {
+            font-size: 0.92rem !important;
+            font-weight: 600 !important;
+            color: #343a40 !important;
         }
 
-        /* Clean Print Style untuk Laporan Resmi */
+        /* Page Content Padding */
+        .page-content {
+            padding: 90px 20px 60px !important;
+        }
+        @media (max-width: 991.98px) {
+            .page-content {
+                padding: 85px 12px 60px !important;
+            }
+        }
+
+        /* Print Style */
         @media print {
-            .sidebar-container, .top-header, .btn, .breadcrumb, footer, .modal, .alert {
+            #page-topbar, .vertical-menu, .footer, .btn, .breadcrumb, .modal {
                 display: none !important;
             }
-            body, .main-content {
-                background: #fff !important;
-                margin: 0 !important;
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            .page-content {
                 padding: 0 !important;
             }
             .card {
-                border: 1px solid #ddd !important;
+                border: 1px solid #ccc !important;
                 box-shadow: none !important;
             }
-        }
-    
-        /* Scoped 1080p Viewport Optimization for Detail Dokumen (Matching UI/detail_MoU.png) */
-        .detail-viewport-1080p {
-            max-width: 100%;
-        }
-        
-        .detail-viewport-1080p .btn-primary {
-            background-color: #3b82f6 !important;
-            border-color: #3b82f6 !important;
-            color: #ffffff !important;
-            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3) !important;
-        }
-        .detail-viewport-1080p .btn-primary:hover,
-        .detail-viewport-1080p .btn-primary:focus {
-            background-color: #2563eb !important;
-            border-color: #2563eb !important;
-            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4) !important;
-        }
-.detail-viewport-1080p .card {
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
-            margin-bottom: 8px !important;
-            background-color: #ffffff !important;
-        }
-        .detail-viewport-1080p .card-header {
-            padding: 6px 12px !important;
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #f1f5f9 !important;
-            border-top-left-radius: 8px !important;
-            border-top-right-radius: 8px !important;
-        }
-        .detail-viewport-1080p .card-body {
-            padding: 8px 12px !important;
-        }
-        .detail-viewport-1080p .table thead th {
-            padding: 5px 8px !important;
-            font-size: 0.72rem !important;
-            background-color: #f8fafc !important;
-            color: #64748b !important;
-            font-weight: 600 !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-        }
-        .detail-viewport-1080p .table tbody td {
-            padding: 5px 8px !important;
-            font-size: 0.76rem !important;
-            vertical-align: middle !important;
-            border-bottom: 1px solid #f1f5f9 !important;
-        }
-        .detail-viewport-1080p .nav-tabs .nav-link {
-            padding: 5px 12px !important;
-            font-size: 0.8rem !important;
-            color: #64748b;
-            font-weight: 500;
-        }
-        .detail-viewport-1080p .nav-tabs .nav-link.active {
-            color: #2563eb !important;
-            font-weight: 600 !important;
-            border-color: transparent transparent #2563eb !important;
-            border-bottom-width: 2px !important;
-        }
-
-        /* Tipografi Nama Field Lebih Jelas pada Formulir Pengajuan & Dokumen Lampau */
-        .form-kerma-submission .col-form-label {
-            font-size: 0.94rem !important;
-            font-weight: 600 !important;
-            color: #1e293b !important;
-            letter-spacing: -0.01em;
-            line-height: 1.35;
-        }
-        .form-kerma-submission .form-control,
-        .form-kerma-submission .form-select {
-            font-size: 0.88rem !important;
-        }
-        .form-kerma-submission .form-check-label {
-            font-size: 0.88rem !important;
         }
     </style>
     @stack('styles')
 </head>
-<body>
 
-<div class="d-flex flex-column flex-lg-row app-layout-wrapper">
+<body data-sidebar="dark">
 
-    <!-- ========================================================================================= -->
-    <!-- SIDEBAR NAVIGASI RESMI                                                                    -->
-    <!-- ========================================================================================= -->
-    <div class="sidebar-container text-white d-flex flex-column justify-content-between p-2 p-md-3 flex-shrink-0">
-        <div>
-            <!-- LOGO & BRAND -->
-            <div class="d-flex align-items-center pb-3 mb-3 border-bottom border-secondary">
-                <div class="brand-icon-box fw-bold rounded-3 d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; font-size: 1.1rem;">
-                    <i class="bi bi-mortarboard-fill"></i>
-                </div>
-                <div>
-                    <h6 class="mb-0 fw-bold text-uppercase text-white letter-spacing-1" style="font-size: 0.88rem;">SIM KERJA SAMA</h6>
-                    <small class="text-secondary" style="font-size: 0.7rem;">Universitas Parna Raya</small>
-                </div>
-            </div>
+<!-- Begin page -->
+<div id="layout-wrapper">
 
-            <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-                <span class="text-uppercase text-secondary fw-bold" style="font-size: 0.67rem; letter-spacing: 0.8px;">
-                    MENU UTAMA
-                </span>
-                <span class="tag-wireframe bg-dark text-white-50 border-secondary" style="font-size: 0.62rem;">
-                    UNIPAR
-                </span>
-            </div>
-
-            <!-- DAFTAR MENU UTAMA -->
-            <nav class="sidebar-nav">
-                @foreach ($features as $fId => $f)
-                    @php $isActive = ($activeMenu === $fId); @endphp
-                    <a href="{{ route('simkerma.index', ['menu' => $fId]) }}" class="nav-link {{ $isActive ? 'active' : '' }}" title="{{ $f['title'] }}">
-                        <i class="bi {{ $f['icon'] }} me-2 fs-6"></i>
-                        <span class="flex-grow-1 text-truncate">{{ $f['title'] }}</span>
-                        @if ($isActive)
-                            <i class="bi bi-chevron-right ms-1 text-white small" style="font-size: 0.68rem;"></i>
-                        @endif
+    <!-- ============================================================== -->
+    <!-- TOP NAVIGATION BAR (Header Minia)                              -->
+    <!-- ============================================================== -->
+    <header id="page-topbar">
+        <div class="navbar-header">
+            <div class="d-flex align-items-center">
+                <!-- LOGO -->
+                <div class="navbar-brand-box">
+                    <a href="{{ route('simkerma.index') }}" class="logo logo-dark">
+                        <span class="logo-sm">
+                            <img src="{{ asset('partial/images/logo/logo-sm.svg') }}" alt="" height="24">
+                        </span>
+                        <span class="logo-lg">
+                            <img src="{{ asset('partial/images/logo/logo-sm.svg') }}" alt="" height="24"> <span class="logo-txt">SIM-KERMA</span>
+                        </span>
                     </a>
-                @endforeach
-            </nav>
-        </div>
 
-        <!-- FOOTER SIDEBAR -->
-        <div class="pt-3 mt-4 border-top border-secondary text-secondary" style="font-size: 0.75rem;">
-            @if (auth()->check())
-                <div class="bg-dark p-2 rounded mb-2 border border-secondary">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2 overflow-hidden">
-                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.75rem;">
-                                <i class="bi bi-person-fill"></i>
+                    <a href="{{ route('simkerma.index') }}" class="logo logo-light">
+                        <span class="logo-sm">
+                            <img src="{{ asset('partial/images/logo/logo-sm.svg') }}" alt="" height="24">
+                        </span>
+                        <span class="logo-lg">
+                            <img src="{{ asset('partial/images/logo/logo-sm.svg') }}" alt="" height="24"> <span class="logo-txt">SIM-KERMA</span>
+                        </span>
+                    </a>
+                </div>
+
+                <button type="button" class="btn btn-sm px-3 font-size-16 header-item waves-effect" id="vertical-menu-btn">
+                    <i class="fa fa-fw fa-bars"></i>
+                </button>
+
+                <!-- App Search Form -->
+                <form class="app-search d-none d-lg-block" onsubmit="event.preventDefault(); var val = this.querySelector('input').value; var target = document.getElementById('searchDocsInput') || document.getElementById('searchMitraInput') || document.getElementById('docSearchInput'); if (target) { target.value = val; target.dispatchEvent(new Event('input')); target.dispatchEvent(new Event('keyup')); }">
+                    <div class="position-relative">
+                        <input type="text" class="form-control" placeholder="Cari kerja sama, nomor dokumen, mitra...">
+                        <button class="btn btn-primary" type="submit"><i class="bx bx-search-alt align-middle"></i></button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="d-flex align-items-center">
+
+                <!-- Reset Data Pengajuan (Mode Pengembangan) -->
+                <form method="POST" action="{{ route('simkerma.reset-all-documents') }}" class="d-none d-sm-inline me-2" onsubmit="return confirm('PERINGATAN PENGEMBANGAN:\n\nApakah Anda yakin ingin menghapus SEMUA data pengajuan dan persetujuan kerja sama?\n\nSemua dokumen, jejak audit (audit trails), dan log siklus FSM akan dihapus permanen.')">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm d-flex align-items-center gap-1 py-1 px-2" style="font-size: 0.75rem;" title="Hapus Semua Pengajuan dan Persetujuan (Mode Pengembangan)">
+                        <i class="bx bx-trash align-middle"></i>
+                        <span class="d-none d-md-inline">Reset Data Dev</span>
+                    </button>
+                </form>
+
+                <!-- Dark / Light Mode Switcher -->
+                <div class="dropdown d-none d-sm-inline-block">
+                    <button type="button" class="btn header-item waves-effect" id="mode-setting-btn" title="Toggle Tampilan Gelap/Terang">
+                        <i data-feather="moon" class="icon-lg layout-mode-dark"></i>
+                        <i data-feather="sun" class="icon-lg layout-mode-light"></i>
+                    </button>
+                </div>
+
+                <!-- User Profile Dropdown -->
+                @if (auth()->check())
+                    <div class="dropdown d-inline-block">
+                        <button type="button" class="btn header-item bg-soft-light border-start border-end waves-effect" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <img class="rounded-circle header-profile-user" src="{{ asset('partial/images/users/avatar-1.jpg') }}" alt="Header Avatar">
+                            <span class="d-none d-xl-inline-block ms-1 fw-medium">{{ auth()->user()->name }}</span>
+                            <span class="badge bg-primary ms-1 d-none d-md-inline-block">{{ auth()->user()->role }}</span>
+                            <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <div class="px-3 py-2 border-bottom">
+                                <div class="fw-bold font-size-14">{{ auth()->user()->name }}</div>
+                                <div class="text-muted font-size-12">{{ auth()->user()->email }}</div>
+                                <span class="badge bg-soft-primary text-primary mt-1">Role: {{ auth()->user()->role }}</span>
+                                @if(auth()->user()->unit)
+                                    <div class="text-muted font-size-12 mt-1">Unit: {{ auth()->user()->unit }}</div>
+                                @endif
                             </div>
-                            <div class="overflow-hidden">
-                                <div class="text-white text-truncate fw-semibold" style="font-size: 0.73rem;">{{ auth()->user()->name }}</div>
-                                <span class="badge bg-danger text-white px-2 py-0" style="font-size: 0.62rem;">{{ auth()->user()->role }}</span>
-                            </div>
+                            <a class="dropdown-item" href="{{ route('simkerma.index', ['menu' => 7]) }}">
+                                <i class="mdi mdi-cog font-size-16 align-middle me-1"></i> Konfigurasi Sistem
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger" href="{{ route('logout') }}">
+                                <i class="mdi mdi-logout font-size-16 align-middle me-1"></i> Logout (Keluar)
+                            </a>
                         </div>
-                        <a href="{{ route('logout') }}" class="text-white-50 hover-text-white ms-1" title="Logout">
-                            <i class="bi bi-box-arrow-right"></i>
+                    </div>
+                @else
+                    <div class="ms-2">
+                        <a href="{{ route('login') }}" class="btn btn-sm btn-primary">
+                            <i class="bx bx-log-in me-1"></i> Login Portal
                         </a>
                     </div>
+                @endif
+
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================== -->
+    <!-- LEFT SIDEBAR NAVIGASI (7 MENU UTAMA)                          -->
+    <!-- ============================================================== -->
+    <div class="vertical-menu">
+
+        <div data-simplebar class="h-100 d-flex flex-column justify-content-between">
+
+            <!--- Sidemenu -->
+            <div id="sidebar-menu">
+                <!-- Left Menu Start -->
+                <ul class="metismenu list-unstyled" id="side-menu">
+                    <li class="menu-title" data-key="t-menu">Main Navigation</li>
+
+                    <!-- 1. Dashboard -->
+                    <li class="{{ $activeMenu === 1 ? 'mm-active' : '' }}">
+                        <a href="{{ route('simkerma.index', ['menu' => 1]) }}" class="{{ $activeMenu === 1 ? 'active' : '' }}">
+                            <i class="bx bx-home-circle"></i>
+                            <span data-key="t-dashboard">Dashboard</span>
+                        </a>
+                    </li>
+
+                    <!-- 2. Master Data Mitra -->
+                    <li class="{{ $activeMenu === 2 ? 'mm-active' : '' }}">
+                        <a href="{{ route('simkerma.index', ['menu' => 2]) }}" class="{{ $activeMenu === 2 ? 'active' : '' }}">
+                            <i class="bx bx-buildings"></i>
+                            <span data-key="t-mitra">Data Master Mitra</span>
+                        </a>
+                    </li>
+
+                    <!-- 3. Pengelolaan Dokumen Kerja Sama -->
+                    <li class="{{ $activeMenu === 3 ? 'mm-active' : '' }}">
+                        <a href="{{ route('simkerma.index', ['menu' => 3]) }}" class="{{ $activeMenu === 3 ? 'active' : '' }}">
+                            <i class="bx bx-folder"></i>
+                            <span data-key="t-dokumen">Dokumen Kerja Sama</span>
+                        </a>
+                    </li>
+
+                    <!-- 4. Pengajuan & Persetujuan -->
+                    <li class="{{ $activeMenu === 4 ? 'mm-active' : '' }}">
+                        <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="{{ $activeMenu === 4 ? 'active' : '' }}">
+                            <i class="bx bx-check-double"></i>
+                            <span data-key="t-pengajuan">Pengajuan & Persetujuan</span>
+                        </a>
+                    </li>
+
+                    <li class="menu-title" data-key="t-monitoring">Pelaksanaan & Evaluasi</li>
+
+                    <!-- 5. Pemantauan Pelaksanaan -->
+                    <li class="{{ $activeMenu === 5 ? 'mm-active' : '' }}">
+                        <a href="{{ route('simkerma.index', ['menu' => 5]) }}" class="{{ $activeMenu === 5 ? 'active' : '' }}">
+                            <i class="bx bx-calendar-check"></i>
+                            <span data-key="t-pemantauan">Pemantauan Kegiatan</span>
+                        </a>
+                    </li>
+
+                    <!-- 6. Monitoring Masa Berlaku & Evaluasi -->
+                    <li class="{{ $activeMenu === 6 ? 'mm-active' : '' }}">
+                        <a href="{{ route('simkerma.index', ['menu' => 6]) }}" class="{{ $activeMenu === 6 ? 'active' : '' }}">
+                            <i class="bx bx-time-five"></i>
+                            <span data-key="t-evaluasi">Masa Berlaku & Evaluasi</span>
+                        </a>
+                    </li>
+
+                    <li class="menu-title" data-key="t-reporting">Laporan & Tata Kelola</li>
+
+                    <!-- 7. Laporan dan Analitik -->
+                    <li class="{{ $activeMenu === 7 ? 'mm-active' : '' }}">
+                        <a href="{{ route('simkerma.index', ['menu' => 7]) }}" class="{{ $activeMenu === 7 ? 'active' : '' }}">
+                            <i class="bx bx-bar-chart-alt-2"></i>
+                            <span data-key="t-laporan">Laporan, Analitik & FSM</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <!-- Sidebar -->
+
+            <!-- Sidebar Bottom Attribution -->
+            <div class="sidebar-bottom-profile mt-auto text-white-50">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="avatar-xs flex-shrink-0">
+                        <span class="avatar-title rounded-circle bg-primary text-white font-size-12">
+                            <i class="bx bx-user"></i>
+                        </span>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="text-white text-truncate font-size-12 fw-semibold">
+                            {{ auth()->check() ? auth()->user()->name : 'Tamu (Guest)' }}
+                        </div>
+                        <span class="badge bg-soft-info text-info font-size-10 py-0">
+                            {{ auth()->check() ? auth()->user()->role : 'Public' }}
+                        </span>
+                    </div>
                 </div>
-            @else
-                <div class="mb-2">
-                    <a href="{{ route('login') }}" class="btn btn-sm btn-outline-light w-100 py-1" style="font-size: 0.73rem;">
-                        <i class="bi bi-box-arrow-in-right me-1"></i> Login Pengguna
-                    </a>
+                <div class="font-size-11 text-muted">
+                    Jordan Immanuel Pusung &bull; 2355201011<br>
+                    Teknik Informatika &bull; UNIPAR
                 </div>
-            @endif
-            <div class="text-white-50 fw-semibold">Jordan Immanuel Pusung</div>
-            <div class="small">NIM: 2355201011 &bull; TI UNIPAR</div>
-            <div class="text-white-50 small mt-1">Laravel 11 &bull; MySQL Relasional</div>
+            </div>
+
         </div>
     </div>
+    <!-- Left Sidebar End -->
 
-    <!-- ========================================================================================= -->
-    <!-- AREA KONTEN UTAMA (RESPONSIF TERHADAP MENU AKTIF)                                         -->
-    <!-- ========================================================================================= -->
-    <div class="flex-grow-1 d-flex flex-column min-vh-100 main-content-wrapper">
+    <!-- ============================================================== -->
+    <!-- START RIGHT CONTENT HERE                                       -->
+    <!-- ============================================================== -->
+    <div class="main-content">
 
-        <!-- TOP BAR HEADER -->
-        <header class="bg-white border-bottom {{ request()->query('view') === 'detail' ? 'py-2 px-3 px-xl-4' : 'py-3 px-3 px-xl-4' }} shadow-sm">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-                <div>
-                    <h4 class="mb-0 fw-bold text-dark text-uppercase">{{ $current['title'] }}</h4>
-                    <p class="text-muted small mb-0">{{ $current['subtitle'] }}</p>
-                </div>
-                <div>
-                    <div class="d-flex align-items-center gap-2">
-                        <!-- Tombol Hapus Semua Pengajuan (Mode Pengembangan) -->
-                        <form method="POST" action="{{ route('simkerma.reset-all-documents') }}" class="d-inline" onsubmit="return confirm('PERINGATAN PENGEMBANGAN:\n\nApakah Anda yakin ingin menghapus SEMUA data pengajuan dan persetujuan kerja sama?\n\nSemua dokumen, jejak audit (audit trails), dan log siklus FSM akan dihapus permanen.')">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm d-flex align-items-center gap-1 py-1 px-2 fw-semibold" style="font-size: 0.75rem;" title="Hapus Semua Pengajuan dan Persetujuan (Mode Pengembangan)">
-                                <i class="bi bi-trash3-fill"></i>
-                                <span class="d-none d-sm-inline">Hapus Semua Pengajuan</span>
-                            </button>
-                        </form>
+        <div class="page-content">
+            <div class="container-fluid">
 
-                        @if (auth()->check())
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1 shadow-sm bg-white" type="button" data-bs-toggle="dropdown">
-                                    <span class="badge bg-danger text-white rounded-pill px-2" style="font-size: 0.65rem;">{{ auth()->user()->role }}</span>
-                                    <span class="fw-semibold small text-dark d-none d-md-inline">{{ auth()->user()->name }}</span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" style="min-width: 220px;">
-                                    <li class="px-3 py-1">
-                                        <div class="fw-bold text-dark small">{{ auth()->user()->name }}</div>
-                                        <div class="text-muted" style="font-size: 0.72rem;">{{ auth()->user()->email }}</div>
-                                        <div class="badge bg-primary text-white mt-1" style="font-size: 0.65rem;">Unit: {{ auth()->user()->unit ?? '-' }}</div>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item text-danger small d-flex align-items-center gap-2" href="{{ route('logout') }}">
-                                             <i class="bi bi-box-arrow-right"></i> Keluar (Logout)
-                                        </a>
-                                    </li>
-                                </ul>
+                <!-- start page title -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                            <h4 class="mb-sm-0 font-size-18 text-uppercase">{{ $current['title'] }}</h4>
+
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item"><a href="{{ route('simkerma.index') }}">SIM-KERMA</a></li>
+                                    <li class="breadcrumb-item active">{{ $current['title'] }}</li>
+                                </ol>
                             </div>
-                        @else
-                            <a href="{{ route('login') }}" class="btn btn-sm btn-primary shadow-sm">
-                                <i class="bi bi-box-arrow-in-right me-1"></i> Login Akun
-                            </a>
-                        @endif
+                        </div>
+                    </div>
+                </div>
+                <!-- end page title -->
+
+                @if ($current['id'] != 4)
+                <!-- Kotak Informasi Spesifikasi Dokumen Resmi -->
+                <div class="alert alert-secondary alert-dismissible fade show border-0 bg-soft-secondary mb-4" role="alert">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="mdi mdi-information-outline font-size-18 text-secondary mt-1"></i>
+                        <div class="small">
+                            <strong class="d-block text-uppercase mb-1">Poin Spesifikasi Sesuai Dokumen Resmi:</strong>
+                            <ul class="mb-0 ps-3">
+                                @foreach ($current['subfeatures'] as $sf)
+                                    <li>{{ $sf }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                @endif
+
+                <!-- Dynamic Content Blade -->
+                @yield('content')
+
+            </div>
+            <!-- container-fluid -->
+        </div>
+        <!-- End Page-content -->
+
+        <footer class="footer">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <script>document.write(new Date().getFullYear())</script> © Universitas PGRI Argopuro Jember (UNIPAR).
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-sm-end d-none d-sm-block">
+                            SIM-KERMA UNIPAR — Sistem Informasi Dokumen Kerja Sama
+                        </div>
                     </div>
                 </div>
             </div>
-        </header>
-
-        <!-- KONTEN FITUR SESUAI MENU -->
-        <main class="{{ request()->query('view') === 'detail' ? 'px-3 py-2 px-xl-4 py-xl-2' : 'p-3 p-xl-4' }} flex-grow-1" style="min-width: 0; width: 100%;">
-
-            @if ($current['id'] != 4)
-            <!-- KOTAK INFORMASI SPESIFIKASI DOKUMEN RESMI -->
-            <div class="alert alert-secondary border d-flex align-items-start mb-4 py-2 px-3 bg-white shadow-sm" role="alert">
-                <i class="bi bi-info-circle-fill text-dark me-2 mt-1 fs-6"></i>
-                <div class="small text-dark">
-                    <strong class="text-uppercase d-block mb-1">Poin Spesifikasi Sesuai Dokumen Resmi:</strong>
-                    <ul class="mb-0 ps-3">
-                        @foreach ($current['subfeatures'] as $sf)
-                            <li>{{ $sf }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-            @endif
-
-            @yield('content')
-
-        </main>
-
-        @if (request()->query('view') !== 'detail')
-        <!-- FOOTER INFORMASI DOKUMEN RESMI -->
-        <footer class="bg-white border-top py-3 px-4 text-muted small d-flex flex-column flex-sm-row justify-content-between align-items-center gap-1">
-            <div>
-                <strong>SIM KERJA SAMA PT</strong> &mdash; Implementasi UI Bootstrap 5, Laravel 11 &amp; MySQL
-            </div>
-            <div>
-                Program Studi Teknik Informatika, Universitas Parna Raya Manado
-            </div>
         </footer>
-        @endif
-
     </div>
+    <!-- end main content-->
 
 </div>
+<!-- END layout-wrapper -->
 
 <!-- ========================================================================================= -->
 <!-- MODAL INTERAKTIF: LEMBAR REGISTRASI & QR CODE RESMI DOKUMEN SIMKERMA UNIPAR               -->
@@ -598,64 +637,59 @@
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-dark text-white py-3">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="bg-warning text-dark rounded p-1 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
-                        <i class="bi bi-qr-code-scan fw-bold"></i>
+                    <div class="bg-primary text-white p-1 rounded-2 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                        <i class="bx bx-qr-scan font-size-18"></i>
                     </div>
                     <div>
-                        <h6 class="modal-title fw-bold mb-0 text-uppercase" id="qrModalLabel">Lembar Registrasi &amp; QR Code Resmi</h6>
-                        <small class="text-white-50">Sistem Informasi Dokumen Kerja Sama UNIPAR</small>
+                        <h6 class="modal-title text-white fw-bold mb-0" id="qrModalLabel" style="font-size: 0.95rem;">Lembar Registrasi &amp; QR Code Resmi Dokumen</h6>
+                        <small class="text-white-50" style="font-size: 0.7rem;">Sistem Informasi Dokumen Kerja Sama UNIPAR</small>
                     </div>
                 </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-3 p-md-4">
                 
-                <!-- Status Bar Dokumen -->
-                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded border">
-                    <div>
-                        <span class="text-muted small fw-bold">STATUS SIKLUS:</span>
-                        <span id="qrModalStatusBadge" class="badge bg-primary ms-1">VERIFIED (Lolos Verifikasi Legal)</span>
-                    </div>
-                    <span id="qrModalRegBadge" class="badge bg-dark">REG-UNIPAR-2026-042</span>
-                </div>
-
-                <!-- Kontainer QR Code & Detail -->
-                <div class="row align-items-center g-3 mb-3">
+                <!-- Kotak Registrasi & Validasi QR Code -->
+                <div class="row align-items-center mb-3 g-3">
                     <div class="col-sm-5 text-center">
-                        <div class="p-2 border rounded bg-white d-inline-block shadow-sm">
-                            <div id="qrcodeCanvas" style="width: 160px; height: 160px; display: flex; align-items: center; justify-content: center; margin: 0 auto;"></div>
+                        <div id="qrcodeCanvas" class="d-inline-flex p-2 bg-white border border-secondary border-opacity-25 rounded-3 shadow-sm justify-content-center align-items-center" style="min-width: 160px; min-height: 160px;">
+                            <!-- QR Code di-generate via QRCode.js -->
                         </div>
-                        <div class="text-muted mt-2 small" style="font-size: 0.72rem;">
-                            <i class="bi bi-phone me-1 text-primary"></i> Pindai dengan Kamera HP
+                        <div class="mt-2">
+                            <span class="badge bg-dark font-monospace px-2 py-1" id="qrModalRegBadge" style="font-size: 0.72rem;">REG-UNIPAR-2026-000</span>
                         </div>
                     </div>
-                    <div class="col-sm-7 small">
+                    <div class="col-sm-7">
                         <div class="mb-2">
-                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">NOMOR SURAT PIHAK I (UNIPAR):</span>
-                            <strong id="qrModalDocNum" class="text-dark fs-6">341/UNIPAR/MoU/X/2026</strong>
+                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">NOMOR DOKUMEN INTERNAL:</span>
+                            <div class="fw-bold font-monospace text-dark" id="qrModalDocNum" style="font-size: 0.85rem;">-</div>
                         </div>
                         <div class="mb-2" id="qrModalPartnerDocContainer" style="display: none;">
-                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">NOMOR SURAT PIHAK II (MITRA):</span>
-                            <strong id="qrModalPartnerDocNum" class="text-primary small"></strong>
+                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">NOMOR DOKUMEN MITRA (PIHAK II):</span>
+                            <div class="fw-semibold font-monospace text-primary" id="qrModalPartnerDocNum" style="font-size: 0.82rem;">-</div>
                         </div>
                         <div class="mb-2">
                             <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">JUDUL KERJA SAMA:</span>
-                            <span id="qrModalTitle" class="fw-semibold text-primary">PKS Program Magang Industri AI</span>
+                            <div class="fw-semibold text-dark small" id="qrModalTitle" style="font-size: 0.8rem; line-height: 1.35;">-</div>
                         </div>
                         <div class="mb-2">
-                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">INSTANSI MITRA:</span>
-                            <span id="qrModalPartner" class="text-dark">PT Industri Inovasi Digital</span>
+                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">MITRA UTAMA:</span>
+                            <div class="text-dark small" id="qrModalPartner" style="font-size: 0.8rem;">-</div>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">STATUS SIKLUS FSM:</span>
+                            <span id="qrModalStatusBadge" class="badge bg-secondary text-white">DRAFT</span>
                         </div>
                         <div>
                             <span id="qrModalDateLabel" class="text-muted fw-bold d-block" style="font-size: 0.72rem;">TANGGAL PERSETUJUAN / PENGESAHAN:</span>
-                            <span id="qrModalDate" class="text-muted">30 Oktober 2026</span>
+                            <span id="qrModalDate" class="text-muted small">30 Oktober 2026</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Kotak Petunjuk Keamanan & Prosedur Fisik FSM Sinkron -->
-                <div id="qrModalAlertBox" class="alert alert-primary py-2 px-3 small border-0 bg-primary-subtle text-dark d-flex align-items-start gap-2 mb-0">
-                    <i id="qrModalAlertIcon" class="bi bi-lock-fill text-primary mt-1"></i>
+                <div id="qrModalAlertBox" class="alert alert-primary py-2 px-3 small border-0 bg-soft-primary text-dark d-flex align-items-start gap-2 mb-0">
+                    <i id="qrModalAlertIcon" class="bx bx-lock-alt text-primary mt-1 font-size-16"></i>
                     <div id="qrModalAlertText" style="font-size: 0.78rem;">
                         <strong>Mekanisme Fisik &amp; Digital:</strong> Draf naskah berstatus <em>VERIFIED</em> telah lolos telaah mutu legal dan terkunci (<em>Freeze Text</em>). QR Code ini disematkan otomatis pada naskah PDF resmi yang dicetak untuk ditandatangani basah dan ditempeli meterai fisik Rp10.000 di hadapan pimpinan kedua belah pihak.
                     </div>
@@ -664,18 +698,32 @@
             </div>
             <div class="modal-footer bg-light py-2 px-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
                 <a id="qrModalVerifyLink" href="/verify/REG-UNIPAR-2026-042" target="_blank" class="btn btn-outline-dark btn-sm fw-semibold w-100 w-sm-auto">
-                    <i class="bi bi-box-arrow-up-right me-1"></i> Buka Verifikasi Publik
+                    <i class="bx bx-link-external me-1"></i> Buka Verifikasi Publik
                 </a>
                 <div class="d-flex gap-2 w-100 w-sm-auto justify-content-end">
-                    <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="openPrintableVerification()">
-                        <i class="bi bi-printer me-1"></i> Buka / Cetak Lembar Registrasi Resmi
+                    <button type="button" class="btn btn-primary btn-sm fw-bold px-3 waves-effect waves-light" onclick="openPrintableVerification()">
+                        <i class="bx bx-printer me-1"></i> Buka / Cetak Lembar Registrasi Resmi
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-secondary btn-sm waves-effect" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ============================================================== -->
+<!-- JAVASCRIPTS (Theme Minia kerma_lama)                           -->
+<!-- ============================================================== -->
+<script src="{{ asset('partial/libs/jquery/jquery.min.js') }}"></script>
+<script src="{{ asset('partial/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('partial/libs/metismenu/metisMenu.min.js') }}"></script>
+<script src="{{ asset('partial/libs/simplebar/simplebar.min.js') }}"></script>
+<script src="{{ asset('partial/libs/node-waves/waves.min.js') }}"></script>
+<script src="{{ asset('partial/libs/feather-icons/feather.min.js') }}"></script>
+<script src="{{ asset('partial/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+
+<!-- App js -->
+<script src="{{ asset('partial/js/app.js') }}"></script>
 
 <!-- Script QRCode JS -->
 <script src="{{ asset('js/qrcode.min.js') }}"></script>
@@ -715,64 +763,64 @@ function showQrModal(regId, docNum, title, partner, status, date, partnerDocNum)
         'DRAFT': {
             badgeClass: 'badge bg-secondary text-white ms-1',
             badgeText: 'DRAFT (Penyusunan Awal)',
-            alertBoxClass: 'alert alert-secondary py-2 px-3 small border-0 bg-secondary-subtle text-dark d-flex align-items-start gap-2 mb-0',
-            alertIconClass: 'bi bi-pencil-square text-secondary mt-1',
+            alertBoxClass: 'alert alert-secondary py-2 px-3 small border-0 bg-soft-secondary text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bx bx-edit text-secondary mt-1 font-size-16',
             alertText: '<strong>Tahap Penyusunan Draf:</strong> Naskah usulan kerja sama sedang dirancang oleh unit pengusul di UNIPAR dan belum diajukan untuk pemeriksaan.',
             dateLabel: 'TANGGAL INISIASI DRAF:'
         },
         'REVIEW': {
-            badgeClass: 'badge bg-info text-dark ms-1',
+            badgeClass: 'badge bg-info text-white ms-1',
             badgeText: 'REVIEW (Pemeriksaan & Telaah)',
-            alertBoxClass: 'alert alert-info py-2 px-3 small border-0 bg-info-subtle text-dark d-flex align-items-start gap-2 mb-0',
-            alertIconClass: 'bi bi-hourglass-split text-info mt-1',
+            alertBoxClass: 'alert alert-info py-2 px-3 small border-0 bg-soft-info text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bx bx-time text-info mt-1 font-size-16',
             alertText: '<strong>Tahap Pemeriksaan Naskah:</strong> Draf naskah kerja sama sedang ditelaah oleh Tim Legal UNIPAR. Jika lolos verifikasi substansi, status beralih ke VERIFIED, atau dikembalikan ke DRAFT jika perlu perbaikan.',
             dateLabel: 'TANGGAL PENGAJUAN TELAAH:'
         },
         'VERIFIED': {
             badgeClass: 'badge bg-primary text-white ms-1',
             badgeText: 'VERIFIED (Lolos Verifikasi Legal)',
-            alertBoxClass: 'alert alert-primary py-2 px-3 small border-0 bg-primary-subtle text-dark d-flex align-items-start gap-2 mb-0',
-            alertIconClass: 'bi bi-patch-check-fill text-primary mt-1',
+            alertBoxClass: 'alert alert-primary py-2 px-3 small border-0 bg-soft-primary text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bx bx-badge-check text-primary mt-1 font-size-16',
             alertText: '<strong>Naskah Terverifikasi Legal:</strong> Draf telah lolos telaah mutu dan hukum oleh Tim Legal. Teks naskah dibekukan (Freeze Text) dan siap dicetak untuk penandatanganan fisik (tanda tangan basah & bea meterai Rp10.000).',
             dateLabel: 'TANGGAL VERIFIKASI LEGAL:'
         },
         'APPROVED': {
             badgeClass: 'badge bg-primary text-white ms-1',
             badgeText: 'VERIFIED (Lolos Verifikasi Legal)',
-            alertBoxClass: 'alert alert-primary py-2 px-3 small border-0 bg-primary-subtle text-dark d-flex align-items-start gap-2 mb-0',
-            alertIconClass: 'bi bi-patch-check-fill text-primary mt-1',
+            alertBoxClass: 'alert alert-primary py-2 px-3 small border-0 bg-soft-primary text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bx bx-badge-check text-primary mt-1 font-size-16',
             alertText: '<strong>Naskah Terverifikasi Legal:</strong> Draf telah lolos telaah mutu dan hukum oleh Tim Legal. Teks naskah dibekukan (Freeze Text) dan siap dicetak untuk penandatanganan fisik.',
             dateLabel: 'TANGGAL VERIFIKASI LEGAL:'
         },
         'ACTIVE': {
             badgeClass: 'badge bg-success text-white ms-1',
             badgeText: 'ACTIVE (Sah & Bermeterai)',
-            alertBoxClass: 'alert alert-success py-2 px-3 small border-0 bg-success-subtle text-dark d-flex align-items-start gap-2 mb-0',
-            alertIconClass: 'bi bi-check-circle-fill text-success mt-1',
+            alertBoxClass: 'alert alert-success py-2 px-3 small border-0 bg-soft-success text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bx bx-check-circle text-success mt-1 font-size-16',
             alertText: '<strong>Dokumen Sah Berlaku:</strong> Eksemplar fisik asli bertanda tangan basah dan bermeterai sah telah diverifikasi keabsahannya serta tersimpan resmi di SIMKERMA UNIPAR.',
             dateLabel: 'TANGGAL PENGESAHAN / AKTIF:'
         },
         'WARNING': {
             badgeClass: 'badge bg-warning text-dark ms-1',
             badgeText: 'WARNING (Peringatan H-90)',
-            alertBoxClass: 'alert alert-warning py-2 px-3 small border-0 bg-warning-subtle text-dark d-flex align-items-start gap-2 mb-0',
-            alertIconClass: 'bi bi-exclamation-triangle-fill text-warning mt-1',
+            alertBoxClass: 'alert alert-warning py-2 px-3 small border-0 bg-soft-warning text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bx bx-error text-warning mt-1 font-size-16',
             alertText: '<strong>Peringatan Ambang Batas Kedaluwarsa:</strong> Kerja sama masih aktif berlaku, namun sisa masa berlaku telah memasuki ambang batas peringatan dini (H-90/H-60). Diimbau segera menindaklanjuti perpanjangan.',
             dateLabel: 'TANGGAL PERINGATAN DINI:'
         },
         'EXPIRED': {
             badgeClass: 'badge bg-danger text-white ms-1',
             badgeText: 'EXPIRED (Kedaluwarsa)',
-            alertBoxClass: 'alert alert-danger py-2 px-3 small border-0 bg-danger-subtle text-dark d-flex align-items-start gap-2 mb-0',
-            alertIconClass: 'bi bi-x-octagon-fill text-danger mt-1',
+            alertBoxClass: 'alert alert-danger py-2 px-3 small border-0 bg-soft-danger text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bx bx-x-circle text-danger mt-1 font-size-16',
             alertText: '<strong>Masa Berlaku Telah Berakhir:</strong> Masa perjanjian kerja sama ini telah habis secara formal. Hubungan kemitraan dapat dipulihkan melalui perpanjangan/reaktivasi naskah.',
             dateLabel: 'TANGGAL KEDALUWARSA / BERAKHIR:'
         },
         'CANCELLED': {
             badgeClass: 'badge bg-dark text-white ms-1',
             badgeText: 'CANCELLED (Dibatalkan)',
-            alertBoxClass: 'alert alert-dark py-2 px-3 small border-0 bg-dark-subtle text-dark d-flex align-items-start gap-2 mb-0',
-            alertIconClass: 'bi bi-slash-circle-fill text-dark mt-1',
+            alertBoxClass: 'alert alert-dark py-2 px-3 small border-0 bg-soft-secondary text-dark d-flex align-items-start gap-2 mb-0',
+            alertIconClass: 'bx bx-block text-dark mt-1 font-size-16',
             alertText: '<strong>Usulan Kemitraan Dibatalkan:</strong> Pengusulan dokumen kerja sama ini telah dihentikan secara permanen oleh pengusul.',
             dateLabel: 'TANGGAL PEMBATALAN:'
         }
@@ -781,8 +829,8 @@ function showQrModal(regId, docNum, title, partner, status, date, partnerDocNum)
     const cfg = fsmStatusConfig[status] || {
         badgeClass: 'badge bg-secondary text-white ms-1',
         badgeText: (status || 'UNKNOWN') + ' (Status FSM)',
-        alertBoxClass: 'alert alert-secondary py-2 px-3 small border-0 bg-secondary-subtle text-dark d-flex align-items-start gap-2 mb-0',
-        alertIconClass: 'bi bi-info-circle-fill text-secondary mt-1',
+        alertBoxClass: 'alert alert-secondary py-2 px-3 small border-0 bg-soft-secondary text-dark d-flex align-items-start gap-2 mb-0',
+        alertIconClass: 'bx bx-info-circle text-secondary mt-1 font-size-16',
         alertText: 'Status dokumen saat ini tercatat sebagai <strong>' + (status || '-') + '</strong> pada mesin FSM SIMKERMA.',
         dateLabel: 'TANGGAL DOKUMEN:'
     };
@@ -815,12 +863,12 @@ function showQrModal(regId, docNum, title, partner, status, date, partnerDocNum)
             text: verifyUrl,
             width: 150,
             height: 150,
-            colorDark: "#0f172a",
+            colorDark: "#2a3042",
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.M
         });
     } catch (e) {
-        container.innerHTML = '<div class="alert alert-secondary p-2 small mb-0"><i class="bi bi-qr-code fs-1 d-block text-dark"></i>' + regId + '</div>';
+        container.innerHTML = '<div class="alert alert-secondary p-2 small mb-0"><i class="bx bx-qr font-size-24 d-block text-dark"></i>' + regId + '</div>';
     }
     
     const qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
@@ -835,8 +883,6 @@ function openPrintableVerification() {
 }
 </script>
 
-<!-- Bootstrap 5.3.3 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 @stack('scripts')
 </body>
 </html>

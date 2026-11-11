@@ -5,29 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Portal - SIMKERMA UNIPAR</title>
     
-    <!-- Google Fonts: Public Sans -->
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{{ asset('partial/images/favicon.ico') }}">
+
+    <!-- Google Fonts: IBM Plex Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap 5.3.3 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons 1.11.3 -->
+    <!-- Bootstrap CSS (Minia) -->
+    <link href="{{ asset('partial/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Icons CSS (Boxicons, Feather, FontAwesome) -->
+    <link href="{{ asset('partial/css/icons.min.css') }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     
     <style>
         :root {
-            --brand-primary: #ea580c;
-            --brand-primary-hover: #c2410c;
-            --brand-primary-light: #fff7ed;
-            --brand-navy: #1e2430;
-            --bg-surface: #f8fafc;
-            --border-color: #e2e8f0;
+            --brand-primary: #5156be;
+            --brand-primary-hover: #4549a2;
+            --brand-primary-light: rgba(81, 86, 190, 0.08);
+            --brand-navy: #2a3042;
+            --bg-surface: #f4f5f8;
+            --border-color: #e9e9ef;
         }
         body {
-            font-family: 'Public Sans', sans-serif;
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-surface);
-            color: #334155;
+            color: #495057;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -35,12 +39,12 @@
             padding: 20px;
         }
         .login-card {
-            max-width: 460px;
+            max-width: 480px;
             width: 100%;
             background: #ffffff;
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.07);
             overflow: hidden;
         }
         .login-header {
@@ -53,13 +57,14 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
             background-color: var(--brand-primary);
             color: white;
-            font-size: 1.5rem;
-            margin-bottom: 12px;
+            font-size: 1.6rem;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(81, 86, 190, 0.4);
         }
         .btn-brand {
             background-color: var(--brand-primary);
@@ -67,7 +72,7 @@
             font-weight: 600;
             border: none;
             padding: 10px 18px;
-            border-radius: 8px;
+            border-radius: 6px;
             transition: all 0.2s;
         }
         .btn-brand:hover {
@@ -76,16 +81,16 @@
         }
         .quick-role-badge {
             cursor: pointer;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 8px 12px;
-            background: #f8fafc;
+            border: 1px solid #e9e9ef;
+            border-radius: 6px;
+            padding: 9px 12px;
+            background: #ffffff;
             transition: all 0.15s;
             text-align: left;
         }
         .quick-role-badge:hover {
             background: var(--brand-primary-light);
-            border-color: #fdba74;
+            border-color: #5156be;
         }
     </style>
 </head>

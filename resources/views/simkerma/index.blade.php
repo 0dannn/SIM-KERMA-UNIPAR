@@ -2987,7 +2987,7 @@
                             <i class="bi bi-clock-history text-secondary"></i>
                             <span>+ Catat Kerja Sama Lampau</span>
                         </a>
-                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_mou']) }}" class="btn btn-primary btn-sm fw-semibold px-3 py-1.5 rounded-2 shadow-sm d-flex align-items-center gap-1.5 text-nowrap" style="font-size: 0.8rem; background-color: #ea580c; border-color: #ea580c;">
+                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_mou']) }}" class="btn btn-primary btn-sm fw-semibold px-3 py-1.5 rounded-2 shadow-sm d-flex align-items-center gap-1.5 text-nowrap waves-effect waves-light" style="font-size: 0.8rem;">
                             <i class="bi bi-plus-lg"></i>
                             <span>+ Pengajuan MoU Baru</span>
                         </a>
