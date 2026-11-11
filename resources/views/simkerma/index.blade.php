@@ -3113,11 +3113,6 @@
                                                     <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.65rem;">{{ $doc->partner_category }}</span>
                                                 @endif
                                             </div>
-                                            @if (!empty($doc->scope))
-                                                <div class="text-secondary small mt-1" style="max-width: 260px; font-size: 0.72rem;">
-                                                    {{ \Illuminate\Support\Str::limit($doc->scope, 85) }}
-                                                </div>
-                                            @endif
                                         </td>
 
                                         <!-- 4. Masa berlaku & peringatan -->
