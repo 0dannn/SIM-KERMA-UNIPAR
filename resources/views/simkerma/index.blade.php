@@ -3113,16 +3113,6 @@
                                                     <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.65rem;">{{ $doc->partner_category }}</span>
                                                 @endif
                                             </div>
-                                            @if (!empty($doc->first_party_signer))
-                                                <div class="small text-muted mt-1" style="font-size: 0.72rem;">
-                                                    <i class="bi bi-person me-1"></i>TTD Unit: {{ $doc->first_party_signer }}
-                                                </div>
-                                            @endif
-                                            @if (!empty($doc->second_party_signer))
-                                                <div class="small text-muted" style="font-size: 0.72rem;">
-                                                    <i class="bi bi-person me-1"></i>TTD Mitra: {{ $doc->second_party_signer }}
-                                                </div>
-                                            @endif
                                             @if (!empty($doc->scope))
                                                 <div class="text-secondary small mt-1" style="max-width: 260px; font-size: 0.72rem;">
                                                     {{ \Illuminate\Support\Str::limit($doc->scope, 85) }}
