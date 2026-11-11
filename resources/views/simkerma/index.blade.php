@@ -2958,429 +2958,268 @@
             {{-- Menggantikan Dropdown Menu Sesuai Permintaan Jordan (Rinci, Menurun ke Bawah)      --}}
             {{-- ================================================================================= --}}
 
-            <!-- HEADER TABEL & FILTER PENCARIAN CEPAT (DESAIN MODERN & RAPI) -->
-            <div class="card card-wireframe mb-4 border rounded-3 shadow-sm bg-white overflow-hidden">
-                <!-- 1. HEADER UTAMA: JUDUL, STATISTIK DOKUMEN & TOMBOL AKSI -->
-                <div class="card-header bg-white py-3 px-3 px-md-4 border-bottom d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background-color: #eff6ff; border: 1px solid #dbeafe;">
-                            <i class="bi bi-folder2-open text-primary fs-4"></i>
+            <!-- HEADER TABEL & FILTER PENCARIAN (DESAIN KERMA LAMA) -->
+            <div class="card">
+                <!-- 1. FILTER DOKUMEN (GRID FILTER KERMA LAMA) -->
+                <div class="card-header">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold mb-1">Jenis Kerja Sama</label>
+                            <select class="form-select form-select-sm" id="tableTypeFilter" onchange="filterDocumentsTable()">
+                                <option value="">Semua Jenis Kerja Sama</option>
+                                <option value="MoU">MoU (Kesepahaman)</option>
+                                <option value="MoA">MoA / PKS (Perjanjian Kerjasama)</option>
+                                <option value="IA">IA (Implementation Arrangement)</option>
+                                <option value="Paket">Paket Terpadu (PKM)</option>
+                            </select>
                         </div>
-                        <div>
-                            <div class="d-flex align-items-center gap-2">
-                                <h6 class="mb-0 fw-bold text-dark text-uppercase" style="letter-spacing: 0.3px; font-size: 0.95rem;">
-                                    Daftar Seluruh Pengajuan &amp; Persetujuan Kerja Sama
-                                </h6>
-                                <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 fw-semibold" style="font-size: 0.72rem;">
-                                    <span id="visibleDocCount" class="fw-bold">{{ $documents->count() }}</span> Dokumen
-                                </span>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold mb-1">Unit Pelaksana</label>
+                            <select class="form-select form-select-sm" id="tableUnitFilter" onchange="filterDocumentsTable()">
+                                <option value="">Semua Unit Pelaksana</option>
+                                @foreach ($documents->pluck('unit')->filter()->unique()->sort() as $uName)
+                                    <option value="{{ $uName }}">{{ $uName }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold mb-1">Status Kerja Sama</label>
+                            <select class="form-select form-select-sm" id="tableStatusFilter" onchange="filterDocumentsTable()">
+                                <option value="">Semua Status FSM</option>
+                                <option value="DRAFT">1. DRAFT (Konsep Awal)</option>
+                                <option value="REVIEW">2. REVIEW (Pemeriksaan Legal)</option>
+                                <option value="VERIFIED">3. VERIFIED (Lolos Verifikasi)</option>
+                                <option value="ACTIVE">4. ACTIVE (Berlaku Sah)</option>
+                                <option value="WARNING">5. WARNING (Peringatan H-90)</option>
+                                <option value="EXPIRED">6. EXPIRED (Kedaluwarsa)</option>
+                                <option value="CANCELLED">7. CANCELLED (Dibatalkan)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold mb-1">Pencarian Teks</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="tableFilterInput" class="form-control form-control-sm" placeholder="Cari nomor, mitra, judul..." onkeyup="filterDocumentsTable()">
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()" title="Reset Filter">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
                             </div>
-                            <small class="text-secondary" style="font-size: 0.78rem;">
-                                Kelola direktori naskah kerja sama (MoU, MoA, IA) dan pantau alur validasi Finite State Machine (FSM).
-                            </small>
                         </div>
-                    </div>
-
-                    <!-- TOMBOL AKSI UTAMA -->
-                    <div class="d-flex align-items-center flex-wrap gap-2">
-                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'legacy']) }}" class="btn btn-outline-dark btn-sm fw-semibold px-3 py-1.5 rounded-2 shadow-2xs d-flex align-items-center gap-1.5 text-nowrap" style="font-size: 0.8rem; border-color: #cbd5e1; background-color: #ffffff;">
-                            <i class="bi bi-clock-history text-secondary"></i>
-                            <span>+ Catat Kerja Sama Lampau</span>
-                        </a>
-                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_mou']) }}" class="btn btn-primary btn-sm fw-semibold px-3 py-1.5 rounded-2 shadow-sm d-flex align-items-center gap-1.5 text-nowrap waves-effect waves-light" style="font-size: 0.8rem;">
-                            <i class="bi bi-plus-lg"></i>
-                            <span>+ Pengajuan MoU Baru</span>
-                        </a>
                     </div>
                 </div>
 
-                <!-- 2. TOOLBAR PENCARIAN & FILTER MULTI-PARAMETER -->
-                <div class="card-body p-3 px-md-4 border-bottom" style="background-color: #f8fafc;">
-                    <div class="row g-2 align-items-center">
-                        <!-- Kotak Pencarian Teks -->
-                        <div class="col-lg-5 col-md-12">
-                            <div class="input-group input-group-sm shadow-2xs">
-                                <span class="input-group-text bg-white border-end-0 ps-3 pe-2 text-muted" style="border-color: #cbd5e1; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
-                                    <i class="bi bi-search text-secondary"></i>
-                                </span>
-                                <input type="text" id="tableFilterInput" class="form-control form-control-sm border-start-0 py-2 ps-1" placeholder="Cari nomor dokumen, nama mitra, atau prodi/unit..." onkeyup="filterDocumentsTable()" style="border-color: #cbd5e1; border-top-right-radius: 8px; border-bottom-right-radius: 8px; font-size: 0.82rem;">
-                            </div>
-                        </div>
-
-                        <!-- Filter Status FSM -->
-                        <div class="col-lg-3 col-md-5 col-sm-6">
-                            <div class="input-group input-group-sm shadow-2xs">
-                                <span class="input-group-text bg-white border-end-0 px-2.5 text-muted" style="border-color: #cbd5e1; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
-                                    <i class="bi bi-funnel text-primary"></i>
-                                </span>
-                                <select id="tableStatusFilter" class="form-select form-select-sm border-start-0 py-2" onchange="filterDocumentsTable()" style="border-color: #cbd5e1; border-top-right-radius: 8px; border-bottom-right-radius: 8px; font-size: 0.82rem;">
-                                    <option value="">Semua Status FSM (7 Status)</option>
-                                    <option value="DRAFT">1. DRAFT (Konsep Awal)</option>
-                                    <option value="REVIEW">2. REVIEW (Pemeriksaan Legal)</option>
-                                    <option value="VERIFIED">3. VERIFIED (Lolos Verifikasi)</option>
-                                    <option value="ACTIVE">4. ACTIVE (Berlaku Sah)</option>
-                                    <option value="WARNING">5. WARNING (Peringatan H-90)</option>
-                                    <option value="EXPIRED">6. EXPIRED (Kedaluwarsa)</option>
-                                    <option value="CANCELLED">7. CANCELLED (Dibatalkan)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Filter Jenis Dokumen -->
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <div class="input-group input-group-sm shadow-2xs">
-                                <span class="input-group-text bg-white border-end-0 px-2.5 text-muted" style="border-color: #cbd5e1; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
-                                    <i class="bi bi-file-earmark-text text-secondary"></i>
-                                </span>
-                                <select id="tableTypeFilter" class="form-select form-select-sm border-start-0 py-2" onchange="filterDocumentsTable()" style="border-color: #cbd5e1; border-top-right-radius: 8px; border-bottom-right-radius: 8px; font-size: 0.82rem;">
-                                    <option value="">Semua Dokumen</option>
-                                    <option value="MoU">MoU (Kesepahaman)</option>
-                                    <option value="MoA">MoA / PKS (Perjanjian)</option>
-                                    <option value="IA">IA (Implementation)</option>
-                                    <option value="Paket">Paket Terpadu (PKM)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Tombol Reset Filter -->
-                        <div class="col-lg-2 col-md-3 col-sm-12">
-                            <button type="button" class="btn btn-outline-secondary btn-sm w-100 fw-medium py-2 rounded-2 d-flex align-items-center justify-content-center gap-1.5 shadow-2xs text-nowrap" onclick="resetFilters()" style="font-size: 0.82rem; border-color: #cbd5e1; background-color: #ffffff;">
-                                <i class="bi bi-arrow-counterclockwise text-secondary"></i>
-                                <span>Reset Filter</span>
+                <!-- 2. TOOLBAR AKSI & TABEL DOKUMEN -->
+                <div class="card-body">
+                    <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_mou']) }}" class="btn btn-primary waves-effect waves-light" id="tambahBtn">
+                                <i class="bi bi-plus-lg me-1"></i> Tambah
+                            </a>
+                            <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'legacy']) }}" class="btn btn-secondary waves-effect waves-light">
+                                <i class="bi bi-clock-history me-1"></i> Kerja Sama Lampau
+                            </a>
+                            <button type="button" class="btn btn-success waves-effect waves-light" id="export" onclick="exportTableToExcel('documentsTable', 'Data_Kerja_Sama')">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                            </button>
+                            <button type="button" class="btn btn-info waves-effect waves-light text-white" onclick="resetFilters()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Reload
                             </button>
                         </div>
+                        <div>
+                            <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                                Total: <span id="visibleDocCount" class="fw-bold text-primary">{{ $documents->count() }}</span> Dokumen
+                            </span>
+                        </div>
                     </div>
 
-                    <!-- 3. QUICK CHIPS PINTAS STATUS (FILTER CEPAT SEKALI KLIK) -->
-                    <div class="d-flex flex-wrap align-items-center gap-1.5 pt-2.5 mt-2.5 border-top" style="border-color: #e2e8f0 !important;">
-                        <span class="text-secondary small me-1 fw-semibold d-flex align-items-center gap-1" style="font-size: 0.72rem;">
-                            <i class="bi bi-sliders text-primary"></i> Filter Cepat:
-                        </span>
-                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-dark small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('')">
-                            Semua ({{ $documents->count() }})
-                        </button>
-                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-secondary small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('DRAFT')">
-                            <span class="badge bg-secondary rounded-circle p-1 me-1"></span>DRAFT ({{ $documents->where('status', 'DRAFT')->count() }})
-                        </button>
-                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-dark small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('REVIEW')">
-                            <span class="badge bg-info rounded-circle p-1 me-1"></span>REVIEW ({{ $documents->where('status', 'REVIEW')->count() }})
-                        </button>
-                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-primary small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('VERIFIED')">
-                            <span class="badge bg-primary rounded-circle p-1 me-1"></span>VERIFIED ({{ $documents->where('status', 'VERIFIED')->count() }})
-                        </button>
-                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-success small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('ACTIVE')">
-                            <span class="badge bg-success rounded-circle p-1 me-1"></span>ACTIVE ({{ $documents->where('status', 'ACTIVE')->count() }})
-                        </button>
-                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-dark small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('WARNING')">
-                            <span class="badge bg-warning rounded-circle p-1 me-1"></span>WARNING ({{ $documents->where('status', 'WARNING')->count() }})
-                        </button>
-                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-danger small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('EXPIRED')">
-                            <span class="badge bg-danger rounded-circle p-1 me-1"></span>EXPIRED ({{ $documents->where('status', 'EXPIRED')->count() }})
-                        </button>
-                    </div>
-                </div>
+                    <!-- TABEL KERMA LAMA FORMAT (6 KOLOM PERSIS) -->
+                    <div class="table-responsive" style="border: 0">
+                        <table id="documentsTable" class="w-100 table table-bordered table-striped table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" style="width: 50px;">No.</th>
+                                    <th>Judul</th>
+                                    <th>Unit Pelaksana</th>
+                                    <th>Masa berlaku &amp; peringatan</th>
+                                    <th class="text-center" style="width: 140px;">Status</th>
+                                    <th class="text-center" style="width: 180px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documentsTableBody">
+                                @forelse ($documents as $doc)
+                                    @php
+                                        $stBadge = match($doc->status) {
+                                            'DRAFT' => 'bg-secondary text-white',
+                                            'REVIEW', 'LEGAL_REVIEW' => 'bg-info text-dark',
+                                            'VERIFIED', 'APPROVED' => 'bg-primary text-white',
+                                            'ACTIVE' => 'bg-success text-white',
+                                            'WARNING', 'WARNING_EXPIRY' => 'bg-warning text-dark',
+                                            'EXPIRED' => 'bg-danger text-white',
+                                            'CANCELLED' => 'bg-dark text-white',
+                                            default => 'bg-secondary text-white'
+                                        };
 
-                <!-- TABEL DOKUMEN RINCI MENURUN KE BAWAH -->
-                <div class="table-responsive">
-                    <table class="table table-wireframe table-hover align-middle mb-0 small">
-                        <thead>
-                            <tr>
-                                <th style="min-width: 150px;">Nomor Dokumen &amp; Jenis</th>
-                                <th style="min-width: 150px;">Mitra Kerja Sama</th>
-                                <th style="min-width: 170px;">Unit Pengusul &amp; Ruang Lingkup</th>
-                                <th style="min-width: 120px;">Masa Berlaku &amp; Peringatan</th>
-                                <th style="min-width: 120px;" class="text-center">Status</th>
-                                <th style="min-width: 120px;" class="text-end">Aksi &amp; Disposisi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="documentsTableBody">
-                            @forelse ($documents as $doc)
-                                @php
-                                    $stBadge = match($doc->status) {
-                                        'DRAFT' => 'bg-secondary text-white',
-                                        'REVIEW' => 'bg-info text-dark',
-                                        'VERIFIED' => 'bg-primary text-white',
-                                        'ACTIVE' => 'bg-success text-white',
-                                        'WARNING' => 'bg-warning text-dark',
-                                        'EXPIRED' => 'bg-danger text-white',
-                                        'CANCELLED' => 'bg-dark text-white',
-                                        default => 'bg-secondary text-white'
-                                    };
+                                        $docAvailEvents = $fullFsmMatrix[$doc->status] ?? [];
 
-                                    $docAvailEvents = $fullFsmMatrix[$doc->status] ?? [];
-                                @endphp
-                                <tr class="doc-row" data-status="{{ $doc->status }}" data-type="{{ $doc->doc_type }}">
-                                    <!-- 1. NOMOR DOKUMEN & JENIS -->
-                                    <td>
-                                        <div class="fw-bold text-dark">
-                                            {{ $doc->doc_number ?: 'Dalam Proses' }}
-                                            <span class="badge bg-light text-dark border" style="font-size: 0.62rem;">Pihak I</span>
-                                        </div>
-                                        @if (!empty($doc->title))
-                                            <div class="fw-semibold text-primary mt-1" style="font-size: 0.78rem; line-height: 1.25;">
-                                                <i class="bi bi-file-earmark-text-fill me-1"></i>{{ $doc->title }}
-                                            </div>
-                                        @endif
-                                        @if (!empty($doc->partner_doc_number))
-                                            <div class="small text-secondary" style="font-size: 0.72rem;">
-                                                <i class="bi bi-file-earmark-text text-primary me-1"></i>Pihak II: <strong>{{ $doc->partner_doc_number }}</strong>
-                                            </div>
-                                        @endif
-                                        <div class="d-flex flex-wrap gap-1 my-1">
-                                            <span class="badge bg-dark" style="font-size: 0.68rem;">{{ $doc->doc_type }}</span>
-                                            <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">{{ $doc->track }}</span>
-                                            @if ($doc->is_legacy)
-                                                <span class="badge bg-dark text-warning border border-warning" style="font-size: 0.65rem;">
-                                                    <i class="bi bi-clock-history me-1"></i>Data Lampau
-                                                </span>
-                                            @endif
-                                        </div>
-                                        @if (!empty($doc->parent_mou) && $doc->parent_mou !== '-')
-                                            <div class="small text-primary" style="font-size: 0.72rem;">
-                                                <i class="bi bi-link-45deg me-1"></i>Induk: <strong>{{ $doc->parent_mou }}</strong>
-                                            </div>
-                                        @else
-                                            <div class="small text-muted" style="font-size: 0.7rem;">
-                                                <i class="bi bi-shield-check me-1"></i>Dokumen Payung Utama
-                                            </div>
-                                        @endif
-                                    </td>
-
-                                    <!-- 2. MITRA KERJA SAMA & KATEGORI -->
-                                    <td>
-                                        <strong class="text-primary d-block">{{ $doc->partner_name }}</strong>
-                                        <span class="text-muted d-block" style="font-size: 0.74rem;">
-                                            <i class="bi bi-building me-1"></i>{{ $doc->partner_category }}
-                                        </span>
-                                        @if (!empty($doc->second_party_signer))
-                                            <div class="text-secondary small mt-1" style="font-size: 0.7rem;">
-                                                <i class="bi bi-person me-1"></i>TTD: {{ $doc->second_party_signer }}
-                                            </div>
-                                        @endif
-                                        @if (!empty($doc->pic_second_party))
-                                            <div class="text-muted small" style="font-size: 0.68rem;">
-                                                <i class="bi bi-telephone me-1"></i>PIC: {{ $doc->pic_second_party }}
-                                            </div>
-                                        @endif
-                                    </td>
-
-                                    <!-- 3. UNIT PENGUSUL & RUANG LINGKUP -->
-                                    <td>
-                                        <div class="fw-semibold text-dark">{{ $doc->unit }}</div>
-                                        @if (!empty($doc->first_party_signer))
-                                            <div class="text-secondary small" style="font-size: 0.7rem;">
-                                                <i class="bi bi-person-badge me-1"></i>TTD: {{ $doc->first_party_signer }}
-                                            </div>
-                                        @endif
-                                        @if (!empty($doc->pic_first_party))
-                                            <div class="text-muted small" style="font-size: 0.68rem;">
-                                                <i class="bi bi-telephone me-1"></i>PIC: {{ $doc->pic_first_party }}
-                                            </div>
-                                        @endif
-                                        @if (!empty($doc->collab_unit))
-                                            <div class="text-muted" style="font-size: 0.72rem;">Kolaborator: {{ $doc->collab_unit }}</div>
-                                        @endif
-                                        <div class="text-secondary small mt-1" style="max-width: 250px; white-space: normal;">
-                                            {{ \Illuminate\Support\Str::limit($doc->scope, 85) }}
-                                        </div>
-                                        @if (!empty($doc->nominal_value))
-                                            <div class="mt-1">
-                                                <span class="badge bg-success-subtle text-success-emphasis border" style="font-size: 0.65rem;">
-                                                    <i class="bi bi-cash-stack me-1"></i>{{ $doc->nominal_value }}
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </td>
-
-                                    <!-- 4. MASA BERLAKU & AMBANG BATAS DINI -->
-                                    <td>
-                                        <div><strong>{{ $doc->validity ?: '1 Tahun' }}</strong></div>
-                                        @if (!empty($doc->start_date) && !empty($doc->end_date))
-                                            <div class="text-muted" style="font-size: 0.7rem;">
-                                                {{ $doc->start_date->format('d/m/Y') }} &ndash; {{ $doc->end_date->format('d/m/Y') }}
-                                            </div>
-                                        @elseif (!empty($doc->date_signed))
-                                            <div class="text-muted" style="font-size: 0.72rem;">TTD: {{ $doc->date_signed->format('d/m/Y') }}</div>
-                                        @endif
-                                        <div class="mt-1">
-                                            <span class="badge bg-warning-subtle text-dark border" style="font-size: 0.68rem;" title="Ambang Batas Peringatan Dini">
-                                                <i class="bi bi-bell-fill text-warning me-1"></i>{{ $doc->warning_threshold ?? 'H-90 Hari' }}
-                                            </span>
-                                        </div>
-                                    </td>
-
-                                    <!-- 5. STATUS SIKLUS FSM & DOKUMEN PDF RESMI -->
-                                    <td class="text-center p-2" style="vertical-align: middle;">
-                                        @php
-                                            $pdfUrl = null;
-                                            $pdfTitle = '';
-                                            $pdfBtnClass = '';
-                                            $pdfIcon = '';
-
-                                            if ($doc->status === 'DRAFT') {
-                                                // Status DRAFT: jika ada berkas naskah draf awal
-                                                if (!empty($doc->draft_file)) {
-                                                    $fPath = str_starts_with($doc->draft_file, 'uploads/') ? $doc->draft_file : 'uploads/documents/' . $doc->draft_file;
-                                                    if (file_exists(public_path($fPath))) {
-                                                        $pdfUrl = asset($fPath);
-                                                        $pdfTitle = 'Buka Naskah Draf Awal (PDF)';
-                                                        $pdfBtnClass = 'btn-outline-secondary';
-                                                        $pdfIcon = 'bi bi-file-earmark-pdf';
-                                                    }
-                                                }
-                                            } elseif ($doc->status === 'REVIEW') {
-                                                // Status REVIEW: dokumen PDF telaah ber-QR Code
-                                                if (!empty($doc->draft_file)) {
-                                                    $fPath = str_starts_with($doc->draft_file, 'uploads/') ? $doc->draft_file : 'uploads/documents/' . $doc->draft_file;
-                                                    if (file_exists(public_path($fPath))) {
-                                                        $pdfUrl = asset($fPath);
-                                                        $pdfTitle = 'Buka Dokumen PDF Telaah Review (Ber-QR Code)';
-                                                        $pdfBtnClass = 'btn-outline-danger';
-                                                        $pdfIcon = 'bi bi-file-earmark-pdf-fill text-danger';
-                                                    }
-                                                }
-                                            } elseif ($doc->status === 'VERIFIED') {
-                                                // Status VERIFIED: dokumen PDF telaah ber-QR Code yang siap dicetak & ditandatangani fisik
-                                                $rawPdf = $doc->signed_file ?: $doc->draft_file;
-                                                if (!empty($rawPdf)) {
-                                                    $fPath = str_starts_with($rawPdf, 'uploads/') ? $rawPdf : 'uploads/documents/' . $rawPdf;
-                                                    if (file_exists(public_path($fPath))) {
-                                                        $pdfUrl = asset($fPath);
-                                                        $pdfTitle = 'Buka Naskah Terverifikasi (Siap Cetak & Teken Basah)';
-                                                        $pdfBtnClass = 'btn-outline-primary text-primary';
-                                                        $pdfIcon = 'bi bi-file-earmark-lock-fill text-primary';
-                                                    }
-                                                }
-                                            } elseif ($doc->status === 'ACTIVE') {
-                                                // Status ACTIVE: dokumen resmi yang sudah ditandatangani
-                                                $rawSigned = $doc->signed_file ?: $doc->draft_file;
-                                                if (!empty($rawSigned)) {
-                                                    $fPath = str_starts_with($rawSigned, 'uploads/') ? $rawSigned : 'uploads/documents/' . $rawSigned;
-                                                    if (file_exists(public_path($fPath))) {
-                                                        $pdfUrl = asset($fPath);
-                                                        $pdfTitle = 'Buka Dokumen PDF Tertandatangan Sah (Aktif)';
-                                                        $pdfBtnClass = 'btn-outline-success text-success';
-                                                        $pdfIcon = 'bi bi-file-earmark-check-fill';
-                                                    }
-                                                }
-                                            } elseif ($doc->status === 'WARNING') {
-                                                // Status WARNING: dokumen resmi aktif dalam masa peringatan dini
-                                                $rawSigned = $doc->signed_file ?: $doc->draft_file;
-                                                if (!empty($rawSigned)) {
-                                                    $fPath = str_starts_with($rawSigned, 'uploads/') ? $rawSigned : 'uploads/documents/' . $rawSigned;
-                                                    if (file_exists(public_path($fPath))) {
-                                                        $pdfUrl = asset($fPath);
-                                                        $pdfTitle = 'Buka Dokumen PDF Tertandatangan (Peringatan Dini)';
-                                                        $pdfBtnClass = 'btn-outline-warning text-warning-emphasis';
-                                                        $pdfIcon = 'bi bi-file-earmark-check-fill text-warning';
-                                                    }
-                                                }
-                                            } elseif ($doc->status === 'EXPIRED') {
-                                                // Status EXPIRED: dokumen resmi yang telah kedaluwarsa
-                                                $rawSigned = $doc->signed_file ?: $doc->draft_file;
-                                                if (!empty($rawSigned)) {
-                                                    $fPath = str_starts_with($rawSigned, 'uploads/') ? $rawSigned : 'uploads/documents/' . $rawSigned;
-                                                    if (file_exists(public_path($fPath))) {
-                                                        $pdfUrl = asset($fPath);
-                                                        $pdfTitle = 'Buka Dokumen PDF Tertandatangan (Arsip Kedaluwarsa)';
-                                                        $pdfBtnClass = 'btn-outline-secondary';
-                                                        $pdfIcon = 'bi bi-file-earmark-text text-secondary';
-                                                    }
-                                                }
-                                            } elseif ($doc->status === 'CANCELLED') {
-                                                // Status CANCELLED: dokumen yang dibatalkan
-                                                $rawCancelled = $doc->draft_file ?: $doc->signed_file;
-                                                if (!empty($rawCancelled)) {
-                                                    $fPath = str_starts_with($rawCancelled, 'uploads/') ? $rawCancelled : 'uploads/documents/' . $rawCancelled;
-                                                    if (file_exists(public_path($fPath))) {
-                                                        $pdfUrl = asset($fPath);
-                                                        $pdfTitle = 'Buka Dokumen PDF (Dibatalkan)';
-                                                        $pdfBtnClass = 'btn-outline-dark text-muted';
-                                                        $pdfIcon = 'bi bi-file-earmark-x';
-                                                    }
-                                                }
+                                        $pdfUrl = null;
+                                        $pdfTitle = '';
+                                        $rawFile = $doc->signed_file ?: $doc->draft_file;
+                                        if (!empty($rawFile)) {
+                                            $fPath = str_starts_with($rawFile, 'uploads/') ? $rawFile : 'uploads/documents/' . $rawFile;
+                                            if (file_exists(public_path($fPath))) {
+                                                $pdfUrl = asset($fPath);
+                                                $pdfTitle = 'Unduh Berkas ' . $doc->doc_type;
                                             }
-                                        @endphp
+                                        }
+                                    @endphp
+                                    <tr class="doc-row" data-status="{{ $doc->status }}" data-type="{{ $doc->doc_type }}" data-unit="{{ $doc->unit }}">
+                                        <!-- 1. No. -->
+                                        <td class="text-center">{{ $loop->iteration }}</td>
 
-                                        <!-- Status Badge & Jejak Audit -->
-                                        <span class="badge {{ $stBadge }} py-1 px-2 d-block fw-bold shadow-sm mb-1" style="font-size: 0.72rem;">
-                                            {{ $doc->status }}
-                                        </span>
-                                        <div class="badge bg-light text-dark border font-monospace mb-1" style="font-size: 0.62rem;">
-                                            {{ $doc->reg_id }}
-                                        </div>
-
-                                        <!-- Tombol Pintas: Buka Verifikasi & Naskah PDF -->
-                                        <div class="d-flex justify-content-center gap-1 mb-1">
-                                            <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.65rem;" title="Buka Lembar Verifikasi Publik">
-                                                <i class="bi bi-box-arrow-up-right me-1"></i>Verifikasi
+                                        <!-- 2. Judul -->
+                                        <td>
+                                            <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="fw-bold text-primary text-decoration-none d-block mb-1" title="{{ $doc->title }}">
+                                                {{ $doc->title ?: $doc->partner_name }}
                                             </a>
-                                            @if ($pdfUrl)
-                                                <a href="{{ $pdfUrl }}" target="_blank" class="btn {{ $pdfBtnClass }} btn-sm py-0 px-1" style="font-size: 0.65rem;" title="{{ $pdfTitle }}">
-                                                    <i class="{{ $pdfIcon }}"></i>
+                                            <div class="d-flex flex-wrap gap-1 mb-1">
+                                                <span class="badge bg-dark">{{ $doc->doc_type }}</span>
+                                                <span class="badge bg-light text-dark border">{{ $doc->track }}</span>
+                                                @if ($doc->is_legacy)
+                                                    <span class="badge bg-warning text-dark border">
+                                                        <i class="bi bi-clock-history me-1"></i>Data Lampau
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="small text-muted">
+                                                <strong>No. Pihak I:</strong> {{ $doc->doc_number ?: 'Dalam Proses' }}
+                                            </div>
+                                            @if (!empty($doc->partner_doc_number))
+                                                <div class="small text-secondary">
+                                                    <strong>No. Pihak II:</strong> {{ $doc->partner_doc_number }}
+                                                </div>
+                                            @endif
+                                            @if (!empty($doc->parent_mou) && $doc->parent_mou !== '-')
+                                                <div class="small text-primary">
+                                                    <i class="bi bi-link-45deg me-1"></i>Induk: {{ $doc->parent_mou }}
+                                                </div>
+                                            @endif
+                                        </td>
+
+                                        <!-- 3. Unit Pelaksana -->
+                                        <td>
+                                            <div>
+                                                <strong>Unit:</strong> {{ $doc->unit }}<br>
+                                                <strong>Mitra:</strong> {{ $doc->partner_name }}
+                                                @if (!empty($doc->partner_category))
+                                                    <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.65rem;">{{ $doc->partner_category }}</span>
+                                                @endif
+                                            </div>
+                                            @if (!empty($doc->first_party_signer))
+                                                <div class="small text-muted mt-1" style="font-size: 0.72rem;">
+                                                    <i class="bi bi-person me-1"></i>TTD Unit: {{ $doc->first_party_signer }}
+                                                </div>
+                                            @endif
+                                            @if (!empty($doc->second_party_signer))
+                                                <div class="small text-muted" style="font-size: 0.72rem;">
+                                                    <i class="bi bi-person me-1"></i>TTD Mitra: {{ $doc->second_party_signer }}
+                                                </div>
+                                            @endif
+                                            @if (!empty($doc->scope))
+                                                <div class="text-secondary small mt-1" style="max-width: 260px; font-size: 0.72rem;">
+                                                    {{ \Illuminate\Support\Str::limit($doc->scope, 85) }}
+                                                </div>
+                                            @endif
+                                        </td>
+
+                                        <!-- 4. Masa berlaku & peringatan -->
+                                        <td>
+                                            @if (!empty($doc->start_date) && !empty($doc->end_date))
+                                                <div class="fw-medium text-dark">{{ $doc->start_date->format('d/m/Y') }} s/d {{ $doc->end_date->format('d/m/Y') }}</div>
+                                            @elseif (!empty($doc->date_signed))
+                                                <div class="text-muted small">TTD: {{ $doc->date_signed->format('d/m/Y') }}</div>
+                                            @else
+                                                <div class="text-muted small">{{ $doc->validity ?: '1 Tahun' }}</div>
+                                            @endif
+                                            <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                                <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">
+                                                    <i class="bi bi-calendar3 me-1"></i>{{ $doc->validity ?: '1 Tahun' }}
+                                                </span>
+                                                <span class="badge bg-warning-subtle text-dark border" style="font-size: 0.7rem;" title="Peringatan Dini">
+                                                    <i class="bi bi-bell-fill text-warning me-1"></i>{{ $doc->warning_threshold ?? 'H-90 Hari' }}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <!-- 5. Status -->
+                                        <td class="text-center">
+                                            <span class="badge {{ $stBadge }} py-1 px-2 d-inline-block fw-bold mb-1" style="font-size: 0.75rem;">
+                                                {{ $doc->status }}
+                                            </span>
+                                            <div class="badge bg-light text-dark border font-monospace d-block mx-auto" style="font-size: 0.65rem; max-width: 120px;">
+                                                {{ $doc->reg_id }}
+                                            </div>
+                                            <div class="text-muted small mt-1" style="font-size: 0.68rem;">
+                                                <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Jejak
+                                            </div>
+                                        </td>
+
+                                        <!-- 6. Action -->
+                                        <td class="text-center">
+                                            <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="btn btn-sm btn-info text-white" title="Lihat Detail">
+                                                    <i class="bi bi-eye"></i> Detail
                                                 </a>
-                                            @endif
-                                        </div>
-
-                                        <div class="text-muted small" style="font-size: 0.66rem;">
-                                            <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Jejak Audit
-                                        </div>
-                                    </td>
-
-                                    <!-- 7. AKSI FSM & DISPOSISI -->
-                                    <td class="text-end">
-                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="btn btn-primary btn-sm fw-bold w-100 mb-1 shadow-sm py-1" style="font-size: 0.75rem;">
-                                            <i class="bi bi-eye me-1"></i> Detail
-                                        </a>
-                                        <button type="button" class="btn btn-outline-dark btn-sm py-0 px-2 w-100 mb-1" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $doc->id }}" style="font-size: 0.65rem;" title="Buka Konsol FSM Cepat">
-                                            <i class="bi bi-sliders me-1 text-warning"></i> Kelola FSM
-                                        </button>
-                                        
-                                        @if ($doc->status === 'ACTIVE' || $doc->status === 'WARNING' || $doc->status === 'EXPIRED')
-                                            <form method="POST" action="{{ route('simkerma.renew-draft') }}" class="w-100 mb-1" onsubmit="return confirm('Inisiasi pembaruan/reaktivasi naskah {{ $doc->doc_id }}? Status akan kembali ke DRAFT.');">
-                                                @csrf
-                                                <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-                                                <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-2 w-100 text-dark fw-semibold" style="font-size: 0.65rem;" title="Perpanjang / Reaktivasi (Kembali ke DRAFT)">
-                                                    <i class="bi bi-arrow-repeat me-1 text-warning"></i> Perpanjang / Reaktivasi
+                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $doc->id }}" title="Kelola FSM">
+                                                    <i class="bi bi-sliders"></i> FSM
                                                 </button>
-                                            </form>
-                                        @endif
-                                        
-                                        <div class="d-flex gap-1 justify-content-end">
-                                            @if ($doc->status === 'DRAFT')
-                                                <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline" onsubmit="return confirm('KONFIRMASI HAPUS DRAF:\n\nApakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Draf yang dihapus tidak dapat dipulihkan.')">
-                                                    @csrf
-                                                    <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size: 0.68rem;" title="Hapus Draf Dokumen Ini">
-                                                        <i class="bi bi-trash3"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-
-                                            @if ($activeRole === 'MASTER')
-                                                <form method="POST" action="{{ route('simkerma.reset-draft') }}" class="d-inline" onsubmit="return confirm('Reset status dokumen {{ $doc->doc_id }} ke DRAFT?')">
-                                                    @csrf
-                                                    <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size: 0.68rem;" title="Reset ke DRAFT">
-                                                        <i class="bi bi-arrow-counterclockwise"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                            
-                                            @if ($doc->status === 'ACTIVE')
-                                                @if (stripos($doc->doc_type, 'MoU') !== false)
-                                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'parent_id' => $doc->doc_id, 'derive_type' => 'MoA']) }}" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.68rem;" title="+ Turunkan MoA">
-                                                        + MoA
-                                                    </a>
-                                                @elseif (stripos($doc->doc_type, 'MoA') !== false)
-                                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'parent_id' => $doc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.68rem;" title="+ Turunkan IA">
-                                                        + IA
+                                                <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-sm btn-secondary" title="Lembar Verifikasi Publik &amp; QR Code">
+                                                    <i class="bi bi-qr-code"></i>
+                                                </a>
+                                                @if ($pdfUrl)
+                                                    <a href="{{ $pdfUrl }}" target="_blank" class="btn btn-sm btn-success" title="{{ $pdfTitle }}">
+                                                        <i class="bi bi-download"></i>
                                                     </a>
                                                 @endif
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
+                                                @if ($doc->status === 'ACTIVE' || $doc->status === 'WARNING' || $doc->status === 'EXPIRED')
+                                                    <form method="POST" action="{{ route('simkerma.renew-draft') }}" class="d-inline" onsubmit="return confirm('Inisiasi pembaruan/reaktivasi naskah {{ $doc->doc_id }}? Status akan kembali ke DRAFT.');">
+                                                        @csrf
+                                                        <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
+                                                        <button type="submit" class="btn btn-sm btn-warning text-dark" title="Perpanjang / Reaktivasi">
+                                                            <i class="bi bi-arrow-repeat"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                                @if ($doc->status === 'DRAFT')
+                                                    <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} secara permanen?');">
+                                                        @csrf
+                                                        <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Draf">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                                @if ($activeRole === 'MASTER')
+                                                    <form method="POST" action="{{ route('simkerma.reset-draft') }}" class="d-inline" onsubmit="return confirm('Reset status dokumen {{ $doc->doc_id }} ke DRAFT?')">
+                                                        @csrf
+                                                        <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Reset ke DRAFT">
+                                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                                @if ($doc->status === 'ACTIVE')
+                                                    @if (stripos($doc->doc_type, 'MoU') !== false)
+                                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'parent_id' => $doc->doc_id, 'derive_type' => 'MoA']) }}" class="btn btn-sm btn-outline-primary" title="+ Turunkan MoA">
+                                                            + MoA
+                                                        </a>
+                                                    @elseif (stripos($doc->doc_type, 'MoA') !== false)
+                                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'parent_id' => $doc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-sm btn-outline-primary" title="+ Turunkan IA">
+                                                            + IA
+                                                        </a>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
 
                                 <!-- MODAL DEDICATED KONSOL FSM UNTUK DOKUMEN INI -->
                                 <div class="modal fade" id="fsmModal_{{ $doc->id }}" tabindex="-1" aria-labelledby="fsmModalLabel_{{ $doc->id }}" aria-hidden="true">
@@ -3862,6 +3701,7 @@
                     </table>
                 </div>
             </div>
+        </div>
 
         @endif
 
@@ -3869,24 +3709,32 @@
         @if (!$isCreatingNew && !$isCreatingDerive && !$isCreatingLegacy && !$isViewingDetail)
         @push('scripts')
         <script>
-        // Fitur Filter & Pencarian Cepat Sisi Klien
+        // Fitur Filter & Pencarian Tabel Sisi Klien (Format Kerma Lama)
         function filterDocumentsTable() {
-            const query = (document.getElementById('tableFilterInput').value || '').toLowerCase().trim();
-            const statusFilter = document.getElementById('tableStatusFilter').value;
-            const typeFilter = (document.getElementById('tableTypeFilter').value || '').toLowerCase();
+            const query = (document.getElementById('tableFilterInput')?.value || '').toLowerCase().trim();
+            const statusFilter = (document.getElementById('tableStatusFilter')?.value || '').trim();
+            const typeFilter = (document.getElementById('tableTypeFilter')?.value || '').toLowerCase().trim();
+            const unitFilter = (document.getElementById('tableUnitFilter')?.value || '').toLowerCase().trim();
             const rows = document.querySelectorAll('#documentsTableBody tr.doc-row');
 
             let visibleCount = 0;
             rows.forEach(function(row) {
                 const text = row.innerText.toLowerCase();
-                const rowStatus = row.getAttribute('data-status') || '';
-                const rowType = (row.getAttribute('data-type') || '').toLowerCase();
+                const rowStatus = (row.getAttribute('data-status') || '').trim();
+                const rowType = (row.getAttribute('data-type') || '').toLowerCase().trim();
+                const rowUnit = (row.getAttribute('data-unit') || '').toLowerCase().trim();
 
                 const matchesQuery = !query || text.includes(query);
-                const matchesStatus = !statusFilter || rowStatus === statusFilter;
+                let matchesStatus = !statusFilter || rowStatus === statusFilter;
+                if (!matchesStatus && statusFilter) {
+                    if (statusFilter === 'REVIEW' && (rowStatus === 'LEGAL_REVIEW' || rowStatus === 'REVIEW')) matchesStatus = true;
+                    if (statusFilter === 'VERIFIED' && (rowStatus === 'APPROVED' || rowStatus === 'VERIFIED')) matchesStatus = true;
+                    if (statusFilter === 'WARNING' && (rowStatus === 'WARNING_EXPIRY' || rowStatus === 'WARNING')) matchesStatus = true;
+                }
                 const matchesType = !typeFilter || rowType.includes(typeFilter);
+                const matchesUnit = !unitFilter || rowUnit.includes(unitFilter);
 
-                if (matchesQuery && matchesStatus && matchesType) {
+                if (matchesQuery && matchesStatus && matchesType && matchesUnit) {
                     row.style.display = '';
                     visibleCount++;
                 } else {
@@ -3901,18 +3749,40 @@
         }
 
         function resetFilters() {
-            document.getElementById('tableFilterInput').value = '';
-            document.getElementById('tableStatusFilter').value = '';
-            document.getElementById('tableTypeFilter').value = '';
+            if (document.getElementById('tableFilterInput')) document.getElementById('tableFilterInput').value = '';
+            if (document.getElementById('tableStatusFilter')) document.getElementById('tableStatusFilter').value = '';
+            if (document.getElementById('tableTypeFilter')) document.getElementById('tableTypeFilter').value = '';
+            if (document.getElementById('tableUnitFilter')) document.getElementById('tableUnitFilter').value = '';
             filterDocumentsTable();
         }
 
-        function setQuickStatus(status) {
-            const selectEl = document.getElementById('tableStatusFilter');
-            if (selectEl) {
-                selectEl.value = status;
-                filterDocumentsTable();
+        function exportTableToExcel(tableID, filename = ''){
+            const downloadLink = document.createElement("a");
+            const dataType = 'application/vnd.ms-excel';
+            const tableSelect = document.getElementById(tableID);
+            if (!tableSelect) return;
+
+            // Clone table and remove the action column (last column)
+            const clone = tableSelect.cloneNode(true);
+            clone.querySelectorAll('tr').forEach(row => {
+                if (row.cells.length > 1) {
+                    row.deleteCell(row.cells.length - 1);
+                }
+            });
+
+            const tableHTML = clone.outerHTML.replace(/ /g, '%20');
+            filename = filename ? filename + '.xls' : 'data_kerja_sama.xls';
+
+            document.body.appendChild(downloadLink);
+            if (navigator.msSaveOrOpenBlob) {
+                const blob = new Blob(['\ufeff', clone.outerHTML], { type: dataType });
+                navigator.msSaveOrOpenBlob(blob, filename);
+            } else {
+                downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+                downloadLink.download = filename;
+                downloadLink.click();
             }
+            document.body.removeChild(downloadLink);
         }
         </script>
         @endpush
