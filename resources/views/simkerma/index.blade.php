@@ -2958,65 +2958,125 @@
             {{-- Menggantikan Dropdown Menu Sesuai Permintaan Jordan (Rinci, Menurun ke Bawah)      --}}
             {{-- ================================================================================= --}}
 
-            <!-- HEADER TABEL & FILTER PENCARIAN CEPAT -->
-            <div class="card card-wireframe mb-4">
-                <div class="card-header bg-white py-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-                    <div>
-                        <h6 class="mb-0 fw-bold text-uppercase">
-                            <i class="bi bi-table text-primary me-1"></i> Daftar Seluruh Pengajuan &amp; Persetujuan Kerja Sama
-                        </h6>
-                        <small class="text-muted">
-                            Menampilkan seluruh dokumen kerja sama terdaftar secara vertikal beserta status siklus hidup FSM.
-                        </small>
+            <!-- HEADER TABEL & FILTER PENCARIAN CEPAT (DESAIN MODERN & RAPI) -->
+            <div class="card card-wireframe mb-4 border rounded-3 shadow-sm bg-white overflow-hidden">
+                <!-- 1. HEADER UTAMA: JUDUL, STATISTIK DOKUMEN & TOMBOL AKSI -->
+                <div class="card-header bg-white py-3 px-3 px-md-4 border-bottom d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background-color: #eff6ff; border: 1px solid #dbeafe;">
+                            <i class="bi bi-folder2-open text-primary fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="mb-0 fw-bold text-dark text-uppercase" style="letter-spacing: 0.3px; font-size: 0.95rem;">
+                                    Daftar Seluruh Pengajuan &amp; Persetujuan Kerja Sama
+                                </h6>
+                                <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 fw-semibold" style="font-size: 0.72rem;">
+                                    <span id="visibleDocCount" class="fw-bold">{{ $documents->count() }}</span> Dokumen
+                                </span>
+                            </div>
+                            <small class="text-secondary" style="font-size: 0.78rem;">
+                                Kelola direktori naskah kerja sama (MoU, MoA, IA) dan pantau alur validasi Finite State Machine (FSM).
+                            </small>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
-                            Total: <span id="visibleDocCount" class="text-primary fw-bold">{{ $documents->count() }}</span> Dokumen
-                        </span>
-                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'legacy']) }}" class="btn btn-outline-dark btn-sm fw-bold shadow-sm text-nowrap">
-                            <i class="bi bi-clock-history me-1"></i> + Catat Kerja Sama Lampau
+
+                    <!-- TOMBOL AKSI UTAMA -->
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'legacy']) }}" class="btn btn-outline-dark btn-sm fw-semibold px-3 py-1.5 rounded-2 shadow-2xs d-flex align-items-center gap-1.5 text-nowrap" style="font-size: 0.8rem; border-color: #cbd5e1; background-color: #ffffff;">
+                            <i class="bi bi-clock-history text-secondary"></i>
+                            <span>+ Catat Kerja Sama Lampau</span>
                         </a>
-                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_mou']) }}" class="btn btn-primary btn-sm fw-bold shadow-sm text-nowrap">
-                            <i class="bi bi-plus-circle-fill me-1"></i> + Pengajuan MoU Baru
+                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_mou']) }}" class="btn btn-primary btn-sm fw-semibold px-3 py-1.5 rounded-2 shadow-sm d-flex align-items-center gap-1.5 text-nowrap" style="font-size: 0.8rem; background-color: #ea580c; border-color: #ea580c;">
+                            <i class="bi bi-plus-lg"></i>
+                            <span>+ Pengajuan MoU Baru</span>
                         </a>
                     </div>
                 </div>
 
-                <!-- FORM PENCARIAN & FILTER DINAMIS -->
-                <div class="card-body bg-light border-bottom py-3">
-                    <div class="row g-2">
-                        <div class="col-md-5">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                                <input type="text" id="tableFilterInput" class="form-control" placeholder="Cari nomor dokumen / nama mitra / prodi unit..." onkeyup="filterDocumentsTable()">
+                <!-- 2. TOOLBAR PENCARIAN & FILTER MULTI-PARAMETER -->
+                <div class="card-body p-3 px-md-4 border-bottom" style="background-color: #f8fafc;">
+                    <div class="row g-2 align-items-center">
+                        <!-- Kotak Pencarian Teks -->
+                        <div class="col-lg-5 col-md-12">
+                            <div class="input-group input-group-sm shadow-2xs">
+                                <span class="input-group-text bg-white border-end-0 ps-3 pe-2 text-muted" style="border-color: #cbd5e1; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <i class="bi bi-search text-secondary"></i>
+                                </span>
+                                <input type="text" id="tableFilterInput" class="form-control form-control-sm border-start-0 py-2 ps-1" placeholder="Cari nomor dokumen, nama mitra, atau prodi/unit..." onkeyup="filterDocumentsTable()" style="border-color: #cbd5e1; border-top-right-radius: 8px; border-bottom-right-radius: 8px; font-size: 0.82rem;">
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <select id="tableStatusFilter" class="form-select form-select-sm" onchange="filterDocumentsTable()">
-                                <option value="">-- Semua Status FSM (7 Status) --</option>
-                                <option value="DRAFT">1. DRAFT (Konsep Awal)</option>
-                                <option value="REVIEW">2. REVIEW (Pemeriksaan Legal)</option>
-                                <option value="VERIFIED">3. VERIFIED (Lolos Verifikasi Legal)</option>
-                                <option value="ACTIVE">4. ACTIVE (Berlaku Sah / Teken Basah)</option>
-                                <option value="WARNING">5. WARNING (Peringatan Dini H-90)</option>
-                                <option value="EXPIRED">6. EXPIRED (Kedaluwarsa)</option>
-                                <option value="CANCELLED">7. CANCELLED (Dibatalkan)</option>
-                            </select>
+
+                        <!-- Filter Status FSM -->
+                        <div class="col-lg-3 col-md-5 col-sm-6">
+                            <div class="input-group input-group-sm shadow-2xs">
+                                <span class="input-group-text bg-white border-end-0 px-2.5 text-muted" style="border-color: #cbd5e1; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <i class="bi bi-funnel text-primary"></i>
+                                </span>
+                                <select id="tableStatusFilter" class="form-select form-select-sm border-start-0 py-2" onchange="filterDocumentsTable()" style="border-color: #cbd5e1; border-top-right-radius: 8px; border-bottom-right-radius: 8px; font-size: 0.82rem;">
+                                    <option value="">Semua Status FSM (7 Status)</option>
+                                    <option value="DRAFT">1. DRAFT (Konsep Awal)</option>
+                                    <option value="REVIEW">2. REVIEW (Pemeriksaan Legal)</option>
+                                    <option value="VERIFIED">3. VERIFIED (Lolos Verifikasi)</option>
+                                    <option value="ACTIVE">4. ACTIVE (Berlaku Sah)</option>
+                                    <option value="WARNING">5. WARNING (Peringatan H-90)</option>
+                                    <option value="EXPIRED">6. EXPIRED (Kedaluwarsa)</option>
+                                    <option value="CANCELLED">7. CANCELLED (Dibatalkan)</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <select id="tableTypeFilter" class="form-select form-select-sm" onchange="filterDocumentsTable()">
-                                <option value="">-- Semua Jenis Dokumen --</option>
-                                <option value="MoU">MoU (Nota Kesepahaman)</option>
-                                <option value="MoA">MoA / PKS (Perjanjian)</option>
-                                <option value="IA">IA (Implementation)</option>
-                                <option value="Paket">Paket Terpadu (PKM)</option>
-                            </select>
+
+                        <!-- Filter Jenis Dokumen -->
+                        <div class="col-lg-2 col-md-4 col-sm-6">
+                            <div class="input-group input-group-sm shadow-2xs">
+                                <span class="input-group-text bg-white border-end-0 px-2.5 text-muted" style="border-color: #cbd5e1; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <i class="bi bi-file-earmark-text text-secondary"></i>
+                                </span>
+                                <select id="tableTypeFilter" class="form-select form-select-sm border-start-0 py-2" onchange="filterDocumentsTable()" style="border-color: #cbd5e1; border-top-right-radius: 8px; border-bottom-right-radius: 8px; font-size: 0.82rem;">
+                                    <option value="">Semua Dokumen</option>
+                                    <option value="MoU">MoU (Kesepahaman)</option>
+                                    <option value="MoA">MoA / PKS (Perjanjian)</option>
+                                    <option value="IA">IA (Implementation)</option>
+                                    <option value="Paket">Paket Terpadu (PKM)</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-secondary btn-sm w-100 fw-semibold" onclick="resetFilters()">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filter
+
+                        <!-- Tombol Reset Filter -->
+                        <div class="col-lg-2 col-md-3 col-sm-12">
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100 fw-medium py-2 rounded-2 d-flex align-items-center justify-content-center gap-1.5 shadow-2xs text-nowrap" onclick="resetFilters()" style="font-size: 0.82rem; border-color: #cbd5e1; background-color: #ffffff;">
+                                <i class="bi bi-arrow-counterclockwise text-secondary"></i>
+                                <span>Reset Filter</span>
                             </button>
                         </div>
+                    </div>
+
+                    <!-- 3. QUICK CHIPS PINTAS STATUS (FILTER CEPAT SEKALI KLIK) -->
+                    <div class="d-flex flex-wrap align-items-center gap-1.5 pt-2.5 mt-2.5 border-top" style="border-color: #e2e8f0 !important;">
+                        <span class="text-secondary small me-1 fw-semibold d-flex align-items-center gap-1" style="font-size: 0.72rem;">
+                            <i class="bi bi-sliders text-primary"></i> Filter Cepat:
+                        </span>
+                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-dark small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('')">
+                            Semua ({{ $documents->count() }})
+                        </button>
+                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-secondary small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('DRAFT')">
+                            <span class="badge bg-secondary rounded-circle p-1 me-1"></span>DRAFT ({{ $documents->where('status', 'DRAFT')->count() }})
+                        </button>
+                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-dark small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('REVIEW')">
+                            <span class="badge bg-info rounded-circle p-1 me-1"></span>REVIEW ({{ $documents->where('status', 'REVIEW')->count() }})
+                        </button>
+                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-primary small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('VERIFIED')">
+                            <span class="badge bg-primary rounded-circle p-1 me-1"></span>VERIFIED ({{ $documents->where('status', 'VERIFIED')->count() }})
+                        </button>
+                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-success small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('ACTIVE')">
+                            <span class="badge bg-success rounded-circle p-1 me-1"></span>ACTIVE ({{ $documents->where('status', 'ACTIVE')->count() }})
+                        </button>
+                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-dark small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('WARNING')">
+                            <span class="badge bg-warning rounded-circle p-1 me-1"></span>WARNING ({{ $documents->where('status', 'WARNING')->count() }})
+                        </button>
+                        <button type="button" class="btn btn-xs py-0.5 px-2.5 rounded-pill border bg-white text-danger small fw-medium shadow-2xs" style="font-size: 0.72rem; border-color: #cbd5e1;" onclick="setQuickStatus('EXPIRED')">
+                            <span class="badge bg-danger rounded-circle p-1 me-1"></span>EXPIRED ({{ $documents->where('status', 'EXPIRED')->count() }})
+                        </button>
                     </div>
                 </div>
 
@@ -3845,6 +3905,14 @@
             document.getElementById('tableStatusFilter').value = '';
             document.getElementById('tableTypeFilter').value = '';
             filterDocumentsTable();
+        }
+
+        function setQuickStatus(status) {
+            const selectEl = document.getElementById('tableStatusFilter');
+            if (selectEl) {
+                selectEl.value = status;
+                filterDocumentsTable();
+            }
         }
         </script>
         @endpush
