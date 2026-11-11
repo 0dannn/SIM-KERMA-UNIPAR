@@ -289,21 +289,10 @@ File: Main Js File
         });
 
         $('#mode-setting-btn').on('click', function (e) {
-            if(body.hasAttribute("data-layout-mode") && body.getAttribute("data-layout-mode") == "dark") {
-                document.body.setAttribute('data-layout-mode', 'light');
-                document.body.setAttribute('data-topbar', 'light');
-                document.body.setAttribute('data-sidebar', 'light');
-                (body.hasAttribute("data-layout") && body.getAttribute("data-layout") == "horizontal") ? '' : document.body.setAttribute('data-sidebar', 'light');
-                updateRadio('topbar-color-light')
-                updateRadio('sidebar-color-light')
-            } else {
-                document.body.setAttribute('data-layout-mode', 'dark');
-                document.body.setAttribute('data-topbar', 'dark');
-                document.body.setAttribute('data-sidebar', 'dark');
-                (body.hasAttribute("data-layout") && body.getAttribute("data-layout") == "horizontal") ? '' : document.body.setAttribute('data-sidebar', 'dark');
-                updateRadio('layout-mode-dark')
-                updateRadio('sidebar-color-dark')
-            }
+            e.preventDefault();
+            document.body.setAttribute('data-layout-mode', 'light');
+            document.body.setAttribute('data-topbar', 'light');
+            document.body.setAttribute('data-sidebar', 'light');
         });
 
         $(document).on('click', 'body', function (e) {
@@ -320,7 +309,10 @@ File: Main Js File
         } else {
             updateRadio('layout-vertical');
         }
-        (body.hasAttribute("data-layout-mode") && body.getAttribute("data-layout-mode") == "dark") ? updateRadio('layout-mode-dark'): updateRadio('layout-mode-light');
+        document.body.setAttribute('data-layout-mode', 'light');
+        document.body.setAttribute('data-topbar', 'light');
+        document.body.setAttribute('data-sidebar', 'light');
+        updateRadio('layout-mode-light');
         (body.hasAttribute("data-layout-size") && body.getAttribute("data-layout-size") == "boxed") ? updateRadio('layout-width-boxed'): updateRadio('layout-width-fuild');
         (body.hasAttribute("data-layout-scrollable") && body.getAttribute("data-layout-scrollable") == "true") ? updateRadio('layout-position-scrollable'): updateRadio('layout-position-fixed');
         (body.hasAttribute("data-topbar") && body.getAttribute("data-topbar") == "dark") ? updateRadio('topbar-color-dark'): updateRadio('topbar-color-light');

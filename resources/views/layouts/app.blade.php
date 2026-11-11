@@ -39,24 +39,25 @@
             color: #495057;
         }
 
-        /* Branding Navbar */
+        /* Branding Navbar (Tema Terang Bersih Sesuai Minia) */
         .navbar-brand-box {
-            background: #2a3042 !important;
-            border-right: 1px solid #32394e !important;
+            background: #ffffff !important;
+            border-right: 1px solid #e9e9ef !important;
             box-shadow: none !important;
         }
         .navbar-brand-box .logo-txt {
             font-size: 1.05rem;
             font-weight: 700;
-            color: #ffffff !important;
+            color: #5156be !important;
             letter-spacing: 0.8px;
         }
 
-        /* Topbar & Search */
-        #page-topbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid #e9e9ef;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        /* Topbar & Search (Tema Terang) */
+        #page-topbar,
+        body[data-topbar="dark"] #page-topbar {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #e9e9ef !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
         }
         .app-search .form-control {
             border-radius: 20px;
@@ -75,11 +76,15 @@
             justify-content: center;
         }
 
-        /* Vertical Sidebar Styling Sesuai Minia kerma_lama */
-        body[data-sidebar="dark"] .vertical-menu {
-            background: #2a3042 !important;
-            border-right: 1px solid #32394e;
+        /* Vertical Sidebar Styling (Tema Terang Bersih Minia kerma_lama) */
+        .vertical-menu,
+        body[data-sidebar="dark"] .vertical-menu,
+        body[data-sidebar="light"] .vertical-menu {
+            background: #ffffff !important;
+            border-right: 1px solid #e9e9ef !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
         }
+        #sidebar-menu ul li.menu-title,
         body[data-sidebar="dark"] #sidebar-menu ul li.menu-title {
             color: #7b8190 !important;
             font-size: 0.68rem;
@@ -88,47 +93,71 @@
             font-weight: 600;
             padding: 14px 20px 6px;
         }
+        #sidebar-menu ul li a,
         body[data-sidebar="dark"] #sidebar-menu ul li a {
-            color: #a6b0cf;
+            color: #555b6d !important;
             font-size: 0.84rem;
             font-weight: 500;
-            padding: 10px 20px;
+            padding: 10px 18px;
             display: flex;
             align-items: center;
             transition: all 0.2s ease;
             text-decoration: none;
+            border-radius: 6px;
+            margin: 2px 10px;
         }
+        #sidebar-menu ul li a i,
         body[data-sidebar="dark"] #sidebar-menu ul li a i {
             font-size: 1.15rem;
             min-width: 1.75rem;
-            color: #79859c;
+            color: #74788d !important;
             transition: all 0.2s ease;
         }
+        #sidebar-menu ul li a:hover,
         body[data-sidebar="dark"] #sidebar-menu ul li a:hover {
-            color: #ffffff;
-            background-color: rgba(255, 255, 255, 0.04);
+            color: #5156be !important;
+            background-color: #f3f3f9 !important;
         }
+        #sidebar-menu ul li a:hover i,
         body[data-sidebar="dark"] #sidebar-menu ul li a:hover i {
-            color: #ffffff;
+            color: #5156be !important;
         }
+        #sidebar-menu ul li a.active,
+        #sidebar-menu ul li.mm-active > a,
         body[data-sidebar="dark"] #sidebar-menu ul li a.active,
         body[data-sidebar="dark"] #sidebar-menu ul li.mm-active > a {
             color: #ffffff !important;
             background-color: #5156be !important;
             font-weight: 600;
-            box-shadow: 0 2px 6px rgba(81, 86, 190, 0.4);
+            box-shadow: 0 2px 6px rgba(81, 86, 190, 0.3) !important;
         }
+        #sidebar-menu ul li a.active i,
+        #sidebar-menu ul li.mm-active > a i,
         body[data-sidebar="dark"] #sidebar-menu ul li a.active i,
         body[data-sidebar="dark"] #sidebar-menu ul li.mm-active > a i {
             color: #ffffff !important;
         }
 
-        /* Sidebar Footer / User Identity */
+        /* Sidebar Footer / User Identity (Tema Terang) */
         .sidebar-bottom-profile {
-            background-color: rgba(0, 0, 0, 0.18);
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background-color: #f8f9fa !important;
+            border-top: 1px solid #e9e9ef !important;
             padding: 14px 18px;
             margin-top: auto;
+        }
+
+        /* Cegah / Netralkan Segala Efek Tema Gelap (Force Pure Light) */
+        body[data-layout-mode="dark"],
+        body[data-layout-mode="dark"] .vertical-menu,
+        body[data-layout-mode="dark"] #page-topbar,
+        body[data-layout-mode="dark"] .navbar-brand-box {
+            background-color: #ffffff !important;
+            color: #495057 !important;
+        }
+        body[data-layout-mode="dark"] .card {
+            background-color: #ffffff !important;
+            color: #495057 !important;
+            border-color: #e9e9ef !important;
         }
 
         /* Cards & Containers */
@@ -352,13 +381,13 @@
     @stack('styles')
 </head>
 
-<body data-sidebar="dark">
+<body data-layout-mode="light" data-topbar="light" data-sidebar="light">
 
 <!-- Begin page -->
 <div id="layout-wrapper">
 
     <!-- ============================================================== -->
-    <!-- TOP NAVIGATION BAR (Header Minia)                              -->
+    <!-- TOP NAVIGATION BAR (Header Minia - Tema Terang)               -->
     <!-- ============================================================== -->
     <header id="page-topbar">
         <div class="navbar-header">
@@ -407,14 +436,6 @@
                         <span class="d-none d-md-inline">Reset Data Dev</span>
                     </button>
                 </form>
-
-                <!-- Dark / Light Mode Switcher -->
-                <div class="dropdown d-none d-sm-inline-block">
-                    <button type="button" class="btn header-item waves-effect" id="mode-setting-btn" title="Toggle Tampilan Gelap/Terang">
-                        <i data-feather="moon" class="icon-lg layout-mode-dark"></i>
-                        <i data-feather="sun" class="icon-lg layout-mode-light"></i>
-                    </button>
-                </div>
 
                 <!-- User Profile Dropdown -->
                 @if (auth()->check())
@@ -531,8 +552,8 @@
             </div>
             <!-- Sidebar -->
 
-            <!-- Sidebar Bottom Attribution -->
-            <div class="sidebar-bottom-profile mt-auto text-white-50">
+            <!-- Sidebar Bottom Attribution (Tema Terang) -->
+            <div class="sidebar-bottom-profile mt-auto">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="avatar-xs flex-shrink-0">
                         <span class="avatar-title rounded-circle bg-primary text-white font-size-12">
@@ -540,15 +561,15 @@
                         </span>
                     </div>
                     <div class="overflow-hidden">
-                        <div class="text-white text-truncate font-size-12 fw-semibold">
+                        <div class="text-dark text-truncate font-size-12 fw-semibold">
                             {{ auth()->check() ? auth()->user()->name : 'Tamu (Guest)' }}
                         </div>
-                        <span class="badge bg-soft-info text-info font-size-10 py-0">
+                        <span class="badge bg-soft-primary text-primary font-size-10 py-0">
                             {{ auth()->check() ? auth()->user()->role : 'Public' }}
                         </span>
                     </div>
                 </div>
-                <div class="font-size-11 text-muted">
+                <div class="font-size-11 text-secondary">
                     Jordan Immanuel Pusung &bull; 2355201011<br>
                     Teknik Informatika &bull; UNIPAR
                 </div>
@@ -881,6 +902,22 @@ function openPrintableVerification() {
         window.open(link.href, '_blank');
     }
 }
+
+// Kunci Sistem Hanya Menerapkan Tema Terang (Light Mode Only)
+(function() {
+    function enforceLightTheme() {
+        document.body.setAttribute('data-layout-mode', 'light');
+        document.body.setAttribute('data-topbar', 'light');
+        document.body.setAttribute('data-sidebar', 'light');
+        try {
+            sessionStorage.removeItem('layout-mode');
+            localStorage.removeItem('layout-mode');
+            sessionStorage.setItem('is_visited', 'layout-ltr');
+        } catch(e) {}
+    }
+    enforceLightTheme();
+    window.addEventListener('DOMContentLoaded', enforceLightTheme);
+})();
 </script>
 
 @stack('scripts')

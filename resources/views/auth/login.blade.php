@@ -48,10 +48,11 @@
             overflow: hidden;
         }
         .login-header {
-            background-color: var(--brand-navy);
-            color: white;
-            padding: 30px 24px;
+            background-color: #ffffff;
+            color: #343a40;
+            padding: 32px 24px 24px;
             text-align: center;
+            border-bottom: 1px solid var(--border-color);
         }
         .brand-badge {
             display: inline-flex;
@@ -101,9 +102,9 @@
         <div class="brand-badge">
             <i class="bi bi-shield-check"></i>
         </div>
-        <h5 class="fw-bold mb-1 tracking-tight text-white">SIMKERMA UNIPAR</h5>
-        <div class="small text-white-50">Sistem Informasi Dokumen Kerja Sama Berbasis FSM</div>
-        <div class="badge bg-dark border border-secondary mt-2 px-2 py-1" style="font-size: 0.72rem;">
+        <h5 class="fw-bold mb-1 tracking-tight text-dark">SIMKERMA UNIPAR</h5>
+        <div class="small text-muted">Sistem Informasi Dokumen Kerja Sama Berbasis FSM</div>
+        <div class="badge bg-light text-primary border mt-2 px-2.5 py-1 fw-semibold" style="font-size: 0.72rem;">
             Universitas Parna Raya Manado
         </div>
     </div>
