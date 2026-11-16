@@ -395,14 +395,21 @@
                                         <i class="bi bi-eye-fill text-warning me-1"></i>Profil &amp; Riwayat
                                     </button>
                                     @if ($firstDoc)
-                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'doc' => $firstDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0 px-2 w-100" style="font-size: 0.68rem;" title="Buka Dokumen Mitra di Menu 04">
+                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'doc' => $firstDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0 px-2 w-100 mb-1" style="font-size: 0.68rem;" title="Buka Dokumen Mitra di Menu 04">
                                             <i class="bi bi-box-arrow-up-right me-1"></i>Dokumen Menu 04
                                         </a>
                                     @else
-                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'partner_name' => $partner->name]) }}" class="btn btn-outline-success btn-sm py-0 px-2 w-100" style="font-size: 0.68rem;" title="Ajukan Naskah Baru dengan Mitra Ini">
+                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'partner_name' => $partner->name]) }}" class="btn btn-outline-success btn-sm py-0 px-2 w-100 mb-1" style="font-size: 0.68rem;" title="Ajukan Naskah Baru dengan Mitra Ini">
                                             <i class="bi bi-plus-lg me-1"></i>Ajukan Naskah
                                         </a>
                                     @endif
+                                    <form method="POST" action="{{ route('simkerma.delete-partner') }}" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data mitra \'{{ addslashes($partner->name) }}\' dari master data?');">
+                                        @csrf
+                                        <input type="hidden" name="id" value="{{ $partner->id }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2 w-100" style="font-size: 0.68rem;" title="Hapus Data Mitra">
+                                            <i class="bi bi-trash me-1"></i>Hapus Mitra
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty
@@ -1160,6 +1167,9 @@
                                                list="partnerDatalist"
                                                autocomplete="off" required>
                                         <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
+                                        <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" title="Tambah Mitra Baru ke Master Data (Menu 02)">
+                                            <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
+                                        </button>
                                     </div>
                                     <datalist id="partnerDatalist">
                                         @foreach ($partners as $p)
@@ -1616,6 +1626,9 @@
                                                list="partnerDatalistLegacy"
                                                autocomplete="off" required>
                                         <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
+                                        <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" title="Tambah Mitra Baru ke Master Data (Menu 02)">
+                                            <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
+                                        </button>
                                     </div>
                                     <datalist id="partnerDatalistLegacy">
                                         @foreach ($partners as $p)
@@ -4774,6 +4787,91 @@
 
     @endif
 
+    {{-- MODAL TAMBAH MITRA BARU DARI FORM PENGAJUAN / DOKUMEN LAMPAU (TERSIMPAN KE MENU 02) --}}
+    <div class="modal fade" id="quickAddPartnerModal" tabindex="-1" aria-labelledby="quickAddPartnerModalLabel" aria-hidden="true" style="z-index: 1070;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <form id="quickAddPartnerForm" method="POST" action="{{ route('simkerma.store-partner') }}">
+                    @csrf
+                    <input type="hidden" name="is_ajax" value="1">
+                    <div class="modal-header bg-dark text-white py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="p-2 bg-light rounded text-dark"><i class="bi bi-building-add fs-4"></i></div>
+                            <div>
+                                <h6 class="modal-title fw-bold mb-0" id="quickAddPartnerModalLabel">Tambah Mitra Baru ke Master Data</h6>
+                                <small class="text-white-50">Data mitra akan tersimpan di Menu 02 dan langsung terpilih di formulir ini</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body p-4 small">
+                        <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center gap-2" style="font-size: 0.78rem;">
+                            <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+                            <div>Mitra yang didaftarkan di sini akan tersimpan resmi di <strong>Data Master Mitra (Menu 02)</strong> dan dapat digunakan kembali untuk semua dokumen kerja sama lainnya.</div>
+                        </div>
+
+                        <div id="quickAddAlert" class="alert alert-danger d-none py-2 px-3 mb-3 small"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label fw-bold text-dark">Nama Lembaga / Instansi Mitra <span class="text-danger">*</span></label>
+                                <input type="text" name="name" id="quick_partner_name" class="form-control" placeholder="Contoh: PT Telekomunikasi Selular / Pemkot Manado" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold text-dark">Kategori Mitra <span class="text-danger">*</span></label>
+                                <select name="category" id="quick_partner_category" class="form-select" required>
+                                    <option value="DUDI / Swasta" selected>DUDI / Swasta (Industri)</option>
+                                    <option value="Instansi Pemerintah">Instansi Pemerintah</option>
+                                    <option value="BUMN / BUMD">BUMN / BUMD</option>
+                                    <option value="Perguruan Tinggi Dalam Negeri">Perguruan Tinggi Dalam Negeri</option>
+                                    <option value="Perguruan Tinggi Luar Negeri">Perguruan Tinggi Luar Negeri</option>
+                                    <option value="Organisasi / Komunitas / Lainnya">Organisasi / Komunitas / Lainnya</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">Cakupan Wilayah</label>
+                                <select name="scope_coverage" id="quick_partner_scope" class="form-select">
+                                    <option value="Dalam Negeri (Nasional/Lokal)" selected>Dalam Negeri (Nasional/Lokal)</option>
+                                    <option value="Internasional">Internasional</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">Kota / Domisili Kantor</label>
+                                <input type="text" name="city" id="quick_partner_city" class="form-control" placeholder="Contoh: Kota Manado / Minahasa Utara">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-dark">Alamat Lengkap Kantor</label>
+                                <textarea name="address" id="quick_partner_address" class="form-control" rows="2" placeholder="Alamat kantor resmi instansi/perusahaan mitra..."></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">Nama Narahubung / PIC</label>
+                                <input type="text" name="pic_name" id="quick_partner_pic_name" class="form-control" placeholder="Nama staf/pejabat penghubung mitra">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">Kontak / Telepon / WhatsApp PIC</label>
+                                <input type="text" name="pic_contact" id="quick_partner_pic_contact" class="form-control" placeholder="08xxxxxxxxxx">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light py-2 px-4 d-flex justify-content-between align-items-center">
+                        <span class="text-muted small"><i class="bi bi-shield-check text-success me-1"></i>Otomatis Tersimpan ke Menu 02</span>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" id="btnSubmitQuickPartner" class="btn btn-primary btn-sm px-3 fw-bold">
+                                <i class="bi bi-save me-1"></i> Simpan ke Master Data Mitra (Menu 02)
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <style>
         .hybrid-partner-combobox .partner-dropdown-menu {
@@ -4806,6 +4904,8 @@
     </style>
     <script>
     (function() {
+        let currentActiveCombobox = null;
+
         function initHybridSmartCombobox(container) {
             if (!container || container.dataset.comboboxInitialized) return;
             container.dataset.comboboxInitialized = 'true';
@@ -4813,6 +4913,7 @@
             const input = container.querySelector('.smart-partner-input');
             const dropdown = container.querySelector('.partner-dropdown-menu');
             const clearBtn = container.querySelector('.btn-clear-partner');
+            const quickAddBtn = container.querySelector('.btn-open-quick-add');
             const verifiedInfo = container.querySelector('.partner-verified-info');
             const toggleBtn = container.querySelector('.btn-toggle-manual');
             const modeBadge = container.querySelector('.partner-mode-desc');
@@ -4843,11 +4944,10 @@
                     }
                 } else {
                     if (iconEl) iconEl.className = 'partner-input-icon bi bi-building text-secondary fs-5';
-                    input.placeholder = 'Ketik nama lembaga / instansi mitra...';
-                    if (modeBadge) modeBadge.innerHTML = '<i class="bi bi-building text-muted me-1"></i>Master Data Mitra Non-PT / DUDI / Instansi';
+                    input.placeholder = 'Ketik nama mitra dari Master Data (contoh: PT Telkom, Pemkot Manado)...';
+                    if (modeBadge) modeBadge.innerHTML = '<i class="bi bi-database-fill text-primary me-1"></i>Database Master Mitra UNIPAR (Menu 02) &bull; Klik Tambah jika belum ada';
                     if (toggleBtn) toggleBtn.style.display = 'none';
                     closeDropdown();
-                    if (verifiedInfo) verifiedInfo.classList.add('d-none');
                 }
             }
 
@@ -4855,6 +4955,15 @@
                 categorySelect.addEventListener('change', function() {
                     isManualMode = false;
                     updateCategoryUI();
+                });
+            }
+
+            // Quick add button handler
+            if (quickAddBtn) {
+                quickAddBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    currentActiveCombobox = container;
+                    openQuickAddModal(input.value.trim(), categorySelect ? categorySelect.value : '');
                 });
             }
 
@@ -4868,18 +4977,36 @@
 
             function openDropdown(items, queryStr) {
                 if (!dropdown) return;
+                const currentVal = input.value.trim();
 
                 if (!items || items.length === 0) {
-                    const currentVal = input.value.trim();
-                    dropdown.innerHTML = `
-                        <div class="p-3 text-center text-muted small">
-                            <i class="bi bi-exclamation-circle text-warning fs-5 d-block mb-1"></i>
-                            Nama kampus "<strong>${currentVal.replace(/</g, '&lt;')}</strong>" tidak ditemukan di direktori PDDikti.<br>
-                            <button type="button" class="btn btn-outline-primary btn-sm mt-2 btn-use-manual">
-                                <i class="bi bi-check2-circle me-1"></i>Gunakan "<strong>${currentVal.replace(/</g, '&lt;')}</strong>" sebagai nama mitra
-                            </button>
-                        </div>
-                    `;
+                    if (isPtCategory()) {
+                        dropdown.innerHTML = `
+                            <div class="p-3 text-center text-muted small">
+                                <i class="bi bi-exclamation-circle text-warning fs-5 d-block mb-1"></i>
+                                Nama kampus "<strong>${currentVal.replace(/</g, '&lt;')}</strong>" tidak ditemukan di direktori PDDikti.<br>
+                                <div class="d-flex justify-content-center gap-2 mt-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm btn-use-manual">
+                                        <i class="bi bi-check2-circle me-1"></i>Gunakan Manual
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-sm btn-open-modal-empty">
+                                        <i class="bi bi-plus-lg me-1"></i>Daftarkan ke Menu 02
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        dropdown.innerHTML = `
+                            <div class="p-3 text-center text-muted small">
+                                <i class="bi bi-building-dash text-secondary fs-5 d-block mb-1"></i>
+                                Mitra "<strong>${currentVal.replace(/</g, '&lt;')}</strong>" belum ada di Master Data Mitra.<br>
+                                <button type="button" class="btn btn-primary btn-sm mt-2 btn-open-modal-empty">
+                                    <i class="bi bi-plus-lg me-1"></i>+ Daftarkan "${currentVal.replace(/</g, '&lt;')}" ke Master Data (Menu 02)
+                                </button>
+                            </div>
+                        `;
+                    }
+
                     const useManualBtn = dropdown.querySelector('.btn-use-manual');
                     if (useManualBtn) {
                         useManualBtn.addEventListener('click', function(e) {
@@ -4898,18 +5025,35 @@
                             if (toggleBtn) toggleBtn.innerHTML = '<i class="bi bi-search me-1"></i>Kembali ke Pencarian PDDikti';
                         });
                     }
+
+                    const openModalEmpty = dropdown.querySelector('.btn-open-modal-empty');
+                    if (openModalEmpty) {
+                        openModalEmpty.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            currentActiveCombobox = container;
+                            closeDropdown();
+                            openQuickAddModal(currentVal, categorySelect ? categorySelect.value : '');
+                        });
+                    }
+
                     dropdown.classList.remove('d-none');
                     return;
                 }
 
                 let html = '<div class="list-group list-group-flush">';
                 items.forEach((item, idx) => {
-                    const kelompokBadge = item.kelompok === 'PTN' ? '<span class="badge bg-primary text-white">PTN</span>' : (item.kelompok === 'PTK' ? '<span class="badge bg-info text-dark">PTK</span>' : '<span class="badge bg-secondary text-white">PTS</span>');
+                    let badgeEl = '';
+                    if (item.source === 'DATABASE_MASTER') {
+                        badgeEl = `<span class="badge bg-success text-white">Menu 02 (Master)</span>`;
+                    } else {
+                        badgeEl = item.kelompok === 'PTN' ? '<span class="badge bg-primary text-white">PTN</span>' : (item.kelompok === 'PTK' ? '<span class="badge bg-info text-dark">PTK</span>' : '<span class="badge bg-secondary text-white">PTS</span>');
+                    }
+
                     html += `
-                        <a href="javascript:void(0)" class="list-group-item list-group-item-action py-2 px-3 partner-item text-start text-decoration-none" data-index="${idx}" data-name="${item.nama.replace(/"/g, '&quot;')}" data-kode="${item.kode || ''}" data-kota="${item.kota || ''}" data-provinsi="${item.provinsi || ''}" data-kelompok="${item.kelompok || 'PTS'}">
+                        <a href="javascript:void(0)" class="list-group-item list-group-item-action py-2 px-3 partner-item text-start text-decoration-none" data-index="${idx}" data-name="${item.nama.replace(/"/g, '&quot;')}" data-kode="${item.kode || ''}" data-kota="${item.kota || ''}" data-provinsi="${item.provinsi || ''}" data-kelompok="${item.kelompok || ''}" data-source="${item.source || 'PDDIKTI'}">
                             <div class="d-flex justify-content-between align-items-center mb-0.5">
                                 <strong class="text-dark">${item.nama}</strong>
-                                ${kelompokBadge}
+                                ${badgeEl}
                             </div>
                             <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
                                 <span><i class="bi bi-geo-alt me-0.5"></i>${item.kota ? item.kota + ', ' : ''}${item.provinsi}</span>
@@ -4930,7 +5074,8 @@
                             kode: this.getAttribute('data-kode'),
                             kota: this.getAttribute('data-kota'),
                             provinsi: this.getAttribute('data-provinsi'),
-                            kelompok: this.getAttribute('data-kelompok')
+                            kelompok: this.getAttribute('data-kelompok'),
+                            source: this.getAttribute('data-source')
                         });
                     });
                 });
@@ -4950,17 +5095,30 @@
                 }
 
                 if (verifiedInfo) {
-                    verifiedInfo.innerHTML = `
-                        <div class="alert alert-success py-1 px-2.5 small mb-0 d-inline-flex align-items-center gap-2 border shadow-sm">
-                            <i class="bi bi-patch-check-fill text-success fs-6"></i>
-                            <div>
-                                <strong>Terverifikasi PDDikti:</strong> 
-                                ${pt.kode ? `Kode: <code class="text-dark fw-bold">${pt.kode}</code> &bull; ` : ''}
-                                ${pt.kota ? `${pt.kota}, ` : ''}${pt.provinsi} &bull; 
-                                Status: <span class="badge bg-success">${pt.kelompok}</span>
+                    if (pt.source === 'DATABASE_MASTER') {
+                        verifiedInfo.innerHTML = `
+                            <div class="alert alert-success py-1 px-2.5 small mb-0 d-inline-flex align-items-center gap-2 border shadow-sm">
+                                <i class="bi bi-patch-check-fill text-success fs-6"></i>
+                                <div>
+                                    <strong>Terdaftar di Master Data Mitra (Menu 02):</strong> 
+                                    ${pt.kota ? `${pt.kota}, ` : ''}${pt.provinsi} &bull; 
+                                    Status: <span class="badge bg-success">Sah &amp; Terverifikasi</span>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        verifiedInfo.innerHTML = `
+                            <div class="alert alert-success py-1 px-2.5 small mb-0 d-inline-flex align-items-center gap-2 border shadow-sm">
+                                <i class="bi bi-patch-check-fill text-success fs-6"></i>
+                                <div>
+                                    <strong>Terverifikasi PDDikti:</strong> 
+                                    ${pt.kode ? `Kode: <code class="text-dark fw-bold">${pt.kode}</code> &bull; ` : ''}
+                                    ${pt.kota ? `${pt.kota}, ` : ''}${pt.provinsi} &bull; 
+                                    Status: <span class="badge bg-success">${pt.kelompok}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
                     verifiedInfo.classList.remove('d-none');
                 }
             }
@@ -4986,20 +5144,28 @@
                         updateCategoryUI();
                         if (verifiedInfo) verifiedInfo.classList.add('d-none');
                         if (input.value.trim().length >= 2) {
-                            fetchUniversities(input.value.trim());
+                            fetchPartners(input.value.trim());
                         }
                     }
                 });
             }
 
-            function fetchUniversities(q) {
-                fetch('/simkerma/api/universities?q=' + encodeURIComponent(q))
+            function fetchPartners(q) {
+                let url = '';
+                if (isPtCategory()) {
+                    url = '/simkerma/api/universities?q=' + encodeURIComponent(q);
+                } else {
+                    const catVal = categorySelect ? categorySelect.value : '';
+                    url = '/simkerma/api/partners?q=' + encodeURIComponent(q) + '&category=' + encodeURIComponent(catVal);
+                }
+
+                fetch(url)
                     .then(res => res.json())
                     .then(data => {
                         openDropdown(data, q);
                     })
                     .catch(err => {
-                        console.error('Err fetchUniversities:', err);
+                        console.error('Err fetchPartners:', err);
                     });
             }
 
@@ -5012,7 +5178,7 @@
                     if (verifiedInfo) verifiedInfo.classList.add('d-none');
                 }
 
-                if (isManualMode || !isPtCategory()) {
+                if (isManualMode) {
                     closeDropdown();
                     return;
                 }
@@ -5020,9 +5186,9 @@
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => {
                     if (val.length >= 2) {
-                        fetchUniversities(val);
+                        fetchPartners(val);
                     } else if (val.length === 0) {
-                        fetchUniversities('');
+                        fetchPartners('');
                     } else {
                         closeDropdown();
                     }
@@ -5030,11 +5196,11 @@
             });
 
             input.addEventListener('focus', function() {
-                if (!isManualMode && isPtCategory()) {
+                if (!isManualMode) {
                     if (this.value.trim().length >= 2) {
-                        fetchUniversities(this.value.trim());
+                        fetchPartners(this.value.trim());
                     } else if (this.value.trim().length === 0) {
-                        fetchUniversities('');
+                        fetchPartners('');
                     }
                 }
             });
@@ -5046,8 +5212,8 @@
                     clearBtn.classList.add('d-none');
                     if (verifiedInfo) verifiedInfo.classList.add('d-none');
                     closeDropdown();
-                    if (!isManualMode && isPtCategory()) {
-                        fetchUniversities('');
+                    if (!isManualMode) {
+                        fetchPartners('');
                     }
                 });
             }
@@ -5094,6 +5260,130 @@
 
             // Initial UI check
             updateCategoryUI();
+        }
+
+        function openQuickAddModal(prefillName, prefillCategory) {
+            const modalEl = document.getElementById('quickAddPartnerModal');
+            if (!modalEl) return;
+
+            const nameInput = modalEl.querySelector('#quick_partner_name');
+            const catSelect = modalEl.querySelector('#quick_partner_category');
+            const alertBox = modalEl.querySelector('#quickAddAlert');
+            if (alertBox) alertBox.classList.add('d-none');
+
+            if (nameInput) {
+                nameInput.value = prefillName || '';
+            }
+            if (catSelect && prefillCategory) {
+                for (let i = 0; i < catSelect.options.length; i++) {
+                    if (catSelect.options[i].value === prefillCategory || catSelect.options[i].text.includes(prefillCategory)) {
+                        catSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            bsModal.show();
+        }
+
+        // Quick add form AJAX submission
+        const quickForm = document.getElementById('quickAddPartnerForm');
+        if (quickForm) {
+            quickForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const submitBtn = document.getElementById('btnSubmitQuickPartner');
+                const alertBox = document.getElementById('quickAddAlert');
+                if (alertBox) alertBox.classList.add('d-none');
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan ke Menu 02...';
+                }
+
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="bi bi-save me-1"></i> Simpan ke Master Data Mitra (Menu 02)';
+                    }
+
+                    if (data.success && data.partner) {
+                        const partner = data.partner;
+                        // Close modal
+                        const modalEl = document.getElementById('quickAddPartnerModal');
+                        const bsModal = bootstrap.Modal.getInstance(modalEl);
+                        if (bsModal) bsModal.hide();
+
+                        // Fill active combobox
+                        if (currentActiveCombobox) {
+                            const input = currentActiveCombobox.querySelector('.smart-partner-input');
+                            const verifiedInfo = currentActiveCombobox.querySelector('.partner-verified-info');
+                            const clearBtn = currentActiveCombobox.querySelector('.btn-clear-partner');
+
+                            if (input) input.value = partner.name;
+                            if (clearBtn) clearBtn.classList.remove('d-none');
+
+                            if (verifiedInfo) {
+                                verifiedInfo.innerHTML = `
+                                    <div class="alert alert-success py-1 px-2.5 small mb-0 d-inline-flex align-items-center gap-2 border shadow-sm">
+                                        <i class="bi bi-patch-check-fill text-success fs-6"></i>
+                                        <div>
+                                            <strong>Tersimpan di Master Data Mitra (Menu 02):</strong> 
+                                            ${partner.category} &bull; ${partner.city || 'Kota Manado'} &bull; Status: Sah
+                                        </div>
+                                    </div>
+                                `;
+                                verifiedInfo.classList.remove('d-none');
+                            }
+
+                            // Autofill city if field exists in the form
+                            const form = currentActiveCombobox.closest('form');
+                            if (form && partner.city) {
+                                const cityInput = form.querySelector('[name="city"]');
+                                if (cityInput && !cityInput.value) {
+                                    cityInput.value = partner.city;
+                                }
+                            }
+                        }
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Mitra Tersimpan di Menu 02!',
+                                text: `Data mitra "${partner.name}" berhasil disimpan ke Master Data (Menu 02) dan langsung terpilih di formulir.`,
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
+                        }
+                    } else {
+                        if (alertBox) {
+                            alertBox.innerText = data.message || 'Gagal menyimpan data mitra.';
+                            alertBox.classList.remove('d-none');
+                        }
+                    }
+                })
+                .catch(err => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="bi bi-save me-1"></i> Simpan ke Master Data Mitra (Menu 02)';
+                    }
+                    if (alertBox) {
+                        alertBox.innerText = 'Terjadi kesalahan sistem saat menyimpan mitra ke database.';
+                        alertBox.classList.remove('d-none');
+                    }
+                });
+            });
         }
 
         function initAllComboboxes() {

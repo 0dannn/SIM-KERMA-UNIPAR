@@ -979,13 +979,36 @@ class SimkermaController extends Controller
      */
     public function storePartner(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:partners,name',
-            'category' => 'required|string',
-        ]);
+        $isAjax = $request->ajax() || $request->wantsJson() || $request->input('is_ajax');
 
-        $name = trim($request->input('name'));
+        $name = trim((string)$request->input('name', ''));
         $category = $request->input('category', 'DUDI / Swasta');
+
+        if (empty($name)) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Nama mitra wajib diisi.'], 422);
+            }
+            return redirect()->back()->with('flash', ['type' => 'danger', 'msg' => 'Nama mitra wajib diisi.']);
+        }
+
+        // Cek jika nama mitra sudah pernah terdaftar di database
+        $existing = Partner::where('name', $name)->first();
+        if ($existing) {
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Mitra '{$existing->name}' sudah terdaftar di Master Data Mitra (Menu 02).",
+                    'partner' => $existing,
+                    'is_existing' => true
+                ]);
+            }
+            return redirect()->route('simkerma.index', ['menu' => 2])
+                ->with('flash', [
+                    'type' => 'info',
+                    'msg' => "Mitra '{$existing->name}' sudah terdaftar di Master Data Mitra."
+                ]);
+        }
+
         $scopeCoverage = $request->input('scope_coverage') ?: ((stripos($name, 'international') !== false || stripos($category, 'luar') !== false) ? 'Internasional' : 'Dalam Negeri (Nasional/Lokal)');
 
         $partner = Partner::create([
@@ -1002,6 +1025,15 @@ class SimkermaController extends Controller
             'profile_desc' => $request->input('profile_desc') ?: ('Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR bidang: ' . $category),
             'status_verification' => 'Terverifikasi Sah',
         ]);
+
+        if ($isAjax) {
+            return response()->json([
+                'success' => true,
+                'message' => "Data mitra baru '{$partner->name}' berhasil didaftarkan ke Master Data Mitra (Menu 02).",
+                'partner' => $partner,
+                'is_existing' => false
+            ]);
+        }
 
         return redirect()->route('simkerma.index', ['menu' => 2])
             ->with('flash', [
@@ -1073,6 +1105,37 @@ class SimkermaController extends Controller
             ->with('flash', [
                 'type' => 'success',
                 'msg' => "Profil data mitra '{$partner->name}' berhasil diperbarui{$syncMsg}"
+            ]);
+    }
+
+    /**
+     * Hapus Data Mitra dari Master Data (Menu 2)
+     */
+    public function deletePartner(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:partners,id',
+        ]);
+
+        $partner = Partner::findOrFail($request->input('id'));
+        $partnerName = $partner->name;
+
+        // Cek apakah mitra memiliki dokumen kerja sama aktif
+        $docCount = Document::where('partner_name', $partnerName)->count();
+        if ($docCount > 0) {
+            return redirect()->route('simkerma.index', ['menu' => 2])
+                ->with('flash', [
+                    'type' => 'danger',
+                    'msg' => "Gagal menghapus: Mitra '{$partnerName}' masih terhubung dengan {$docCount} dokumen kerja sama di Menu 04. Hapus atau pindahkan dokumen terkait terlebih dahulu."
+                ]);
+        }
+
+        $partner->delete();
+
+        return redirect()->route('simkerma.index', ['menu' => 2])
+            ->with('flash', [
+                'type' => 'success',
+                'msg' => "Data mitra '{$partnerName}' berhasil dihapus dari direktori master data."
             ]);
     }
 
@@ -1503,6 +1566,49 @@ class SimkermaController extends Controller
                 }
             }
         }
+
+        return response()->json($results);
+    }
+
+    /**
+     * API Pencarian Master Data Mitra (Menu 02) untuk Mitra Non-PT / Swasta / Pemda / Luar Negeri
+     */
+    public function searchPartners(Request $request)
+    {
+        $query = trim((string)$request->query('q', ''));
+        $category = trim((string)$request->query('category', ''));
+        $limit = (int)$request->query('limit', 25);
+        if ($limit < 1 || $limit > 100) $limit = 25;
+
+        $dbQuery = Partner::query();
+
+        if (!empty($query)) {
+            $dbQuery->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('city', 'like', "%{$query}%")
+                  ->orWhere('category', 'like', "%{$query}%");
+            });
+        }
+
+        if (!empty($category) && stripos($category, 'semua') === false) {
+            $dbQuery->where('category', $category);
+        }
+
+        $partners = $dbQuery->orderBy('name', 'asc')->limit($limit)->get();
+
+        $results = $partners->map(function($p) {
+            return [
+                'id' => $p->name,
+                'text' => $p->name,
+                'nama' => $p->name,
+                'kode' => 'ID-' . str_pad($p->id, 4, '0', STR_PAD_LEFT),
+                'bentuk' => $p->category,
+                'kota' => $p->city ?: 'Kota Manado',
+                'provinsi' => $p->scope_coverage,
+                'kelompok' => 'MITRA-UNIPAR',
+                'source' => 'DATABASE_MASTER'
+            ];
+        });
 
         return response()->json($results);
     }

@@ -27,11 +27,13 @@ Route::post('/simkerma/store-activity', [SimkermaController::class, 'storeActivi
 Route::post('/simkerma/store-evaluation', [SimkermaController::class, 'storeEvaluation'])->name('simkerma.store-evaluation');
 Route::post('/simkerma/store-partner', [SimkermaController::class, 'storePartner'])->name('simkerma.store-partner');
 Route::post('/simkerma/update-partner', [SimkermaController::class, 'updatePartner'])->name('simkerma.update-partner');
+Route::post('/simkerma/delete-partner', [SimkermaController::class, 'deletePartner'])->name('simkerma.delete-partner');
 Route::post('/simkerma/update-document', [SimkermaController::class, 'updateDocument'])->name('simkerma.update-document');
 Route::post('/simkerma/upload-document-file', [SimkermaController::class, 'uploadDocumentFile'])->name('simkerma.upload-document-file');
 
-// Rute API Helper & Direktori PDDikti
+// Rute API Helper & Direktori PDDikti / Master Data Mitra
 Route::get('/simkerma/api/universities', [SimkermaController::class, 'searchUniversities'])->name('simkerma.api.universities');
+Route::get('/simkerma/api/partners', [SimkermaController::class, 'searchPartners'])->name('simkerma.api.partners');
 
 // Rute Verifikasi Publik QR Code (Bisa diakses via /verify/{reg_id} atau ?action=verify&reg=...)
 Route::get('/verify/{reg_id?}', [SimkermaController::class, 'verify'])->name('simkerma.verify');
