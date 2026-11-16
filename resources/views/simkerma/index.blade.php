@@ -1167,7 +1167,7 @@
                                                list="partnerDatalist"
                                                autocomplete="off" required>
                                         <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
-                                        <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" title="Tambah Mitra Baru ke Master Data (Menu 02)">
+                                        <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" data-bs-toggle="modal" data-bs-target="#quickAddPartnerModal" title="Tambah Mitra Baru ke Master Data (Menu 02)">
                                             <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
                                         </button>
                                     </div>
@@ -1626,7 +1626,7 @@
                                                list="partnerDatalistLegacy"
                                                autocomplete="off" required>
                                         <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
-                                        <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" title="Tambah Mitra Baru ke Master Data (Menu 02)">
+                                        <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" data-bs-toggle="modal" data-bs-target="#quickAddPartnerModal" title="Tambah Mitra Baru ke Master Data (Menu 02)">
                                             <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
                                         </button>
                                     </div>
@@ -4961,7 +4961,6 @@
             // Quick add button handler
             if (quickAddBtn) {
                 quickAddBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
                     currentActiveCombobox = container;
                     openQuickAddModal(input.value.trim(), categorySelect ? categorySelect.value : '');
                 });
@@ -5262,6 +5261,60 @@
             updateCategoryUI();
         }
 
+        // Robust Bootstrap 5.0 compatible modal helpers
+        function getModalInstance(modalEl) {
+            if (!modalEl) return null;
+            try {
+                if (window.bootstrap && bootstrap.Modal) {
+                    if (typeof bootstrap.Modal.getInstance === 'function') {
+                        const inst = bootstrap.Modal.getInstance(modalEl);
+                        if (inst) return inst;
+                    }
+                    return new bootstrap.Modal(modalEl);
+                }
+            } catch (e) {
+                console.warn('Bootstrap modal instance error:', e);
+            }
+            return null;
+        }
+
+        function showModalSafe(modalEl) {
+            if (!modalEl) return;
+            const inst = getModalInstance(modalEl);
+            if (inst) {
+                inst.show();
+                return;
+            }
+            if (window.jQuery && typeof jQuery(modalEl).modal === 'function') {
+                jQuery(modalEl).modal('show');
+            }
+        }
+
+        function hideModalSafe(modalEl) {
+            if (!modalEl) return;
+            try {
+                if (window.bootstrap && bootstrap.Modal) {
+                    let inst = typeof bootstrap.Modal.getInstance === 'function' ? bootstrap.Modal.getInstance(modalEl) : null;
+                    if (inst) {
+                        inst.hide();
+                    } else {
+                        new bootstrap.Modal(modalEl).hide();
+                    }
+                }
+            } catch (e) {}
+            if (window.jQuery && typeof jQuery(modalEl).modal === 'function') {
+                jQuery(modalEl).modal('hide');
+            }
+            setTimeout(() => {
+                if (!modalEl.classList.contains('show')) {
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                    document.body.style.removeProperty('overflow');
+                }
+            }, 300);
+        }
+
         function openQuickAddModal(prefillName, prefillCategory) {
             const modalEl = document.getElementById('quickAddPartnerModal');
             if (!modalEl) return;
@@ -5271,8 +5324,8 @@
             const alertBox = modalEl.querySelector('#quickAddAlert');
             if (alertBox) alertBox.classList.add('d-none');
 
-            if (nameInput) {
-                nameInput.value = prefillName || '';
+            if (nameInput && prefillName) {
+                nameInput.value = prefillName;
             }
             if (catSelect && prefillCategory) {
                 for (let i = 0; i < catSelect.options.length; i++) {
@@ -5283,9 +5336,66 @@
                 }
             }
 
-            const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            bsModal.show();
+            showModalSafe(modalEl);
         }
+
+        // Listener saat Modal Quick Add dibuka (baik via data-bs-toggle maupun script)
+        const quickModalEl = document.getElementById('quickAddPartnerModal');
+        if (quickModalEl) {
+            quickModalEl.addEventListener('show.bs.modal', function(e) {
+                const alertBox = quickModalEl.querySelector('#quickAddAlert');
+                if (alertBox) alertBox.classList.add('d-none');
+
+                let trigger = e.relatedTarget;
+                let container = null;
+                if (trigger && typeof trigger.closest === 'function') {
+                    container = trigger.closest('.hybrid-partner-combobox');
+                }
+                if (!container && currentActiveCombobox) {
+                    container = currentActiveCombobox;
+                }
+                if (!container) {
+                    container = document.querySelector('.hybrid-partner-combobox');
+                }
+
+                if (container) {
+                    currentActiveCombobox = container;
+                    const input = container.querySelector('.smart-partner-input');
+                    const form = container.closest('form');
+                    const catSelect = form ? form.querySelector('[name="category"]') : null;
+
+                    const nameInput = quickModalEl.querySelector('#quick_partner_name');
+                    const modalCatSelect = quickModalEl.querySelector('#quick_partner_category');
+
+                    if (nameInput && input && input.value.trim()) {
+                        nameInput.value = input.value.trim();
+                    }
+                    if (modalCatSelect && catSelect && catSelect.value) {
+                        for (let i = 0; i < modalCatSelect.options.length; i++) {
+                            if (modalCatSelect.options[i].value === catSelect.value || modalCatSelect.options[i].text.includes(catSelect.value)) {
+                                modalCatSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Global delegated click listener for quick add button
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-open-quick-add');
+            if (btn) {
+                const container = btn.closest('.hybrid-partner-combobox');
+                if (container) {
+                    currentActiveCombobox = container;
+                    const input = container.querySelector('.smart-partner-input');
+                    const form = container.closest('form');
+                    const catSelect = form ? form.querySelector('[name="category"]') : null;
+                    openQuickAddModal(input ? input.value.trim() : '', catSelect ? catSelect.value : '');
+                }
+            }
+        });
 
         // Quick add form AJAX submission
         const quickForm = document.getElementById('quickAddPartnerForm');
@@ -5320,19 +5430,28 @@
 
                     if (data.success && data.partner) {
                         const partner = data.partner;
-                        // Close modal
+                        // Close modal safely
                         const modalEl = document.getElementById('quickAddPartnerModal');
-                        const bsModal = bootstrap.Modal.getInstance(modalEl);
-                        if (bsModal) bsModal.hide();
+                        hideModalSafe(modalEl);
 
                         // Fill active combobox
-                        if (currentActiveCombobox) {
-                            const input = currentActiveCombobox.querySelector('.smart-partner-input');
-                            const verifiedInfo = currentActiveCombobox.querySelector('.partner-verified-info');
-                            const clearBtn = currentActiveCombobox.querySelector('.btn-clear-partner');
+                        const targetCombobox = currentActiveCombobox || document.querySelector('.hybrid-partner-combobox');
+                        if (targetCombobox) {
+                            const input = targetCombobox.querySelector('.smart-partner-input');
+                            const verifiedInfo = targetCombobox.querySelector('.partner-verified-info');
+                            const clearBtn = targetCombobox.querySelector('.btn-clear-partner');
 
                             if (input) input.value = partner.name;
                             if (clearBtn) clearBtn.classList.remove('d-none');
+
+                            // Update datalist if present
+                            const datalist = targetCombobox.querySelector('datalist');
+                            if (datalist) {
+                                const opt = document.createElement('option');
+                                opt.value = partner.name;
+                                opt.textContent = `${partner.category} • ${partner.city || 'Kota Manado'}`;
+                                datalist.prepend(opt);
+                            }
 
                             if (verifiedInfo) {
                                 verifiedInfo.innerHTML = `
@@ -5348,7 +5467,7 @@
                             }
 
                             // Autofill city if field exists in the form
-                            const form = currentActiveCombobox.closest('form');
+                            const form = targetCombobox.closest('form');
                             if (form && partner.city) {
                                 const cityInput = form.querySelector('[name="city"]');
                                 if (cityInput && !cityInput.value) {
