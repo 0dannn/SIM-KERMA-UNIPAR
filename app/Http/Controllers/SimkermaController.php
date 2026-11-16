@@ -1397,4 +1397,113 @@ class SimkermaController extends Controller
                 ]);
         }
     }
+
+    /**
+     * API Pencarian Direktori Perguruan Tinggi (PDDikti) untuk Hybrid Smart Combobox
+     */
+    public function searchUniversities(Request $request)
+    {
+        $query = strtolower(trim($request->query('q', '')));
+        $limit = (int)$request->query('limit', 25);
+        if ($limit < 1 || $limit > 100) {
+            $limit = 25;
+        }
+
+        $phpPath = database_path('data/perguruan_tinggi.php');
+        if (!file_exists($phpPath)) {
+            $phpPath = storage_path('app/perguruan_tinggi.php');
+        }
+
+        if (file_exists($phpPath)) {
+            $allPt = require $phpPath;
+        } else {
+            $jsonPath = storage_path('app/perguruan_tinggi.json');
+            $allPt = file_exists($jsonPath) ? (json_decode(file_get_contents($jsonPath), true) ?: []) : [];
+        }
+
+        if (empty($allPt)) {
+            return response()->json([]);
+        }
+
+        if (empty($query)) {
+            // Berikan saran prioritas: Kampus lokal Sulawesi Utara & mitra populer
+            $priorities = [
+                'universitas sam ratulangi',
+                'universitas negeri manado',
+                'universitas parna raya',
+                'universitas katolik de la salle',
+                'universitas pembangunan indonesia',
+                'universitas prisma',
+                'universitas sariputra indonesia tomohon',
+                'politeknik negeri manado',
+                'universitas bina mandiri gorontalo',
+                'universitas ichsan gorontalo',
+                'universitas indonesia',
+                'institut teknologi bandung',
+                'universitas gadjah mada',
+                'universitas telkom',
+            ];
+
+            $results = [];
+            foreach ($allPt as $pt) {
+                $nameLower = strtolower($pt['nama'] ?? '');
+                $provLower = strtolower($pt['provinsi'] ?? '');
+                if (in_array($nameLower, $priorities) || str_contains($provLower, 'sulawesi utara')) {
+                    $results[] = [
+                        'id' => $pt['nama'],
+                        'text' => $pt['nama'],
+                        'nama' => $pt['nama'],
+                        'kode' => $pt['kode'] ?? '',
+                        'bentuk' => $pt['bentuk'] ?? 'Universitas',
+                        'kota' => $pt['kabupatenKota'] ?? 'Kota Manado',
+                        'provinsi' => $pt['provinsi'] ?? 'Sulawesi Utara',
+                        'kelompok' => $pt['kelompok'] ?? 'PTS',
+                    ];
+                    if (count($results) >= $limit) {
+                        break;
+                    }
+                }
+            }
+            return response()->json($results);
+        }
+
+        $results = [];
+        $words = array_filter(explode(' ', $query));
+
+        foreach ($allPt as $pt) {
+            $name = $pt['nama'] ?? '';
+            $kota = $pt['kabupatenKota'] ?? '';
+            $prov = $pt['provinsi'] ?? '';
+            $kode = $pt['kode'] ?? '';
+            $singkatan = $pt['singkatan'] ?? '';
+
+            $searchStr = strtolower($name . ' ' . $kota . ' ' . $prov . ' ' . $kode . ' ' . $singkatan);
+
+            $matched = true;
+            foreach ($words as $w) {
+                if (!str_contains($searchStr, $w)) {
+                    $matched = false;
+                    break;
+                }
+            }
+
+            if ($matched) {
+                $results[] = [
+                    'id' => $name,
+                    'text' => $name,
+                    'nama' => $name,
+                    'kode' => $kode,
+                    'bentuk' => $pt['bentuk'] ?? 'Universitas',
+                    'kota' => $kota,
+                    'provinsi' => $prov,
+                    'kelompok' => $pt['kelompok'] ?? 'PTS',
+                ];
+                if (count($results) >= $limit) {
+                    break;
+                }
+            }
+        }
+
+        return response()->json($results);
+    }
 }

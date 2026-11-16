@@ -30,5 +30,8 @@ Route::post('/simkerma/update-partner', [SimkermaController::class, 'updatePartn
 Route::post('/simkerma/update-document', [SimkermaController::class, 'updateDocument'])->name('simkerma.update-document');
 Route::post('/simkerma/upload-document-file', [SimkermaController::class, 'uploadDocumentFile'])->name('simkerma.upload-document-file');
 
+// Rute API Helper & Direktori PDDikti
+Route::get('/simkerma/api/universities', [SimkermaController::class, 'searchUniversities'])->name('simkerma.api.universities');
+
 // Rute Verifikasi Publik QR Code (Bisa diakses via /verify/{reg_id} atau ?action=verify&reg=...)
 Route::get('/verify/{reg_id?}', [SimkermaController::class, 'verify'])->name('simkerma.verify');

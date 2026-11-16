@@ -439,19 +439,38 @@
                             </div>
 
                             <div class="row g-3">
-                                <div class="col-md-7">
-                                    <label class="form-label fw-bold text-dark">Nama Lembaga / Instansi Mitra <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" class="form-control form-control-sm" placeholder="Contoh: PT Industri Maju Bersama" required>
-                                </div>
                                 <div class="col-md-5">
                                     <label class="form-label fw-bold text-dark">Kategori Mitra <span class="text-danger">*</span></label>
-                                    <select name="category" class="form-select form-select-sm" required>
+                                    <select name="category" id="modal_partner_category" class="form-select form-select-sm" required>
+                                        <option value="Perguruan Tinggi" selected>Perguruan Tinggi</option>
                                         <option value="DUDI / Swasta">DUDI / Swasta (Industri)</option>
                                         <option value="Instansi Pemerintah">Instansi Pemerintah</option>
                                         <option value="BUMN / BUMD">BUMN / BUMD</option>
-                                        <option value="Perguruan Tinggi">Perguruan Tinggi</option>
                                         <option value="Organisasi / Komunitas / Lainnya">Organisasi / Komunitas / Lainnya</option>
                                     </select>
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label fw-bold text-dark">Nama Lembaga / Instansi Mitra <span class="text-danger">*</span></label>
+                                    <div class="hybrid-partner-combobox position-relative">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white border-end-0">
+                                                <i class="partner-input-icon bi bi-mortarboard-fill text-primary"></i>
+                                            </span>
+                                            <input type="text" name="name" id="modal_partner_name" class="form-control form-control-sm border-start-0 smart-partner-input" 
+                                                   placeholder="Ketik nama kampus (contoh: Sam Ratulangi, ITB, Parna Raya)..." 
+                                                   autocomplete="off" required>
+                                            <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
+                                        </div>
+                                        <!-- Floating Dropdown Suggestions -->
+                                        <div class="partner-dropdown-menu shadow-lg bg-white border rounded mt-1 d-none position-absolute w-100" style="z-index: 1060; max-height: 240px; overflow-y: auto;"></div>
+                                        <!-- Verified Info Banner -->
+                                        <div class="partner-verified-info small mt-1 d-none"></div>
+                                        <!-- Helper Tools -->
+                                        <div class="d-flex flex-wrap justify-content-between align-items-center mt-1" style="font-size: 0.72rem;">
+                                            <small class="partner-mode-desc text-muted"><i class="bi bi-database-check text-success me-1"></i>Direktori PDDikti (4.650+ PT)</small>
+                                            <a href="javascript:void(0)" class="text-decoration-none text-primary btn-toggle-manual"><i class="bi bi-pencil-square me-1"></i>Ketik Manual</a>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6">
@@ -1110,24 +1129,10 @@
                         <!-- 3. IDENTITAS PIHAK KEDUA (MITRA) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nama Mitra (Pihak II) : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <input type="text" name="partner_name" class="form-control" list="partnerDatalist" required>
-                                <datalist id="partnerDatalist">
-                                    @foreach ($partners as $p)
-                                        <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
-                                    @endforeach
-                                </datalist>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
                                 Kategori / Sektor Mitra : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
-                                <select name="category" class="form-select" required>
+                                <select name="category" id="category_jalur1" class="form-select" required>
                                     <option value="Perguruan Tinggi" selected>Perguruan Tinggi</option>
                                     <option value="DUDI / Swasta">DUDI / Swasta</option>
                                     <option value="BUMN">BUMN</option>
@@ -1136,6 +1141,41 @@
                                     <option value="Kesehatan">Kesehatan</option>
                                     <option value="Lainnya">Lainnya</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Nama Mitra (Pihak II) : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <div class="hybrid-partner-combobox position-relative">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="partner-input-icon bi bi-mortarboard-fill text-primary fs-5"></i>
+                                        </span>
+                                        <input type="text" name="partner_name" id="partner_name_jalur1" class="form-control border-start-0 smart-partner-input" 
+                                               placeholder="Ketik nama kampus (contoh: Sam Ratulangi, ITB, Parna Raya)..." 
+                                               value="{{ request('partner_name') }}"
+                                               list="partnerDatalist"
+                                               autocomplete="off" required>
+                                        <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
+                                    </div>
+                                    <datalist id="partnerDatalist">
+                                        @foreach ($partners as $p)
+                                            <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
+                                        @endforeach
+                                    </datalist>
+                                    <!-- Floating Dropdown Suggestions -->
+                                    <div class="partner-dropdown-menu shadow-lg bg-white border rounded mt-1 d-none position-absolute w-100" style="z-index: 1050; max-height: 280px; overflow-y: auto;"></div>
+                                    <!-- Verified Info Banner -->
+                                    <div class="partner-verified-info small mt-1.5 d-none"></div>
+                                    <!-- Helper Tools -->
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-1">
+                                        <small class="partner-mode-desc text-muted"><i class="bi bi-database-check text-success me-1"></i>Direktori Resmi PDDikti Kemendikbudristek (4.650+ PT)</small>
+                                        <a href="javascript:void(0)" class="small text-decoration-none text-primary btn-toggle-manual"><i class="bi bi-pencil-square me-1"></i>Ketik Manual / Luar Negeri</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1495,17 +1535,17 @@
                             </div>
                         </div>
 
-                        <!-- 3. NOMOR NASKAH PIHAK I (UNIPAR) & PIHAK II (MITRA) -->
+                        <!-- 3. NOMOR NASKAH PIHAK I & PIHAK II -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nomor Naskah UNIPAR : <span class="text-danger">*</span>
+                                Nomor Naskah Pihak I : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-4">
                                 <input type="text" name="doc_number" class="form-control font-monospace" required>
                                 <div class="text-muted" style="font-size: 0.72rem;">Nomor resmi yang tercantum pada naskah fisik institusi.</div>
                             </div>
                             <label class="col-md-2 col-form-label fw-bold text-dark text-md-end">
-                                Nomor Naskah Mitra :
+                                Nomor Naskah Pihak II :
                             </label>
                             <div class="col-md-3">
                                 <input type="text" name="partner_doc_number" class="form-control font-monospace">
@@ -1549,13 +1589,13 @@
                                 Kategori Mitra : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-3">
-                                <select name="category" class="form-select" required>
-                                    <option>DUDI / Swasta</option>
-                                    <option>Instansi Pemerintah</option>
-                                    <option>BUMN / BUMD</option>
-                                    <option>Perguruan Tinggi Dalam Negeri</option>
-                                    <option>Perguruan Tinggi Luar Negeri</option>
-                                    <option>Organisasi Non-Profit / NGO</option>
+                                <select name="category" id="category_legacy" class="form-select" required>
+                                    <option value="Perguruan Tinggi Dalam Negeri" selected>Perguruan Tinggi Dalam Negeri</option>
+                                    <option value="Perguruan Tinggi Luar Negeri">Perguruan Tinggi Luar Negeri</option>
+                                    <option value="DUDI / Swasta">DUDI / Swasta</option>
+                                    <option value="Instansi Pemerintah">Instansi Pemerintah</option>
+                                    <option value="BUMN / BUMD">BUMN / BUMD</option>
+                                    <option value="Organisasi Non-Profit / NGO">Organisasi Non-Profit / NGO</option>
                                 </select>
                             </div>
                         </div>
@@ -1566,7 +1606,32 @@
                                 Nama Lembaga Mitra : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
-                                <input type="text" name="partner_name" class="form-control" required>
+                                <div class="hybrid-partner-combobox position-relative">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="partner-input-icon bi bi-mortarboard-fill text-primary fs-5"></i>
+                                        </span>
+                                        <input type="text" name="partner_name" id="partner_name_legacy" class="form-control border-start-0 smart-partner-input" 
+                                               placeholder="Ketik nama kampus (contoh: Sam Ratulangi, ITB, Parna Raya)..." 
+                                               list="partnerDatalistLegacy"
+                                               autocomplete="off" required>
+                                        <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
+                                    </div>
+                                    <datalist id="partnerDatalistLegacy">
+                                        @foreach ($partners as $p)
+                                            <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
+                                        @endforeach
+                                    </datalist>
+                                    <!-- Floating Dropdown Suggestions -->
+                                    <div class="partner-dropdown-menu shadow-lg bg-white border rounded mt-1 d-none position-absolute w-100" style="z-index: 1050; max-height: 280px; overflow-y: auto;"></div>
+                                    <!-- Verified Info Banner -->
+                                    <div class="partner-verified-info small mt-1.5 d-none"></div>
+                                    <!-- Helper Tools -->
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-1">
+                                        <small class="partner-mode-desc text-muted"><i class="bi bi-database-check text-success me-1"></i>Direktori Resmi PDDikti Kemendikbudristek (4.650+ PT)</small>
+                                        <a href="javascript:void(0)" class="small text-decoration-none text-primary btn-toggle-manual"><i class="bi bi-pencil-square me-1"></i>Ketik Manual / Luar Negeri</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -2985,7 +3050,7 @@
                         <div class="col-md-3">
                             <label class="form-label fw-semibold mb-1">Status Kerja Sama</label>
                             <select class="form-select form-select-sm" id="tableStatusFilter" onchange="filterDocumentsTable()">
-                                <option value="">Semua Status FSM</option>
+                                <option value="">Semua Status</option>
                                 <option value="DRAFT">1. DRAFT (Konsep Awal)</option>
                                 <option value="REVIEW">2. REVIEW (Pemeriksaan Legal)</option>
                                 <option value="VERIFIED">3. VERIFIED (Lolos Verifikasi)</option>
@@ -3036,12 +3101,12 @@
                         <table id="documentsTable" class="w-100 table table-bordered table-striped table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="text-center" style="width: 50px;">No.</th>
-                                    <th>Judul</th>
-                                    <th>Unit Pelaksana</th>
-                                    <th>Masa berlaku &amp; peringatan</th>
-                                    <th class="text-center" style="width: 140px;">Status</th>
-                                    <th class="text-center" style="width: 180px;">Action</th>
+                                    <th class="text-center py-1 px-2" style="width: 50px; font-size: 0.82rem; line-height: 1.2;">No.</th>
+                                    <th class="text-center py-1 px-2" style="font-size: 0.82rem; line-height: 1.2;">Judul</th>
+                                    <th class="text-center py-1 px-2" style="font-size: 0.82rem; line-height: 1.2;">Unit Pelaksana</th>
+                                    <th class="text-center py-1 px-2" style="font-size: 0.82rem; line-height: 1.2;">Masa Berlaku</th>
+                                    <th class="text-center py-1 px-2" style="width: 140px; font-size: 0.82rem; line-height: 1.2;">Status</th>
+                                    <th class="text-center py-1 px-2" style="width: 180px; font-size: 0.82rem; line-height: 1.2;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="documentsTableBody">
@@ -3077,26 +3142,19 @@
 
                                         <!-- 2. Judul -->
                                         <td>
-                                            <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="fw-bold text-primary text-decoration-none d-block mb-1" title="{{ $doc->title }}">
+                                            <div class="small text-muted mb-1 d-flex flex-wrap align-items-center gap-2">
+                                                <span><strong>No. Pihak I:</strong> {{ $doc->doc_number ?: 'Dalam Proses' }}</span>
+                                                @if (!empty($doc->partner_doc_number))
+                                                    <span class="text-secondary"><span class="text-muted">|</span> <strong>No. Pihak II:</strong> {{ $doc->partner_doc_number }}</span>
+                                                @endif
+                                            </div>
+                                            <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="fw-bold text-dark text-decoration-none d-block mb-1" title="{{ $doc->title }}">
                                                 {{ $doc->title ?: $doc->partner_name }}
                                             </a>
                                             <div class="d-flex flex-wrap gap-1 mb-1">
                                                 <span class="badge bg-dark">{{ $doc->doc_type }}</span>
                                                 <span class="badge bg-light text-dark border">{{ $doc->track }}</span>
-                                                @if ($doc->is_legacy)
-                                                    <span class="badge bg-warning text-dark border">
-                                                        <i class="bi bi-clock-history me-1"></i>Data Lampau
-                                                    </span>
-                                                @endif
                                             </div>
-                                            <div class="small text-muted">
-                                                <strong>No. Pihak I:</strong> {{ $doc->doc_number ?: 'Dalam Proses' }}
-                                            </div>
-                                            @if (!empty($doc->partner_doc_number))
-                                                <div class="small text-secondary">
-                                                    <strong>No. Pihak II:</strong> {{ $doc->partner_doc_number }}
-                                                </div>
-                                            @endif
                                             @if (!empty($doc->parent_mou) && $doc->parent_mou !== '-')
                                                 <div class="small text-primary">
                                                     <i class="bi bi-link-45deg me-1"></i>Induk: {{ $doc->parent_mou }}
@@ -3115,7 +3173,7 @@
                                             </div>
                                         </td>
 
-                                        <!-- 4. Masa berlaku & peringatan -->
+                                        <!-- 4. Masa Berlaku -->
                                         <td>
                                             @if (!empty($doc->start_date) && !empty($doc->end_date))
                                                 <div class="fw-medium text-dark">{{ $doc->start_date->format('d/m/Y') }} s/d {{ $doc->end_date->format('d/m/Y') }}</div>
@@ -3124,27 +3182,18 @@
                                             @else
                                                 <div class="text-muted small">{{ $doc->validity ?: '1 Tahun' }}</div>
                                             @endif
-                                            <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                            <div class="mt-1">
                                                 <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">
                                                     <i class="bi bi-calendar3 me-1"></i>{{ $doc->validity ?: '1 Tahun' }}
-                                                </span>
-                                                <span class="badge bg-warning-subtle text-dark border" style="font-size: 0.7rem;" title="Peringatan Dini">
-                                                    <i class="bi bi-bell-fill text-warning me-1"></i>{{ $doc->warning_threshold ?? 'H-90 Hari' }}
                                                 </span>
                                             </div>
                                         </td>
 
                                         <!-- 5. Status -->
                                         <td class="text-center">
-                                            <span class="badge {{ $stBadge }} py-1 px-2 d-inline-block fw-bold mb-1" style="font-size: 0.75rem;">
+                                            <span class="badge {{ $stBadge }} py-1 px-2 d-inline-block fw-bold" style="font-size: 0.75rem;">
                                                 {{ $doc->status }}
                                             </span>
-                                            <div class="badge bg-light text-dark border font-monospace d-block mx-auto" style="font-size: 0.65rem; max-width: 120px;">
-                                                {{ $doc->reg_id }}
-                                            </div>
-                                            <div class="text-muted small mt-1" style="font-size: 0.68rem;">
-                                                <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Jejak
-                                            </div>
                                         </td>
 
                                         <!-- 6. Action -->
@@ -3156,52 +3205,6 @@
                                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $doc->id }}" title="Kelola FSM">
                                                     <i class="bi bi-sliders"></i> FSM
                                                 </button>
-                                                <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-sm btn-secondary" title="Lembar Verifikasi Publik &amp; QR Code">
-                                                    <i class="bi bi-qr-code"></i>
-                                                </a>
-                                                @if ($pdfUrl)
-                                                    <a href="{{ $pdfUrl }}" target="_blank" class="btn btn-sm btn-success" title="{{ $pdfTitle }}">
-                                                        <i class="bi bi-download"></i>
-                                                    </a>
-                                                @endif
-                                                @if ($doc->status === 'ACTIVE' || $doc->status === 'WARNING' || $doc->status === 'EXPIRED')
-                                                    <form method="POST" action="{{ route('simkerma.renew-draft') }}" class="d-inline" onsubmit="return confirm('Inisiasi pembaruan/reaktivasi naskah {{ $doc->doc_id }}? Status akan kembali ke DRAFT.');">
-                                                        @csrf
-                                                        <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-                                                        <button type="submit" class="btn btn-sm btn-warning text-dark" title="Perpanjang / Reaktivasi">
-                                                            <i class="bi bi-arrow-repeat"></i>
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                                @if ($doc->status === 'DRAFT')
-                                                    <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} secara permanen?');">
-                                                        @csrf
-                                                        <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Draf">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                                @if ($activeRole === 'MASTER')
-                                                    <form method="POST" action="{{ route('simkerma.reset-draft') }}" class="d-inline" onsubmit="return confirm('Reset status dokumen {{ $doc->doc_id }} ke DRAFT?')">
-                                                        @csrf
-                                                        <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Reset ke DRAFT">
-                                                            <i class="bi bi-arrow-counterclockwise"></i>
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                                @if ($doc->status === 'ACTIVE')
-                                                    @if (stripos($doc->doc_type, 'MoU') !== false)
-                                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'parent_id' => $doc->doc_id, 'derive_type' => 'MoA']) }}" class="btn btn-sm btn-outline-primary" title="+ Turunkan MoA">
-                                                            + MoA
-                                                        </a>
-                                                    @elseif (stripos($doc->doc_type, 'MoA') !== false)
-                                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'parent_id' => $doc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-sm btn-outline-primary" title="+ Turunkan IA">
-                                                            + IA
-                                                        </a>
-                                                    @endif
-                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -4770,5 +4773,348 @@
         @endpush
 
     @endif
+
+    @push('scripts')
+    <style>
+        .hybrid-partner-combobox .partner-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            z-index: 1060;
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .hybrid-partner-combobox .partner-item {
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .hybrid-partner-combobox .partner-item:hover,
+        .hybrid-partner-combobox .partner-item.active {
+            background-color: #eef2ff !important;
+            color: #1e3a8a !important;
+        }
+        .hybrid-partner-combobox .smart-partner-input:focus {
+            box-shadow: none;
+            border-color: #86b7fe;
+        }
+    </style>
+    <script>
+    (function() {
+        function initHybridSmartCombobox(container) {
+            if (!container || container.dataset.comboboxInitialized) return;
+            container.dataset.comboboxInitialized = 'true';
+
+            const input = container.querySelector('.smart-partner-input');
+            const dropdown = container.querySelector('.partner-dropdown-menu');
+            const clearBtn = container.querySelector('.btn-clear-partner');
+            const verifiedInfo = container.querySelector('.partner-verified-info');
+            const toggleBtn = container.querySelector('.btn-toggle-manual');
+            const modeBadge = container.querySelector('.partner-mode-desc');
+            const form = container.closest('form');
+            const categorySelect = form ? form.querySelector('[name="category"]') : null;
+            const iconEl = container.querySelector('.partner-input-icon');
+
+            let isManualMode = false;
+            let debounceTimer = null;
+            let activeIndex = -1;
+
+            function isPtCategory() {
+                if (!categorySelect) return true;
+                const val = (categorySelect.value || '').toLowerCase();
+                return val.includes('perguruan tinggi') && !val.includes('luar negeri');
+            }
+
+            function updateCategoryUI() {
+                if (isPtCategory()) {
+                    if (iconEl) iconEl.className = 'partner-input-icon bi bi-mortarboard-fill text-primary fs-5';
+                    if (!isManualMode) {
+                        input.placeholder = 'Ketik nama kampus (contoh: Sam Ratulangi, ITB, Parna Raya)...';
+                        if (modeBadge) modeBadge.innerHTML = '<i class="bi bi-database-check text-success me-1"></i>Direktori Resmi PDDikti Kemendikbudristek (4.650+ PT)';
+                        if (toggleBtn) {
+                            toggleBtn.style.display = 'inline-block';
+                            toggleBtn.innerHTML = '<i class="bi bi-pencil-square me-1"></i>Ketik Manual / Luar Negeri';
+                        }
+                    }
+                } else {
+                    if (iconEl) iconEl.className = 'partner-input-icon bi bi-building text-secondary fs-5';
+                    input.placeholder = 'Ketik nama lembaga / instansi mitra...';
+                    if (modeBadge) modeBadge.innerHTML = '<i class="bi bi-building text-muted me-1"></i>Master Data Mitra Non-PT / DUDI / Instansi';
+                    if (toggleBtn) toggleBtn.style.display = 'none';
+                    closeDropdown();
+                    if (verifiedInfo) verifiedInfo.classList.add('d-none');
+                }
+            }
+
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function() {
+                    isManualMode = false;
+                    updateCategoryUI();
+                });
+            }
+
+            function closeDropdown() {
+                if (dropdown) {
+                    dropdown.classList.add('d-none');
+                    dropdown.innerHTML = '';
+                }
+                activeIndex = -1;
+            }
+
+            function openDropdown(items, queryStr) {
+                if (!dropdown) return;
+
+                if (!items || items.length === 0) {
+                    const currentVal = input.value.trim();
+                    dropdown.innerHTML = `
+                        <div class="p-3 text-center text-muted small">
+                            <i class="bi bi-exclamation-circle text-warning fs-5 d-block mb-1"></i>
+                            Nama kampus "<strong>${currentVal.replace(/</g, '&lt;')}</strong>" tidak ditemukan di direktori PDDikti.<br>
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2 btn-use-manual">
+                                <i class="bi bi-check2-circle me-1"></i>Gunakan "<strong>${currentVal.replace(/</g, '&lt;')}</strong>" sebagai nama mitra
+                            </button>
+                        </div>
+                    `;
+                    const useManualBtn = dropdown.querySelector('.btn-use-manual');
+                    if (useManualBtn) {
+                        useManualBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            isManualMode = true;
+                            closeDropdown();
+                            if (verifiedInfo) {
+                                verifiedInfo.innerHTML = `
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="bi bi-pencil-fill text-secondary me-1"></i>Nama diinput manual (Non-Direktori)
+                                    </span>
+                                `;
+                                verifiedInfo.classList.remove('d-none');
+                            }
+                            if (modeBadge) modeBadge.innerHTML = '<i class="bi bi-pencil text-warning me-1"></i>Mode Input Manual Aktif';
+                            if (toggleBtn) toggleBtn.innerHTML = '<i class="bi bi-search me-1"></i>Kembali ke Pencarian PDDikti';
+                        });
+                    }
+                    dropdown.classList.remove('d-none');
+                    return;
+                }
+
+                let html = '<div class="list-group list-group-flush">';
+                items.forEach((item, idx) => {
+                    const kelompokBadge = item.kelompok === 'PTN' ? '<span class="badge bg-primary text-white">PTN</span>' : (item.kelompok === 'PTK' ? '<span class="badge bg-info text-dark">PTK</span>' : '<span class="badge bg-secondary text-white">PTS</span>');
+                    html += `
+                        <a href="javascript:void(0)" class="list-group-item list-group-item-action py-2 px-3 partner-item text-start text-decoration-none" data-index="${idx}" data-name="${item.nama.replace(/"/g, '&quot;')}" data-kode="${item.kode || ''}" data-kota="${item.kota || ''}" data-provinsi="${item.provinsi || ''}" data-kelompok="${item.kelompok || 'PTS'}">
+                            <div class="d-flex justify-content-between align-items-center mb-0.5">
+                                <strong class="text-dark">${item.nama}</strong>
+                                ${kelompokBadge}
+                            </div>
+                            <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
+                                <span><i class="bi bi-geo-alt me-0.5"></i>${item.kota ? item.kota + ', ' : ''}${item.provinsi}</span>
+                                ${item.kode ? `<span class="badge bg-light text-secondary border font-monospace" style="font-size:0.65rem;">Kode: ${item.kode}</span>` : ''}
+                            </div>
+                        </a>
+                    `;
+                });
+                html += '</div>';
+                dropdown.innerHTML = html;
+                dropdown.classList.remove('d-none');
+
+                dropdown.querySelectorAll('.partner-item').forEach(el => {
+                    el.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        selectPartner({
+                            nama: this.getAttribute('data-name'),
+                            kode: this.getAttribute('data-kode'),
+                            kota: this.getAttribute('data-kota'),
+                            provinsi: this.getAttribute('data-provinsi'),
+                            kelompok: this.getAttribute('data-kelompok')
+                        });
+                    });
+                });
+            }
+
+            function selectPartner(pt) {
+                input.value = pt.nama;
+                closeDropdown();
+                if (clearBtn) clearBtn.classList.remove('d-none');
+
+                // Autofill city if field exists in the form
+                if (form && pt.kota) {
+                    const cityInput = form.querySelector('[name="city"]');
+                    if (cityInput && !cityInput.value) {
+                        cityInput.value = pt.kota;
+                    }
+                }
+
+                if (verifiedInfo) {
+                    verifiedInfo.innerHTML = `
+                        <div class="alert alert-success py-1 px-2.5 small mb-0 d-inline-flex align-items-center gap-2 border shadow-sm">
+                            <i class="bi bi-patch-check-fill text-success fs-6"></i>
+                            <div>
+                                <strong>Terverifikasi PDDikti:</strong> 
+                                ${pt.kode ? `Kode: <code class="text-dark fw-bold">${pt.kode}</code> &bull; ` : ''}
+                                ${pt.kota ? `${pt.kota}, ` : ''}${pt.provinsi} &bull; 
+                                Status: <span class="badge bg-success">${pt.kelompok}</span>
+                            </div>
+                        </div>
+                    `;
+                    verifiedInfo.classList.remove('d-none');
+                }
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    isManualMode = !isManualMode;
+                    if (isManualMode) {
+                        closeDropdown();
+                        input.placeholder = 'Ketik bebas nama perguruan tinggi / lembaga...';
+                        this.innerHTML = '<i class="bi bi-search me-1"></i>Kembali ke Pencarian PDDikti';
+                        if (modeBadge) modeBadge.innerHTML = '<i class="bi bi-pencil text-warning me-1"></i>Mode Input Manual Aktif';
+                        if (verifiedInfo) {
+                            verifiedInfo.innerHTML = `
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-pencil-fill text-secondary me-1"></i>Nama diinput manual (Non-Direktori)
+                                </span>
+                            `;
+                            verifiedInfo.classList.remove('d-none');
+                        }
+                    } else {
+                        updateCategoryUI();
+                        if (verifiedInfo) verifiedInfo.classList.add('d-none');
+                        if (input.value.trim().length >= 2) {
+                            fetchUniversities(input.value.trim());
+                        }
+                    }
+                });
+            }
+
+            function fetchUniversities(q) {
+                fetch('/simkerma/api/universities?q=' + encodeURIComponent(q))
+                    .then(res => res.json())
+                    .then(data => {
+                        openDropdown(data, q);
+                    })
+                    .catch(err => {
+                        console.error('Err fetchUniversities:', err);
+                    });
+            }
+
+            input.addEventListener('input', function() {
+                const val = this.value.trim();
+                if (val.length > 0) {
+                    if (clearBtn) clearBtn.classList.remove('d-none');
+                } else {
+                    if (clearBtn) clearBtn.classList.add('d-none');
+                    if (verifiedInfo) verifiedInfo.classList.add('d-none');
+                }
+
+                if (isManualMode || !isPtCategory()) {
+                    closeDropdown();
+                    return;
+                }
+
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    if (val.length >= 2) {
+                        fetchUniversities(val);
+                    } else if (val.length === 0) {
+                        fetchUniversities('');
+                    } else {
+                        closeDropdown();
+                    }
+                }, 220);
+            });
+
+            input.addEventListener('focus', function() {
+                if (!isManualMode && isPtCategory()) {
+                    if (this.value.trim().length >= 2) {
+                        fetchUniversities(this.value.trim());
+                    } else if (this.value.trim().length === 0) {
+                        fetchUniversities('');
+                    }
+                }
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    input.value = '';
+                    input.focus();
+                    clearBtn.classList.add('d-none');
+                    if (verifiedInfo) verifiedInfo.classList.add('d-none');
+                    closeDropdown();
+                    if (!isManualMode && isPtCategory()) {
+                        fetchUniversities('');
+                    }
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                if (!container.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (!dropdown || dropdown.classList.contains('d-none')) return;
+                const items = dropdown.querySelectorAll('.partner-item');
+                if (!items || items.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = (activeIndex + 1) % items.length;
+                    highlightItem(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                    highlightItem(items);
+                } else if (e.key === 'Enter') {
+                    if (activeIndex >= 0 && activeIndex < items.length) {
+                        e.preventDefault();
+                        items[activeIndex].click();
+                    }
+                } else if (e.key === 'Escape') {
+                    closeDropdown();
+                }
+            });
+
+            function highlightItem(items) {
+                items.forEach((item, idx) => {
+                    if (idx === activeIndex) {
+                        item.classList.add('active');
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            // Initial UI check
+            updateCategoryUI();
+        }
+
+        function initAllComboboxes() {
+            document.querySelectorAll('.hybrid-partner-combobox').forEach(initHybridSmartCombobox);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAllComboboxes);
+        } else {
+            initAllComboboxes();
+        }
+
+        // Re-check when modal opens (e.g. createPartnerModal)
+        const partnerModal = document.getElementById('createPartnerModal');
+        if (partnerModal) {
+            partnerModal.addEventListener('shown.bs.modal', function() {
+                initAllComboboxes();
+            });
+        }
+    })();
+    </script>
+    @endpush
 
 @endsection
