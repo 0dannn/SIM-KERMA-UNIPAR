@@ -1072,7 +1072,7 @@
         @endphp
 
         {{-- ===================================================================================== --}}
-        {{-- 1. FORMULIR PENGAJUAN MOU BARU (DEDICATED UNTUK DOKUMEN MOU SAJA)                     --}}
+        {{-- 1. FORMULIR PENGAJUAN DOKUMEN BARU (MoU / MoA / IA DENGAN DOKUMEN INDUK)              --}}
         {{-- ===================================================================================== --}}
         @if ($isCreatingNew)
 
@@ -1080,10 +1080,10 @@
                 <div class="card-header bg-white py-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                     <div>
                         <h5 class="card-title mb-0 fw-bold text-dark">
-                            <i class="bi bi-file-earmark-plus text-primary me-2"></i> Pengajuan MoU (Nota Kesepahaman Baru)
+                            <i class="bi bi-file-earmark-plus text-primary me-2"></i> Pengajuan Dokumen Kerja Sama Baru
                         </h5>
                         <div class="small text-muted">
-                            Pengajuan naskah Nota Kesepahaman (MoU) induk kemitraan institusi diterbitkan dengan status awal <strong>DRAFT</strong> untuk penelaahan internal naskah.
+                            Pengajuan naskah kerja sama kemitraan institusi (<strong>MoU</strong>, <strong>MoA / PKS</strong>, atau <strong>IA</strong>) diterbitkan dengan status awal <strong>DRAFT</strong> untuk penelaahan internal naskah. Naskah turunan (MoA / IA) wajib merujuk pada dokumen induk yang telah terdaftar.
                         </div>
                     </div>
                     <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm fw-semibold">
@@ -1094,13 +1094,52 @@
 
                     <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="form-kerma-submission">
                         @csrf
-                        <input type="hidden" name="doc_type" value="MoU">
-                        <input type="hidden" name="parent_mou" value="-">
 
-                        <!-- 1. JUDUL / TOPIK KERJA SAMA MOU -->
+                        <!-- 0. JENIS DOKUMEN KERJA SAMA & DOKUMEN INDUK -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Judul / Topik Kerja Sama MoU : <span class="text-danger">*</span>
+                                Jenis Dokumen Kerja Sama : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <select name="doc_type" id="inputDocType" class="form-select" required onchange="toggleParentField()">
+                                    <option value="MoU" selected>MoU (Nota Kesepahaman / Tingkat Institusi/Rektorat)</option>
+                                    <option value="MoA / PKS">MoA / PKS (Perjanjian Kerja Sama / Tingkat Fakultas/UPPS)</option>
+                                    <option value="IA">IA (Implementation Arrangement / Tingkat Program Studi/Unit)</option>
+                                </select>
+                                <div class="form-text text-muted">
+                                    Pilih jenis naskah kerja sama yang diajukan. Untuk <strong>MoA / PKS</strong> dan <strong>IA</strong>, sistem mewajibkan pemilihan Dokumen Induk (MoU / MoA payung).
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DOKUMEN INDUK (KONDISIONAL: JIKA MOA / IA) -->
+                        <div class="row mb-3 align-items-center" id="parentDocRow" style="display: none;">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Dokumen Induk Rujukan : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-9">
+                                <select name="parent_mou" id="inputParentMou" class="form-select" onchange="autoFillFromParent()">
+                                    <option value="">-- Pilih Dokumen Induk (MoU / MoA yang telah terdaftar) --</option>
+                                    @foreach ($registeredMous as $rMou)
+                                        <option value="{{ $rMou->doc_number ?: $rMou->doc_id }}" 
+                                                data-partner="{{ $rMou->partner_name }}"
+                                                data-category="{{ $rMou->partner_category }}"
+                                                data-scope="{{ $rMou->scope }}"
+                                                data-unit="{{ $rMou->unit }}">
+                                            [{{ $rMou->doc_type }}] {{ $rMou->doc_number ?: $rMou->doc_id }} &bull; {{ $rMou->partner_name }} ({{ Str::limit($rMou->title, 45) }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i> Wajib untuk MoA/PKS dan IA sesuai tata kelola IKU 6. Data mitra akan otomatis diselaraskan dengan dokumen induk terpilih.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1. JUDUL / TOPIK KERJA SAMA -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark" id="labelDocTitle">
+                                Judul / Topik Kerja Sama : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
                                 <input type="text" name="title" class="form-control" required>
@@ -1114,12 +1153,18 @@
                             </label>
                             <div class="col-md-9">
                                 <select name="unit" class="form-select" required>
+                                    <option>Biro Kerja Sama &amp; Urusan Internasional (BKUI)</option>
                                     <option>Program Studi Teknik Informatika</option>
+                                    <option>Program Studi Sistem Informasi</option>
+                                    <option>Program Studi Sistem Komputer</option>
+                                    <option>Program Studi Bisnis Digital</option>
+                                    <option>Program Studi Kewirausahaan</option>
+                                    <option>Program Studi Hukum Bisnis</option>
                                     <option>Fakultas Ilmu Komputer</option>
                                     <option>Fakultas Ekonomi dan Bisnis</option>
-                                    <option>LPPM Universitas Parna Raya</option>
+                                    <option>LPPM</option>
                                     <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
-                                    <option>Rektorat Universitas Parna Raya</option>
+                                    <option>Rektorat</option>
                                 </select>
                             </div>
                         </div>
@@ -1211,10 +1256,10 @@
                             </div>
                         </div>
 
-                        <!-- 4. UPLOAD DRAFT DOKUMEN MOU (PDF) -->
+                        <!-- 4. UPLOAD DRAFT DOKUMEN (PDF) -->
                         <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Upload Draf Naskah MoU (PDF) : <span class="text-danger">*</span>
+                            <label class="col-md-3 col-form-label fw-bold text-dark" id="labelUploadDraft">
+                                Upload Draf Naskah (PDF) : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
                                 <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
@@ -1293,8 +1338,8 @@
                         <!-- TOMBOL AKSI SIMPAN -->
                         <div class="row pt-2">
                             <div class="col-md-9 offset-md-3">
-                                <button type="submit" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
-                                    <i class="bi bi-save me-1"></i> Simpan Sebagai DRAF MoU
+                                <button type="submit" class="btn btn-primary fw-bold px-4 py-2 shadow-sm" id="btnSubmitSubmission">
+                                    <i class="bi bi-save me-1"></i> Simpan Sebagai DRAF Dokumen
                                 </button>
                                 <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary ms-2 px-3 py-2">Batal</a>
                             </div>
@@ -1304,6 +1349,58 @@
             </div>
 
             <script>
+            function toggleParentField() {
+                const docType = document.getElementById('inputDocType').value;
+                const parentRow = document.getElementById('parentDocRow');
+                const parentSelect = document.getElementById('inputParentMou');
+                const btnSubmit = document.getElementById('btnSubmitSubmission');
+                const labelTitle = document.getElementById('labelDocTitle');
+                const labelDraft = document.getElementById('labelUploadDraft');
+
+                if (docType === 'MoU') {
+                    parentRow.style.display = 'none';
+                    parentSelect.removeAttribute('required');
+                    parentSelect.value = '';
+                    if (btnSubmit) btnSubmit.innerHTML = '<i class="bi bi-save me-1"></i> Simpan Sebagai DRAF MoU';
+                    if (labelTitle) labelTitle.innerHTML = 'Judul / Topik Kerja Sama MoU : <span class="text-danger">*</span>';
+                    if (labelDraft) labelDraft.innerHTML = 'Upload Draf Naskah MoU (PDF) : <span class="text-danger">*</span>';
+                } else {
+                    parentRow.style.display = 'flex';
+                    parentSelect.setAttribute('required', 'required');
+                    if (btnSubmit) btnSubmit.innerHTML = '<i class="bi bi-save me-1"></i> Simpan Sebagai DRAF ' + docType;
+                    if (labelTitle) labelTitle.innerHTML = 'Judul / Topik ' + docType + ' : <span class="text-danger">*</span>';
+                    if (labelDraft) labelDraft.innerHTML = 'Upload Draf Naskah ' + docType + ' (PDF) : <span class="text-danger">*</span>';
+                }
+            }
+
+            function autoFillFromParent() {
+                const parentSelect = document.getElementById('inputParentMou');
+                if (!parentSelect) return;
+                const selectedOpt = parentSelect.options[parentSelect.selectedIndex];
+                if (!selectedOpt || !selectedOpt.value) return;
+
+                const partnerName = selectedOpt.getAttribute('data-partner');
+                const category = selectedOpt.getAttribute('data-category');
+
+                if (partnerName) {
+                    const partnerInput = document.getElementById('partner_name_jalur1');
+                    if (partnerInput && !partnerInput.value) {
+                        partnerInput.value = partnerName;
+                    }
+                }
+                if (category) {
+                    const catSelect = document.getElementById('category_jalur1');
+                    if (catSelect) {
+                        for (let i = 0; i < catSelect.options.length; i++) {
+                            if (catSelect.options[i].value === category) {
+                                catSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             function calculateEndDate() {
                 const startEl = document.getElementById('inputStartDate');
                 const yearsEl = document.getElementById('inputValidityYears');
@@ -1336,6 +1433,7 @@
                 endEl.value = `${yyyy}-${mm}-${dd}`;
             }
             document.addEventListener('DOMContentLoaded', function() {
+                toggleParentField();
                 if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
                     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                     tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -1408,12 +1506,18 @@
                             </label>
                             <div class="col-md-9">
                                 <select name="unit" class="form-select" required>
+                                    <option>Biro Kerja Sama &amp; Urusan Internasional (BKUI)</option>
                                     <option>Program Studi Teknik Informatika</option>
+                                    <option>Program Studi Sistem Informasi</option>
+                                    <option>Program Studi Sistem Komputer</option>
+                                    <option>Program Studi Bisnis Digital</option>
+                                    <option>Program Studi Kewirausahaan</option>
+                                    <option>Program Studi Hukum Bisnis</option>
                                     <option>Fakultas Ilmu Komputer</option>
                                     <option>Fakultas Ekonomi dan Bisnis</option>
-                                    <option>LPPM Universitas Parna Raya</option>
+                                    <option>LPPM</option>
                                     <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
-                                    <option>Rektorat Universitas Parna Raya</option>
+                                    <option>Rektorat</option>
                                 </select>
                             </div>
                         </div>
@@ -1588,11 +1692,16 @@
                                 <select name="unit" class="form-select" required>
                                     <option>Biro Kerja Sama &amp; Urusan Internasional (BKUI)</option>
                                     <option>Program Studi Teknik Informatika</option>
+                                    <option>Program Studi Sistem Informasi</option>
+                                    <option>Program Studi Sistem Komputer</option>
+                                    <option>Program Studi Bisnis Digital</option>
+                                    <option>Program Studi Kewirausahaan</option>
+                                    <option>Program Studi Hukum Bisnis</option>
                                     <option>Fakultas Ilmu Komputer</option>
                                     <option>Fakultas Ekonomi dan Bisnis</option>
-                                    <option>LPPM Universitas Parna Raya</option>
+                                    <option>LPPM</option>
                                     <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
-                                    <option>Rektorat Universitas Parna Raya</option>
+                                    <option>Rektorat</option>
                                 </select>
                             </div>
                             <label class="col-md-2 col-form-label fw-bold text-dark text-md-end">

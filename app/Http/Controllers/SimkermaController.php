@@ -87,9 +87,15 @@ class SimkermaController extends Controller
             }
         }
 
-        // Autocomplete list untuk Dokumen Induk MoU
-        $registeredMous = Document::where('doc_type', 'like', '%MoU%')
-            ->orWhere('doc_number', 'like', '%MoU%')
+        // Autocomplete list untuk Dokumen Induk (MoU / MoA / Naskah Payung Sah)
+        $registeredMous = Document::where(function ($q) {
+                $q->where('doc_type', 'like', '%MoU%')
+                  ->orWhere('doc_type', 'like', '%MoA%')
+                  ->orWhere('doc_number', 'like', '%MoU%')
+                  ->orWhere('doc_number', 'like', '%MoA%');
+            })
+            ->whereNotIn('status', ['CANCELLED'])
+            ->orderBy('id', 'desc')
             ->get();
 
         // Relasi Parent & Child untuk Dokumen yang Sedang Diperiksa
@@ -328,12 +334,20 @@ class SimkermaController extends Controller
      */
     public function storeJalur1(Request $request)
     {
+        $docType = $request->input('doc_type', 'MoU');
+        $rawParentMou = trim((string)$request->input('parent_mou', ''));
+
+        // Validasi: Jika jenis dokumen adalah MoA / PKS atau IA, dokumen induk wajib dipilih
+        if ($docType !== 'MoU' && (empty($rawParentMou) || $rawParentMou === '-')) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Untuk pengajuan dokumen ' . $docType . ', wajib memilih Dokumen Induk (MoU / MoA)!');
+        }
+
         [$newId, $regId] = $this->generateUniqueDocId();
-        $docType = $request->input('doc_type', 'MoA / PKS');
         $typePrefix = ($docType === 'MoU') ? 'MoU' : (($docType === 'IA') ? 'IA' : 'MoA');
         $partnerName = $request->input('partner_name', 'Mitra Baru');
         $partnerDocNumber = $request->input('partner_doc_number');
-        $rawParentMou = trim((string)$request->input('parent_mou', ''));
         $parentMou = ($docType === 'MoU' || empty($rawParentMou)) ? '-' : $rawParentMou;
         $activeRole = session('active_role', 'MASTER');
 
