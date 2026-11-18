@@ -3327,6 +3327,15 @@
                                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $doc->id }}" title="Kelola FSM">
                                                     <i class="bi bi-sliders"></i> FSM
                                                 </button>
+                                                @if ($doc->status === 'DRAFT')
+                                                    <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DRAF:\n\nApakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Draf yang dihapus tidak dapat dipulihkan kembali.')">
+                                                        @csrf
+                                                        <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus Draf">
+                                                            <i class="bi bi-trash"></i> Hapus
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -3707,6 +3716,19 @@
                                                                 @endif
                                                             </div>
                                                         </form>
+
+                                                        @if ($doc->status === 'DRAFT')
+                                                            <div class="mt-3 pt-3 border-top">
+                                                                <form method="POST" action="{{ route('simkerma.delete-draft') }}" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DRAF:\n\nApakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Draf yang dihapus tidak dapat dipulihkan kembali.')">
+                                                                    @csrf
+                                                                    <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100 py-2 d-flex justify-content-between align-items-center shadow-sm">
+                                                                        <span><i class="bi bi-trash3 me-2"></i>Hapus Draf Dokumen Ini</span>
+                                                                        <span class="badge bg-danger text-white" style="font-size: 0.65rem;">DELETE_DRAFT</span>
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 </div>
 
