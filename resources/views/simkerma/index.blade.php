@@ -3392,8 +3392,6 @@
                                                                 <div><strong>Kolaborator:</strong> {{ $doc->collab_unit }}</div>
                                                             @endif
                                                             <div><strong>Dokumen Induk:</strong> {{ $doc->parent_mou ?: '-' }}</div>
-                                                            <div><strong>Format Kertas:</strong> <span class="badge bg-secondary-subtle text-secondary-emphasis border">{{ $doc->paper_size ?: 'A4' }} ({{ ($doc->paper_size ?: 'A4') === 'F4' ? '215 &times; 330 mm' : '210 &times; 297 mm' }})</span></div>
-                                                            <div><strong>Posisi QR Code:</strong> <span class="text-success fw-bold"><i class="bi bi-qr-code me-1"></i>Ujung Kanan Bawah Hal. Akhir</span></div>
                                                         </div>
                                                     </div>
                                                     <div class="col-sm-6">
@@ -3434,9 +3432,6 @@
                                                                             <i class="bi bi-file-earmark-pdf-fill me-1 text-danger"></i>Naskah PDF
                                                                         </a>
                                                                     @endif
-                                                                    <a href="{{ route('simkerma.verify', $doc->reg_id) }}" target="_blank" class="btn btn-outline-success btn-sm py-1 px-2" style="font-size: 0.72rem;">
-                                                                        <i class="bi bi-qr-code me-1 text-success"></i>Cek QR Code
-                                                                    </a>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -3485,21 +3480,10 @@
                                                                     </div>
                                                                     <p class="text-muted mb-2" style="font-size: 0.73rem;">
                                                                         Ketika Anda menekan tombol <strong>Ajukan Naskah ke Meja Pemeriksaan (SUBMIT)</strong>:
-                                                                        <br>&bull; Sistem secara otomatis menyematkan stempel QR Code resmi langsung ke naskah dokumen PDF yang dikirim oleh pengusul pada <strong>bagian ujung kanan bawah halaman terakhir dokumen</strong> (mendukung format kertas <strong>A4</strong> dan <strong>F4 / Folio</strong>) tanpa menimpa atau mengubah isi substansi naskah.
+                                                                        <br>&bull; Sistem secara otomatis menyematkan stempel QR Code resmi langsung ke naskah dokumen PDF yang dikirim oleh pengusul tanpa menimpa atau mengubah isi substansi naskah.
                                                                         <br>&bull; Naskah draf ber-QR Code tersebut langsung siap ditelaah kelayakan hukumnya oleh pimpinan.
                                                                     </p>
-                                                                    <div class="mb-2">
-                                                                        <label class="form-label fw-bold text-dark d-block mb-1" style="font-size: 0.73rem;">
-                                                                            <i class="bi bi-aspect-ratio text-primary me-1"></i> Format Ukuran Kertas Dokumen:
-                                                                        </label>
-                                                                        <select name="paper_size" class="form-select form-select-sm">
-                                                                            <option value="A4" {{ ($doc->paper_size ?? 'A4') === 'A4' ? 'selected' : '' }}>Kertas A4 (210 &times; 297 mm) &mdash; Standar</option>
-                                                                            <option value="F4" {{ ($doc->paper_size ?? 'A4') === 'F4' ? 'selected' : '' }}>Kertas F4 / Folio (215 &times; 330 mm)</option>
-                                                                        </select>
-                                                                        <small class="text-muted d-block mt-1" style="font-size: 0.68rem;">
-                                                                            Penempatan QR Code disesuaikan secara dinamis di pojok kanan bawah halaman terakhir sesuai ukuran kertas yang dipilih.
-                                                                        </small>
-                                                                    </div>
+                                                                    <input type="hidden" name="paper_size" value="{{ $doc->paper_size ?: 'A4' }}">
                                                                     <div>
                                                                         <label class="form-label fw-bold text-dark d-block mb-1" style="font-size: 0.73rem;">
                                                                             <i class="bi bi-file-earmark-pdf text-danger me-1"></i> Unggah Naskah PDF Revisi Pengusul (Opsional):
