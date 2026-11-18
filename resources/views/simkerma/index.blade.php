@@ -1149,7 +1149,7 @@
                         <!-- 2. IDENTITAS PIHAK PERTAMA (UNIPAR) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Unit Pengusul (Pihak I) : <span class="text-danger">*</span>
+                                Unit Pengusul : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
                                 <select name="unit" class="form-select" required>
@@ -1198,7 +1198,7 @@
 
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nama Mitra (Pihak II) : <span class="text-danger">*</span>
+                                Nama Mitra : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
                                 <div class="hybrid-partner-combobox position-relative">
@@ -1236,7 +1236,7 @@
 
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Penandatangan Pihak II (Mitra) :
+                                Penandatangan Pihak II :
                             </label>
                             <div class="col-md-9">
                                 <input type="text" name="second_party_signer" class="form-control">
@@ -1525,7 +1525,7 @@
                         <!-- 4. MITRA (PREFILLED DARI INDUK) -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nama Mitra (Pihak II) : <span class="text-danger">*</span>
+                                Nama Mitra : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-9">
                                 <input type="text" name="partner_name" class="form-control bg-light" value="{{ $prefillPartnerName }}" required>

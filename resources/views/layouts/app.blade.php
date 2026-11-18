@@ -144,6 +144,107 @@
             border-top: 1px solid #e9e9ef !important;
             padding: 14px 18px;
             margin-top: auto;
+            transition: all 0.2s ease;
+        }
+
+        /* ============================================================== */
+        /* PERBAIKAN SIDEBAR KETIKA DI-MINIMIZE (data-sidebar-size="sm")  */
+        /* ============================================================== */
+        body[data-sidebar-size="sm"] .navbar-brand-box {
+            width: 70px !important;
+            padding: 0 !important;
+            text-align: center !important;
+        }
+        body[data-sidebar-size="sm"] .navbar-brand-box .logo span.logo-lg {
+            display: none !important;
+        }
+        body[data-sidebar-size="sm"] .navbar-brand-box .logo span.logo-sm {
+            display: inline-block !important;
+            line-height: 70px !important;
+        }
+        body[data-sidebar-size="sm"] #vertical-menu-btn {
+            margin-left: 0 !important;
+            margin-right: 15px !important;
+        }
+        body[data-sidebar-size="sm"] .vertical-menu {
+            width: 70px !important;
+            position: absolute !important;
+            z-index: 1001 !important;
+        }
+        body[data-sidebar-size="sm"] .vertical-menu #sidebar-menu .menu-title {
+            display: none !important;
+        }
+        body[data-sidebar-size="sm"] #sidebar-menu ul li a {
+            margin: 4px 0 !important;
+            padding: 12px 0 !important;
+            text-align: center !important;
+            justify-content: center !important;
+            border-radius: 0 !important;
+            display: block !important;
+            width: 70px !important;
+        }
+        body[data-sidebar-size="sm"] #sidebar-menu ul li a i {
+            min-width: unset !important;
+            margin: 0 auto !important;
+            font-size: 1.35rem !important;
+            display: block !important;
+            line-height: 1 !important;
+        }
+        body[data-sidebar-size="sm"] #sidebar-menu ul li a span {
+            display: none !important;
+        }
+        /* Hover flyout state for minimized sidebar items */
+        body[data-sidebar-size="sm"] .vertical-menu #sidebar-menu > ul > li:hover > a {
+            position: relative !important;
+            width: 250px !important;
+            background-color: #ffffff !important;
+            color: #5156be !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+            border: 1px solid #e9e9ef !important;
+            border-left: none !important;
+            border-radius: 0 6px 6px 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding: 12px 18px !important;
+            z-index: 1005 !important;
+            text-align: left !important;
+        }
+        body[data-sidebar-size="sm"] .vertical-menu #sidebar-menu > ul > li:hover > a i {
+            margin: 0 12px 0 0 !important;
+            color: #5156be !important;
+            font-size: 1.25rem !important;
+            display: inline-block !important;
+        }
+        body[data-sidebar-size="sm"] .vertical-menu #sidebar-menu > ul > li:hover > a span {
+            display: inline !important;
+            padding-left: 0 !important;
+            white-space: nowrap !important;
+            font-size: 0.84rem !important;
+            font-weight: 600 !important;
+            color: #5156be !important;
+        }
+        /* Active item in minimized state */
+        body[data-sidebar-size="sm"] #sidebar-menu ul li.mm-active > a,
+        body[data-sidebar-size="sm"] #sidebar-menu ul li a.active {
+            background-color: #5156be !important;
+            color: #ffffff !important;
+        }
+        body[data-sidebar-size="sm"] #sidebar-menu ul li.mm-active > a i,
+        body[data-sidebar-size="sm"] #sidebar-menu ul li a.active i {
+            color: #ffffff !important;
+        }
+        body[data-sidebar-size="sm"] .vertical-menu #sidebar-menu > ul > li.mm-active:hover > a {
+            background-color: #5156be !important;
+            color: #ffffff !important;
+        }
+        body[data-sidebar-size="sm"] .vertical-menu #sidebar-menu > ul > li.mm-active:hover > a i,
+        body[data-sidebar-size="sm"] .vertical-menu #sidebar-menu > ul > li.mm-active:hover > a span {
+            color: #ffffff !important;
+        }
+        /* Sembunyikan profil teks di bagian bawah sidebar saat di-minimize agar tidak overflow */
+        body[data-sidebar-size="sm"] .sidebar-bottom-profile {
+            display: none !important;
         }
 
         /* Cegah / Netralkan Segala Efek Tema Gelap (Force Pure Light) */
