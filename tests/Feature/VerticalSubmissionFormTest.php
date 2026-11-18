@@ -349,4 +349,45 @@ class VerticalSubmissionFormTest extends TestCase
         $this->assertEquals(215, round($size['width']));
         $this->assertEquals(330, round($size['height']));
     }
+
+    /**
+     * Test pengajuan draf MoU Jalur 1 saat field masa berlaku (validity) dan tanggal dikosongkan.
+     */
+    public function test_jalur1_submission_with_empty_validity_and_dates(): void
+    {
+        $payload = [
+            'doc_type' => 'MoU',
+            'parent_mou' => '-',
+            'title' => 'KERJA SAMA PELATIHAN & PENEMPATAN KERJA',
+            'unit' => 'Rektorat',
+            'first_party_signer' => 'Frany Manopo',
+            'partner_name' => 'PT.Tradepro Penasihat Berjangka',
+            'category' => 'DUDI / Swasta',
+            'partner_doc_number' => '012/TPB-LT/XI/2026',
+            'scope' => ['Pendidikan', 'Penelitian', 'Pengabdian kepada Masyarakat', 'Pengembangan SDM'],
+            'start_date' => '',
+            'end_date' => '',
+            'validity_years' => '',
+            'validity' => '',
+            'second_party_signer' => '',
+            'pic_first_party' => '',
+            'pic_second_party' => '',
+            'description' => '',
+        ];
+
+        $response = $this->post(route('simkerma.store-jalur1'), $payload);
+        $response->assertStatus(302);
+
+        $doc = Document::where('partner_name', 'PT.Tradepro Penasihat Berjangka')->first();
+        $this->assertNotNull($doc, 'Dokumen harus tersimpan di basis data tanpa error validity cannot be null.');
+        $this->assertEquals('KERJA SAMA PELATIHAN & PENEMPATAN KERJA', $doc->title);
+        $this->assertEquals('MoU', $doc->doc_type);
+        $this->assertEquals('Rektorat', $doc->unit);
+        $this->assertEquals('Frany Manopo', $doc->first_party_signer);
+        $this->assertEquals('DUDI / Swasta', $doc->partner_category);
+        $this->assertNull($doc->validity, 'Masa berlaku harus bernilai null jika dikosongkan pada fase draf.');
+        $this->assertNull($doc->start_date);
+        $this->assertNull($doc->end_date);
+        $this->assertEquals('DRAFT', $doc->status);
+    }
 }

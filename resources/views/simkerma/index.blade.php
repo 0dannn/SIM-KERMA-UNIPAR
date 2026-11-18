@@ -792,7 +792,7 @@
                                                         <div class="text-muted" style="font-size: 0.68rem;">Unit: {{ $doc->unit }}</div>
                                                     </td>
                                                     <td>
-                                                        <div>{{ $doc->validity }}</div>
+                                                        <div>{{ $doc->validity ?: 'Belum Ditetapkan' }}</div>
                                                         @if ($doc->date_signed)
                                                             <small class="text-muted" style="font-size: 0.68rem;">TTD: {{ \Carbon\Carbon::parse($doc->date_signed)->format('d M Y') }}</small>
                                                         @endif
@@ -3413,7 +3413,7 @@
                                                                     -
                                                                 @endif
                                                             </div>
-                                                            <div><strong>Masa Berlaku:</strong> {{ $doc->validity }}</div>
+                                                            <div><strong>Masa Berlaku:</strong> {{ $doc->validity ?: 'Belum Ditetapkan' }}</div>
                                                             <div><strong>Ambang Batas Peringatan:</strong> <span class="text-warning text-dark fw-bold">{{ $doc->warning_threshold ?? 'H-90 Hari' }}</span></div>
                                                             @if (!empty($doc->nominal_value))
                                                                 <div><strong>Nominal / Anggaran:</strong> <span class="badge bg-success-subtle text-success-emphasis border">{{ $doc->nominal_value }}</span></div>
@@ -4403,7 +4403,7 @@
                                             &bull; <strong>No. Mitra:</strong> {{ $wDoc->partner_doc_number }}
                                         @endif
                                         <br>
-                                        <strong>Masa Berlaku:</strong> {{ $wDoc->validity }}
+                                        <strong>Masa Berlaku:</strong> {{ $wDoc->validity ?: 'Belum Ditetapkan' }}
                                         @if ($wDoc->date_signed)
                                             (Tgl Pengesahan: {{ \Carbon\Carbon::parse($wDoc->date_signed)->format('d M Y') }})
                                         @endif
