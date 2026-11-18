@@ -3466,35 +3466,7 @@
                                                         <form method="POST" action="{{ route('simkerma.transition') }}" enctype="multipart/form-data">
                                                             @csrf
                                                             <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-
-                                                            @if ($doc->status === 'DRAFT')
-                                                                <!-- KOTAK PENJELASAN OTOMASI QR CODE & UNGGAH DRAF NASKAH -->
-                                                                <div class="mb-3 p-3 bg-white rounded border border-primary-subtle shadow-sm small">
-                                                                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                                                                        <span class="fw-bold text-primary">
-                                                                            <i class="bi bi-qr-code-scan me-1"></i> Penyiapan Naskah &amp; Otomasi QR Code
-                                                                        </span>
-                                                                        <span class="badge bg-primary-subtle text-primary border border-primary" style="font-size: 0.65rem;">
-                                                                            Otomasi Sistem
-                                                                        </span>
-                                                                    </div>
-                                                                    <p class="text-muted mb-2" style="font-size: 0.73rem;">
-                                                                        Ketika Anda menekan tombol <strong>Ajukan Naskah ke Meja Pemeriksaan (SUBMIT)</strong>:
-                                                                        <br>&bull; Sistem secara otomatis menyematkan stempel QR Code resmi langsung ke naskah dokumen PDF yang dikirim oleh pengusul tanpa menimpa atau mengubah isi substansi naskah.
-                                                                        <br>&bull; Naskah draf ber-QR Code tersebut langsung siap ditelaah kelayakan hukumnya oleh pimpinan.
-                                                                    </p>
-                                                                    <input type="hidden" name="paper_size" value="{{ $doc->paper_size ?: 'A4' }}">
-                                                                    <div>
-                                                                        <label class="form-label fw-bold text-dark d-block mb-1" style="font-size: 0.73rem;">
-                                                                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i> Unggah Naskah PDF Revisi Pengusul (Opsional):
-                                                                        </label>
-                                                                        <input type="file" name="draft_file" class="form-control form-control-sm mb-1" accept=".pdf">
-                                                                        <small class="text-muted d-block" style="font-size: 0.68rem;">
-                                                                            Jika dikosongkan, sistem akan membubuhkan QR Code langsung pada naskah draf PDF yang telah Anda unggah pada saat pembuatan draf.
-                                                                        </small>
-                                                                    </div>
-                                                                </div>
-                                                            @endif
+                                                            <input type="hidden" name="paper_size" value="{{ $doc->paper_size ?: 'A4' }}">
 
                                                             @if ($doc->status === 'REVIEW')
                                                                 <!-- KOTAK PRATINJAU & UNDUH BERKAS NASKAH REVIEW (PDF BER-QR CODE) -->
