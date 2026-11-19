@@ -3228,7 +3228,7 @@
                                     <th class="text-center py-1 px-2" style="font-size: 0.82rem; line-height: 1.2;">Unit Pelaksana</th>
                                     <th class="text-center py-1 px-2" style="font-size: 0.82rem; line-height: 1.2;">Masa Berlaku</th>
                                     <th class="text-center py-1 px-2" style="width: 140px; font-size: 0.82rem; line-height: 1.2;">Status</th>
-                                    <th class="text-center py-1 px-2" style="width: 180px; font-size: 0.82rem; line-height: 1.2;">Action</th>
+                                    <th class="text-center py-1 px-2" style="width: 130px; font-size: 0.82rem; line-height: 1.2;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="documentsTableBody">
@@ -3319,22 +3319,48 @@
                                         </td>
 
                                         <!-- 6. Action -->
-                                        <td class="text-center">
-                                            <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="btn btn-sm btn-info text-white" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i> Detail
+                                        <td class="text-center align-middle">
+                                            <div class="d-inline-flex align-items-center justify-content-center gap-1 flex-nowrap">
+                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" 
+                                                   class="btn btn-sm btn-info text-white p-0 d-inline-flex align-items-center justify-content-center shadow-sm" 
+                                                   style="width: 31px; height: 31px; border-radius: 4px;" 
+                                                   data-bs-toggle="tooltip" 
+                                                   data-bs-placement="top" 
+                                                   title="Lihat Detail Naskah">
+                                                    <i class="bi bi-eye-fill fs-6"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $doc->id }}" title="Kelola FSM">
-                                                    <i class="bi bi-sliders"></i> FSM
+
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-primary p-0 d-inline-flex align-items-center justify-content-center shadow-sm" 
+                                                        style="width: 31px; height: 31px; border-radius: 4px;" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#fsmModal_{{ $doc->id }}" 
+                                                        data-bs-placement="top" 
+                                                        title="Kelola Transisi FSM &amp; Status">
+                                                    <i class="bi bi-gear-fill fs-6"></i>
                                                 </button>
+
                                                 @if ($doc->status === 'DRAFT')
-                                                    <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DRAF:\n\nApakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Draf yang dihapus tidak dapat dipulihkan kembali.')">
+                                                    <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline m-0 p-0" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DRAF:\n\nApakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Draf yang dihapus tidak dapat dipulihkan kembali.')">
                                                         @csrf
                                                         <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus Draf">
-                                                            <i class="bi bi-trash"></i> Hapus
+                                                        <button type="submit" 
+                                                                class="btn btn-sm btn-danger p-0 d-inline-flex align-items-center justify-content-center shadow-sm" 
+                                                                style="width: 31px; height: 31px; border-radius: 4px;" 
+                                                                data-bs-toggle="tooltip" 
+                                                                data-bs-placement="top" 
+                                                                title="Hapus Draf Dokumen">
+                                                            <i class="bi bi-trash-fill fs-6"></i>
                                                         </button>
                                                     </form>
+                                                @else
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-light border p-0 d-inline-flex align-items-center justify-content-center text-muted disabled opacity-50" 
+                                                            style="width: 31px; height: 31px; border-radius: 4px; cursor: not-allowed;" 
+                                                            title="Hanya dapat dihapus pada status DRAFT" 
+                                                            disabled>
+                                                        <i class="bi bi-trash fs-6"></i>
+                                                    </button>
                                                 @endif
                                             </div>
                                         </td>
