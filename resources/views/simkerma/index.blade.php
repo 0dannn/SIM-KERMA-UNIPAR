@@ -3147,7 +3147,7 @@
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
                                                 Kategori / Sektor Mitra : <span class="text-danger">*</span>
                                             </label>
-                                            <select name="category" class="form-select form-select-sm" required>
+                                            <select name="category" id="edit_category_{{ $currentDoc->id }}" class="form-select form-select-sm" required>
                                                 @foreach ($categoryOptions as $cat)
                                                     <option value="{{ $cat }}" {{ ($currentDoc->partner_category === $cat) ? 'selected' : '' }}>{{ $cat }}</option>
                                                 @endforeach
@@ -3156,16 +3156,54 @@
                                                 @endif
                                             </select>
                                         </div>
-                                        <div class="col-md-6">
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-12">
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
                                                 Nama Lembaga Mitra : <span class="text-danger">*</span>
                                             </label>
-                                            <input type="text" name="partner_name" class="form-control form-control-sm" value="{{ $currentDoc->partner_name }}" list="editPartnerDatalist_{{ $currentDoc->id }}" required>
-                                            <datalist id="editPartnerDatalist_{{ $currentDoc->id }}">
-                                                @foreach ($partners as $p)
-                                                    <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
-                                                @endforeach
-                                            </datalist>
+                                            <div class="hybrid-partner-combobox position-relative">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white border-end-0">
+                                                        <i class="partner-input-icon bi bi-mortarboard-fill text-primary fs-5"></i>
+                                                    </span>
+                                                    <input type="text" name="partner_name" id="edit_partner_name_{{ $currentDoc->id }}" class="form-control border-start-0 smart-partner-input" 
+                                                           placeholder="Ketik nama kampus (contoh: Sam Ratulangi, ITB, Parna Raya)..." 
+                                                           value="{{ $currentDoc->partner_name }}"
+                                                           list="editPartnerDatalist_{{ $currentDoc->id }}"
+                                                           autocomplete="off" required>
+                                                    <button class="btn btn-outline-secondary btn-clear-partner {{ empty($currentDoc->partner_name) ? 'd-none' : '' }}" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
+                                                    <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" data-bs-toggle="modal" data-bs-target="#quickAddPartnerModal" title="Tambah Mitra Baru ke Master Data (Menu 02)">
+                                                        <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
+                                                    </button>
+                                                </div>
+                                                <datalist id="editPartnerDatalist_{{ $currentDoc->id }}">
+                                                    @foreach ($partners as $p)
+                                                        <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
+                                                    @endforeach
+                                                </datalist>
+                                                <!-- Floating Dropdown Suggestions -->
+                                                <div class="partner-dropdown-menu shadow-lg bg-white border rounded mt-1 d-none position-absolute w-100" style="z-index: 1060; max-height: 280px; overflow-y: auto;"></div>
+                                                <!-- Verified Info Banner -->
+                                                <div class="partner-verified-info small mt-1.5 {{ empty($currentDoc->partner_name) ? 'd-none' : '' }}">
+                                                    @if (!empty($currentDoc->partner_name))
+                                                        <div class="alert alert-success py-1 px-2.5 small mb-0 d-inline-flex align-items-center gap-2 border shadow-sm" style="font-size: 0.72rem;">
+                                                            <i class="bi bi-patch-check-fill text-success fs-6"></i>
+                                                            <div>
+                                                                <strong>Mitra Terpilih:</strong> {{ $currentDoc->partner_name }}
+                                                                @if (!empty($currentDoc->partner_category))
+                                                                    &bull; {{ $currentDoc->partner_category }}
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <!-- Helper Tools -->
+                                                <div class="d-flex flex-wrap justify-content-between align-items-center mt-1">
+                                                    <small class="partner-mode-desc text-muted"><i class="bi bi-database-check text-success me-1"></i>Direktori Resmi PDDikti Kemendikbudristek (4.650+ PT)</small>
+                                                    <a href="javascript:void(0)" class="small text-decoration-none text-primary btn-toggle-manual"><i class="bi bi-pencil-square me-1"></i>Ketik Manual / Luar Negeri</a>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="row g-2 mb-2">
@@ -5165,7 +5203,10 @@
                 jQuery(modalEl).modal('hide');
             }
             setTimeout(() => {
-                if (!modalEl.classList.contains('show')) {
+                const anyOpen = document.querySelectorAll('.modal.show');
+                if (anyOpen.length > 0) {
+                    document.body.classList.add('modal-open');
+                } else if (!modalEl.classList.contains('show')) {
                     document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
                     document.body.classList.remove('modal-open');
                     document.body.style.removeProperty('padding-right');
@@ -5374,13 +5415,10 @@
             initAllComboboxes();
         }
 
-        // Re-check when modal opens (e.g. createPartnerModal)
-        const partnerModal = document.getElementById('createPartnerModal');
-        if (partnerModal) {
-            partnerModal.addEventListener('shown.bs.modal', function() {
-                initAllComboboxes();
-            });
-        }
+        // Re-check when any modal opens (e.g. createPartnerModal or editInfoModal)
+        document.addEventListener('shown.bs.modal', function() {
+            initAllComboboxes();
+        });
     })();
     </script>
     @endpush
