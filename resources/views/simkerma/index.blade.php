@@ -3081,10 +3081,10 @@
                             </div>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form method="POST" action="{{ route('simkerma.update-document') }}">
+                        <form method="POST" action="{{ route('simkerma.update-document') }}" class="d-flex flex-column" style="max-height: 85vh;">
                             @csrf
                             <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
-                            <div class="modal-body p-3.5 small">
+                            <div class="modal-body p-3.5 small overflow-y-auto" style="max-height: calc(85vh - 120px); -webkit-overflow-scrolling: touch;">
                                 
                                 <!-- 1. JUDUL / TOPIK KERJA SAMA -->
                                 <div class="mb-3">
