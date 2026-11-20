@@ -2227,53 +2227,98 @@
                                     $auditActive = $currentDoc->auditTrails->firstWhere('event', 'ACTIVATE');
                                     $auditExpire = $currentDoc->auditTrails->firstWhere('event', 'EXPIRE');
 
-                                    // Tanggal masing-masing node FSM
-                                    $dateNode1 = $auditDraft ? \Carbon\Carbon::parse($auditDraft->created_at)->format('d M Y') : \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y');
-                                    
-                                    $isNode2Done = in_array($docStatus, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']) || $auditSubmit !== null;
-                                    $dateNode2 = $auditSubmit 
-                                        ? \Carbon\Carbon::parse($auditSubmit->created_at)->format('d M Y') 
-                                        : ($isNode2Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : '-');
+                                    // Cek apakah dokumen merupakan pengajuan lampau (legacy)
+                                    $isLegacyDoc = (bool)(
+                                        $currentDoc->is_legacy 
+                                        || ($currentDoc->track && str_contains($currentDoc->track, 'Lampau'))
+                                        || ($currentDoc->start_date && \Carbon\Carbon::parse($currentDoc->start_date)->year < \Carbon\Carbon::parse($currentDoc->created_at)->year)
+                                    );
 
-                                    $isNode3Done = in_array($docStatus, ['VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']) || $auditVerify !== null;
-                                    $isNode3Active = ($docStatus === 'REVIEW');
-                                    $dateNode3 = $auditVerify 
-                                        ? \Carbon\Carbon::parse($auditVerify->created_at)->format('d M Y') 
-                                        : ($currentDoc->date_approved 
-                                            ? \Carbon\Carbon::parse($currentDoc->date_approved)->subDay()->format('d M Y') 
-                                            : ($isNode3Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : ($isNode3Active ? 'Dalam Telaah' : '-')));
+                                    $legacyBaseDate = $currentDoc->start_date 
+                                        ? \Carbon\Carbon::parse($currentDoc->start_date)->format('d M Y')
+                                        : ($currentDoc->date_signed 
+                                            ? \Carbon\Carbon::parse($currentDoc->date_signed)->format('d M Y')
+                                            : ($currentDoc->date_approved 
+                                                ? \Carbon\Carbon::parse($currentDoc->date_approved)->format('d M Y') 
+                                                : \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y')));
 
-                                    $isNode4Done = in_array($docStatus, ['ACTIVE', 'WARNING', 'EXPIRED']) || $auditActive !== null;
-                                    $isNode4Active = ($docStatus === 'VERIFIED');
-                                    $dateNode4 = $currentDoc->date_approved 
-                                        ? \Carbon\Carbon::parse($currentDoc->date_approved)->format('d M Y') 
-                                        : ($auditActive 
-                                            ? \Carbon\Carbon::parse($auditActive->created_at)->format('d M Y') 
-                                            : ($isNode4Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : ($isNode4Active ? 'Siap Diteken' : '-')));
+                                    // Tanggal masing-masing node alur proses
+                                    if ($isLegacyDoc) {
+                                        // Untuk dokumen lampau, selaraskan tanggal status ke tanggal awal/efektif naskah lampau
+                                        $dateNode1 = $legacyBaseDate;
+                                        
+                                        $isNode2Done = in_array($docStatus, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']) || $auditSubmit !== null;
+                                        $dateNode2 = $isNode2Done ? $legacyBaseDate : '-';
+
+                                        $isNode3Done = in_array($docStatus, ['VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']) || $auditVerify !== null;
+                                        $isNode3Active = ($docStatus === 'REVIEW');
+                                        $dateNode3 = $isNode3Done ? $legacyBaseDate : ($isNode3Active ? 'Dalam Telaah' : '-');
+
+                                        $isNode4Done = in_array($docStatus, ['ACTIVE', 'WARNING', 'EXPIRED']) || $auditActive !== null;
+                                        $isNode4Active = ($docStatus === 'VERIFIED');
+                                        $dateNode4 = $isNode4Done ? $legacyBaseDate : ($isNode4Active ? 'Siap Diteken' : '-');
+
+                                        $isNode5Done = in_array($docStatus, ['ACTIVE', 'WARNING', 'EXPIRED']);
+                                        $dateNode5 = $isNode5Done ? $legacyBaseDate : '-';
+                                    } else {
+                                        $dateNode1 = $auditDraft ? \Carbon\Carbon::parse($auditDraft->created_at)->format('d M Y') : \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y');
+                                        
+                                        $isNode2Done = in_array($docStatus, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']) || $auditSubmit !== null;
+                                        $dateNode2 = $auditSubmit 
+                                            ? \Carbon\Carbon::parse($auditSubmit->created_at)->format('d M Y') 
+                                            : ($isNode2Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : '-');
+
+                                        $isNode3Done = in_array($docStatus, ['VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']) || $auditVerify !== null;
+                                        $isNode3Active = ($docStatus === 'REVIEW');
+                                        $dateNode3 = $auditVerify 
+                                            ? \Carbon\Carbon::parse($auditVerify->created_at)->format('d M Y') 
+                                            : ($currentDoc->date_approved 
+                                                ? \Carbon\Carbon::parse($currentDoc->date_approved)->subDay()->format('d M Y') 
+                                                : ($isNode3Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : ($isNode3Active ? 'Dalam Telaah' : '-')));
+
+                                        $isNode4Done = in_array($docStatus, ['ACTIVE', 'WARNING', 'EXPIRED']) || $auditActive !== null;
+                                        $isNode4Active = ($docStatus === 'VERIFIED');
+                                        $dateNode4 = $currentDoc->date_approved 
+                                            ? \Carbon\Carbon::parse($currentDoc->date_approved)->format('d M Y') 
+                                            : ($auditActive 
+                                                ? \Carbon\Carbon::parse($auditActive->created_at)->format('d M Y') 
+                                                : ($isNode4Done ? \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') : ($isNode4Active ? 'Siap Diteken' : '-')));
+
+                                        $isNode5Done = in_array($docStatus, ['ACTIVE', 'WARNING', 'EXPIRED']);
+                                        $dateNode5 = $isNode5Done 
+                                            ? ($currentDoc->start_date ? \Carbon\Carbon::parse($currentDoc->start_date)->format('d M Y') : ($currentDoc->date_signed ? \Carbon\Carbon::parse($currentDoc->date_signed)->format('d M Y') : ''))
+                                            : '-';
+                                    }
 
                                     $isNode5Active = ($docStatus === 'ACTIVE');
-                                    $isNode5Warning = ($docStatus === 'WARNING');
-                                    $isNode5Done = in_array($docStatus, ['ACTIVE', 'WARNING', 'EXPIRED']);
-                                    $dateNode5 = $isNode5Done 
-                                        ? ($currentDoc->start_date ? \Carbon\Carbon::parse($currentDoc->start_date)->format('d M Y') : ($currentDoc->date_signed ? \Carbon\Carbon::parse($currentDoc->date_signed)->format('d M Y') : ''))
-                                        : '';
 
-                                    $isNode6Active = ($docStatus === 'EXPIRED');
-                                    $dateNode6 = $isNode6Active 
-                                        ? ($currentDoc->end_date ? \Carbon\Carbon::parse($currentDoc->end_date)->format('d M Y') : '')
-                                        : '';
+                                    $isNode6Active = ($docStatus === 'WARNING');
+                                    $isNode6Done = in_array($docStatus, ['WARNING', 'EXPIRED']);
+                                    $dateNode6 = $isNode6Done 
+                                        ? ($currentDoc->end_date ? \Carbon\Carbon::parse($currentDoc->end_date)->subDays(90)->format('d M Y') : 'H-90')
+                                        : '-';
 
-                                    // Lebar garis progres FSM horizontal
+                                    $isNode7Active = ($docStatus === 'EXPIRED');
+                                    $dateNode7 = $isNode7Active 
+                                        ? ($currentDoc->end_date ? \Carbon\Carbon::parse($currentDoc->end_date)->format('d M Y') : ($auditExpire ? \Carbon\Carbon::parse($auditExpire->created_at)->format('d M Y') : ''))
+                                        : '-';
+
+                                    // Lebar garis progres alur horizontal (7 tahapan)
                                     $progressWidth = match($docStatus) {
                                         'DRAFT' => '0%',
-                                        'REVIEW' => '40%',
-                                        'VERIFIED' => '60%',
-                                        'ACTIVE', 'WARNING' => '80%',
+                                        'REVIEW' => '33%',
+                                        'VERIFIED' => '50%',
+                                        'ACTIVE' => '67%',
+                                        'WARNING' => '84%',
                                         'EXPIRED' => '100%',
                                         'CANCELLED' => '0%',
                                         default => '0%'
                                     };
-                                    $progressColor = ($docStatus === 'EXPIRED') ? '#ef4444' : '#22c55e';
+                                    $progressColor = match($docStatus) {
+                                        'EXPIRED' => '#ef4444',
+                                        'WARNING' => '#f59e0b',
+                                        default => '#22c55e'
+                                    };
 
                                     // Konfigurasi Banner Keterangan Status Aktual
                                     $alertConfig = match($docStatus) {
@@ -2339,23 +2384,23 @@
                                 <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
                                     <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
-                                            <i class="bi bi-layers text-primary"></i> Alur Proses (Finite State Machine)
+                                            <i class="bi bi-layers text-primary"></i> Alur Proses
                                         </div>
                                         <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 fw-semibold d-flex align-items-center gap-1" style="font-size: 0.72rem; border-color: #cbd5e1;" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}">
-                                            <i class="bi bi-diagram-3"></i> Lihat Detail FSM
+                                            <i class="bi bi-diagram-3"></i> Lihat Detail Status
                                         </button>
                                     </div>
                                     <div class="card-body py-2 px-3">
-                                        <!-- HORIZONTAL STEPPER PERSIS MOCKUP detail_MoU.png -->
+                                        <!-- HORIZONTAL STEPPER 7 TAHAPAN -->
                                         <div class="stepper-wrap position-relative py-1 px-2 mb-2">
                                             <!-- Connecting line background & active line -->
-                                            <div class="position-absolute" style="top: 15px; left: 45px; right: 45px; height: 3px; background-color: #e2e8f0; z-index: 1;">
+                                            <div class="position-absolute" style="top: 15px; left: 35px; right: 35px; height: 3px; background-color: #e2e8f0; z-index: 1;">
                                                 <div style="width: {{ $progressWidth }}; height: 100%; background-color: {{ $progressColor }}; transition: width 0.3s ease;"></div>
                                             </div>
 
                                             <div class="d-flex justify-content-between position-relative" style="z-index: 2;">
                                                 <!-- Node 1: Draft -->
-                                                <div class="text-center" style="width: 75px;">
+                                                <div class="text-center" style="width: 70px;">
                                                     @if ($docStatus === 'CANCELLED')
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #ef4444;">
                                                             <i class="bi bi-x-lg"></i>
@@ -2371,7 +2416,7 @@
                                                 </div>
 
                                                 <!-- Node 2: Verifikasi Unit -->
-                                                <div class="text-center" style="width: 85px;">
+                                                <div class="text-center" style="width: 80px;">
                                                     @if ($isNode2Done)
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
                                                             <i class="bi bi-check"></i>
@@ -2388,7 +2433,7 @@
                                                 </div>
 
                                                 <!-- Node 3: Review LPPM -->
-                                                <div class="text-center" style="width: 80px;">
+                                                <div class="text-center" style="width: 75px;">
                                                     @if ($isNode3Done)
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
                                                             <i class="bi bi-check"></i>
@@ -2411,7 +2456,7 @@
                                                 </div>
 
                                                 <!-- Node 4: Persetujuan Pimpinan -->
-                                                <div class="text-center" style="width: 100px;">
+                                                <div class="text-center" style="width: 95px;">
                                                     @if ($isNode4Done)
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
                                                             <i class="bi bi-check"></i>
@@ -2434,54 +2479,75 @@
                                                 </div>
 
                                                 <!-- Node 5: Active -->
-                                                <div class="text-center" style="width: 75px;">
+                                                <div class="text-center" style="width: 70px;">
                                                     @if ($isNode5Active)
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e; border: 2px solid #bbf7d0; box-shadow: 0 0 0 3px #dcfce7;">
-                                                            <i class="bi bi-calendar-check"></i>
+                                                            <i class="bi bi-check"></i>
                                                         </div>
                                                         <div class="fw-bold text-success mt-1" style="font-size: 0.72rem;">Active</div>
-                                                        @if ($dateNode5)
+                                                        @if ($dateNode5 && $dateNode5 !== '-')
                                                             <div class="text-success fw-medium" style="font-size: 0.65rem;">{{ $dateNode5 }}</div>
-                                                        @endif
-                                                    @elseif ($isNode5Warning)
-                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #f59e0b; border: 2px solid #fde68a; box-shadow: 0 0 0 3px #fef3c7;">
-                                                            <i class="bi bi-bell-fill"></i>
-                                                        </div>
-                                                        <div class="fw-bold text-warning mt-1" style="font-size: 0.72rem;">Warning</div>
-                                                        @if ($dateNode5)
-                                                            <div class="text-warning fw-medium" style="font-size: 0.65rem;">{{ $dateNode5 }}</div>
                                                         @endif
                                                     @elseif ($isNode5Done)
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #22c55e;">
                                                             <i class="bi bi-check"></i>
                                                         </div>
                                                         <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Active</div>
-                                                        @if ($dateNode5)
+                                                        @if ($dateNode5 && $dateNode5 !== '-')
                                                             <div class="text-muted" style="font-size: 0.65rem;">{{ $dateNode5 }}</div>
                                                         @endif
                                                     @else
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
-                                                            <i class="bi bi-calendar"></i>
+                                                            <i class="bi bi-circle"></i>
                                                         </div>
                                                         <div class="text-muted mt-1" style="font-size: 0.72rem;">Active</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">-</div>
                                                     @endif
                                                 </div>
 
-                                                <!-- Node 6: Selesai -->
-                                                <div class="text-center" style="width: 75px;">
+                                                <!-- Node 6: Peringatan -->
+                                                <div class="text-center" style="width: 70px;">
                                                     @if ($isNode6Active)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #f59e0b; border: 2px solid #fde68a; box-shadow: 0 0 0 3px #fef3c7;">
+                                                            <i class="bi bi-bell-fill"></i>
+                                                        </div>
+                                                        <div class="fw-bold text-warning mt-1" style="font-size: 0.72rem;">Peringatan</div>
+                                                        @if ($dateNode6 && $dateNode6 !== '-')
+                                                            <div class="text-warning fw-medium" style="font-size: 0.65rem;">{{ $dateNode6 }}</div>
+                                                        @endif
+                                                    @elseif ($isNode6Done)
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #f59e0b;">
+                                                            <i class="bi bi-bell"></i>
+                                                        </div>
+                                                        <div class="fw-semibold text-dark mt-1" style="font-size: 0.72rem;">Peringatan</div>
+                                                        @if ($dateNode6 && $dateNode6 !== '-')
+                                                            <div class="text-muted" style="font-size: 0.65rem;">{{ $dateNode6 }}</div>
+                                                        @endif
+                                                    @else
+                                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
+                                                            <i class="bi bi-bell"></i>
+                                                        </div>
+                                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">Peringatan</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">-</div>
+                                                    @endif
+                                                </div>
+
+                                                <!-- Node 7: Selesai -->
+                                                <div class="text-center" style="width: 70px;">
+                                                    @if ($isNode7Active)
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto text-white shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; background-color: #ef4444; border: 2px solid #fecaca; box-shadow: 0 0 0 3px #fee2e2;">
                                                             <i class="bi bi-clock-history"></i>
                                                         </div>
                                                         <div class="fw-bold text-danger mt-1" style="font-size: 0.72rem;">Selesai</div>
-                                                        @if ($dateNode6)
-                                                            <div class="text-danger fw-medium" style="font-size: 0.65rem;">{{ $dateNode6 }}</div>
+                                                        @if ($dateNode7 && $dateNode7 !== '-')
+                                                            <div class="text-danger fw-medium" style="font-size: 0.65rem;">{{ $dateNode7 }}</div>
                                                         @endif
                                                     @else
                                                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto bg-white border shadow-2xs" style="width: 24px; height: 24px; font-size: 0.7rem; border-color: #cbd5e1 !important; color: #94a3b8 !important;">
                                                             <i class="bi bi-circle"></i>
                                                         </div>
                                                         <div class="text-muted mt-1" style="font-size: 0.72rem;">Selesai</div>
+                                                        <div class="text-muted" style="font-size: 0.65rem;">-</div>
                                                     @endif
                                                 </div>
                                             </div>
