@@ -1174,7 +1174,20 @@
                                 Penandatangan Pihak I :
                             </label>
                             <div class="col-md-9">
-                                <input type="text" name="first_party_signer" class="form-control">
+                                <input type="text" name="first_party_signer" class="form-control" placeholder="Nama lengkap & gelar penandatangan dari Pihak 1 (UNIPAR)">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Nomor Naskah Pihak 1 :
+                                <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
+                            </label>
+                            <div class="col-md-9">
+                                <input type="text" name="doc_number" class="form-control font-monospace" placeholder="Dapat dikosongkan untuk penomoran otomatis UNIPAR">
+                                <div class="form-text text-muted">
+                                    Nomor naskah resmi UNIPAR (Pihak 1). Jika dikosongkan, nomor akan dibuat otomatis oleh sistem.
+                                </div>
                             </div>
                         </div>
 
@@ -1239,19 +1252,19 @@
                                 Penandatangan Pihak II :
                             </label>
                             <div class="col-md-9">
-                                <input type="text" name="second_party_signer" class="form-control">
+                                <input type="text" name="second_party_signer" class="form-control" placeholder="Nama lengkap & gelar penandatangan dari Pihak 2 (Mitra)">
                             </div>
                         </div>
 
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nomor Naskah Mitra :
+                                Nomor Naskah Pihak 2 :
                                 <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
                             </label>
                             <div class="col-md-9">
-                                <input type="text" name="partner_doc_number" class="form-control">
+                                <input type="text" name="partner_doc_number" class="form-control font-monospace" placeholder="Nomor naskah resmi pihak kedua / mitra jika sudah ada">
                                 <div class="form-text text-muted">
-                                    Opsional pada fase inisiasi DRAFT/SUBMIT. Wajib dilengkapi saat penandatanganan fisik naskah (ACTIVE).
+                                    Nomor naskah resmi dari pihak mitra (Pihak 2). Opsional pada fase inisiasi DRAFT/SUBMIT.
                                 </div>
                             </div>
                         </div>

@@ -347,7 +347,8 @@ class SimkermaController extends Controller
         [$newId, $regId] = $this->generateUniqueDocId();
         $typePrefix = ($docType === 'MoU') ? 'MoU' : (($docType === 'IA') ? 'IA' : 'MoA');
         $partnerName = $request->input('partner_name', 'Mitra Baru');
-        $partnerDocNumber = $request->input('partner_doc_number');
+        $inputDocNumber = trim((string)$request->input('doc_number', ''));
+        $partnerDocNumber = trim((string)$request->input('partner_doc_number', ''));
         $parentMou = ($docType === 'MoU' || empty($rawParentMou)) ? '-' : $rawParentMou;
         $activeRole = session('active_role', 'MASTER');
 
@@ -409,14 +410,18 @@ class SimkermaController extends Controller
 
         $doc = DB::transaction(function () use (
             $request, $newId, $regId, $typePrefix, $docType, $partnerName,
-            $partnerDocNumber, $parentMou, $activeRole, $title,
+            $inputDocNumber, $partnerDocNumber, $parentMou, $activeRole, $title,
             $firstPartySigner, $secondPartySigner, $picFirstParty,
             $picSecondParty, $startDate, $endDate, $nominalValue,
             $description, $validity, $scope, $paperSize, $warningThreshold
         ) {
-            do {
-                $docNumber = sprintf('%03d/UNIPAR/%s/X/2026', rand(360, 499), $typePrefix);
-            } while (Document::where('doc_number', $docNumber)->exists());
+            if (!empty($inputDocNumber)) {
+                $docNumber = $inputDocNumber;
+            } else {
+                do {
+                    $docNumber = sprintf('%03d/UNIPAR/%s/X/2026', rand(360, 499), $typePrefix);
+                } while (Document::where('doc_number', $docNumber)->exists());
+            }
 
             $document = Document::create([
                 'doc_id' => $newId,
