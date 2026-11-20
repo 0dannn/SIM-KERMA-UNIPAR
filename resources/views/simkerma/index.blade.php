@@ -2576,35 +2576,38 @@
                                             <table class="table table-hover align-middle mb-0" style="font-size: 0.76rem;">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th class="ps-3 py-1 text-muted fw-semibold" style="width: 40px;">No.</th>
-                                                        <th class="py-1 text-muted fw-semibold">Nomor Dokumen</th>
-                                                        <th class="py-1 text-muted fw-semibold">Jenis</th>
-                                                        <th class="py-1 text-muted fw-semibold">Unit Pelaksana</th>
-                                                        <th class="py-1 text-muted fw-semibold">Status</th>
-                                                        <th class="pe-3 py-1 text-end text-muted fw-semibold" style="width: 80px;">Aksi</th>
+                                                        <th class="py-1 text-center text-muted fw-semibold" style="width: 45px;">No.</th>
+                                                        <th class="py-1 text-center text-muted fw-semibold">Judul dan Nomor Dokumen</th>
+                                                        <th class="py-1 text-center text-muted fw-semibold" style="width: 100px;">Jenis</th>
+                                                        <th class="py-1 text-center text-muted fw-semibold">Unit Pelaksana</th>
+                                                        <th class="py-1 text-center text-muted fw-semibold" style="width: 120px;">Status</th>
+                                                        <th class="pe-3 py-1 text-center text-muted fw-semibold" style="width: 80px;">Aksi</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     @forelse ($childDocs as $cIdx => $cDoc)
                                                         <tr>
-                                                            <td class="ps-3 py-1 text-muted">{{ $cIdx + 1 }}</td>
-                                                            <td class="py-1 fw-bold text-dark">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</td>
+                                                            <td class="py-1 text-center text-muted">{{ $cIdx + 1 }}</td>
                                                             <td class="py-1">
+                                                                <div class="fw-bold text-dark">{{ $cDoc->title ?: 'Dokumen Turunan' }}</div>
+                                                                <small class="text-muted font-monospace">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</small>
+                                                            </td>
+                                                            <td class="py-1 text-center">
                                                                 @if (stripos($cDoc->doc_type, 'MoA') !== false)
                                                                     <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;">MoA / PKS</span>
                                                                 @else
                                                                     <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;">IA</span>
                                                                 @endif
                                                             </td>
-                                                            <td class="py-1 text-secondary">{{ $cDoc->unit }}</td>
-                                                            <td class="py-1">
+                                                            <td class="py-1 text-center text-secondary">{{ $cDoc->unit }}</td>
+                                                            <td class="py-1 text-center">
                                                                 @if ($cDoc->status === 'ACTIVE')
                                                                     <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;"><i class="bi bi-check me-0.5"></i> ACTIVE</span>
                                                                 @else
                                                                     <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;"><i class="bi bi-clock me-0.5"></i> {{ $cDoc->status }}</span>
                                                                 @endif
                                                             </td>
-                                                            <td class="pe-3 py-1 text-end">
+                                                            <td class="pe-3 py-1 text-center">
                                                                 <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat Detail">
                                                                     <i class="bi bi-eye"></i>
                                                                 </a>
@@ -2851,35 +2854,38 @@
                                     <table class="table table-bordered table-hover align-middle mb-0" style="font-size: 0.76rem;">
                                         <thead class="table-light">
                                             <tr>
-                                                <th class="py-1">Jenis</th>
-                                                <th class="py-1">Nomor Dokumen</th>
-                                                <th class="py-1">Judul Naskah</th>
-                                                <th class="py-1">Unit Pelaksana</th>
-                                                <th class="py-1">Mitra</th>
-                                                <th class="py-1">Status FSM</th>
-                                                <th class="py-1 text-end">Aksi</th>
+                                                <th class="py-1 text-center text-muted fw-semibold" style="width: 45px;">No.</th>
+                                                <th class="py-1 text-center text-muted fw-semibold" style="width: 100px;">Jenis</th>
+                                                <th class="py-1 text-center text-muted fw-semibold">Judul dan Nomor Dokumen</th>
+                                                <th class="py-1 text-center text-muted fw-semibold">Unit Pelaksana</th>
+                                                <th class="py-1 text-center text-muted fw-semibold">Mitra</th>
+                                                <th class="py-1 text-center text-muted fw-semibold" style="width: 120px;">Status</th>
+                                                <th class="py-1 text-center text-muted fw-semibold" style="width: 80px;">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($childDocs as $cDoc)
+                                            @foreach ($childDocs as $cIdx => $cDoc)
                                                 <tr>
-                                                    <td class="py-1">
+                                                    <td class="py-1 text-center text-muted">{{ $cIdx + 1 }}</td>
+                                                    <td class="py-1 text-center">
                                                         @if (stripos($cDoc->doc_type, 'MoA') !== false)
                                                             <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;">MoA / PKS</span>
                                                         @else
                                                             <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;">IA</span>
                                                         @endif
                                                     </td>
-                                                    <td class="py-1 fw-bold text-dark">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</td>
-                                                    <td class="py-1 text-truncate" style="max-width: 250px;">{{ $cDoc->title }}</td>
-                                                    <td class="py-1 text-secondary">{{ $cDoc->unit }}</td>
-                                                    <td class="py-1 text-dark">{{ $cDoc->partner_name }}</td>
                                                     <td class="py-1">
+                                                        <div class="fw-bold text-dark">{{ $cDoc->title ?: 'Dokumen Turunan' }}</div>
+                                                        <small class="text-muted font-monospace">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</small>
+                                                    </td>
+                                                    <td class="py-1 text-center text-secondary">{{ $cDoc->unit }}</td>
+                                                    <td class="py-1 text-center text-dark">{{ $cDoc->partner_name }}</td>
+                                                    <td class="py-1 text-center">
                                                         <span class="badge {{ $stepperList[$cDoc->status][1] ?? 'bg-secondary' }} px-2 py-0.5" style="font-size: 0.7rem;">
                                                             {{ $cDoc->status }}
                                                         </span>
                                                     </td>
-                                                    <td class="py-1 text-end">
+                                                    <td class="py-1 text-center">
                                                         <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0.5 px-2" style="font-size: 0.72rem;">
                                                             Detail
                                                         </a>
