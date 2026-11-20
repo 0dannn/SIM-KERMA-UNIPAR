@@ -1180,18 +1180,36 @@ class SimkermaController extends Controller
         $docId = $request->input('doc_id');
         $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
 
+        $startDate = $request->input('start_date') ?: $document->start_date;
+        $endDate = $request->input('end_date') ?: $document->end_date;
+        $validityYears = $request->input('validity_years');
+        $validity = $request->input('validity', $document->validity);
+
+        if (!empty($validityYears)) {
+            $validity = ((int)$validityYears) . ' Tahun';
+            if ($startDate && empty($request->input('end_date'))) {
+                try {
+                    $endDate = \Carbon\Carbon::parse($startDate)->addYears((int)$validityYears)->format('Y-m-d');
+                } catch (\Exception $e) {}
+            }
+        }
+
+        $category = $request->input('category') ?: $request->input('partner_category', $document->partner_category);
+
         $updateData = [
             'title' => $request->input('title', $document->title),
             'unit' => $request->input('unit', $document->unit),
             'first_party_signer' => $request->input('first_party_signer', $document->first_party_signer),
             'partner_name' => $request->input('partner_name', $document->partner_name),
-            'partner_category' => $request->input('partner_category', $document->partner_category),
+            'partner_category' => $category,
             'second_party_signer' => $request->input('second_party_signer', $document->second_party_signer),
+            'pic_first_party' => $request->input('pic_first_party', $document->pic_first_party),
+            'pic_second_party' => $request->input('pic_second_party', $document->pic_second_party),
             'scope' => $request->input('scope', $document->scope),
             'description' => $request->input('description', $document->description),
-            'start_date' => $request->input('start_date', $document->start_date),
-            'end_date' => $request->input('end_date', $document->end_date),
-            'validity' => $request->input('validity', $document->validity),
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'validity' => $validity,
             'warning_threshold' => $request->input('warning_threshold', $document->warning_threshold),
         ];
 
@@ -1205,6 +1223,14 @@ class SimkermaController extends Controller
         }
 
         $document->update($updateData);
+
+        // Sinkronisasi nama/kategori mitra jika diubah
+        if ($request->filled('partner_name')) {
+            Partner::updateOrCreate(
+                ['name' => $request->input('partner_name')],
+                ['category' => $category]
+            );
+        }
 
         $activeRole = session('active_role', 'ADMIN');
         AuditTrail::create([

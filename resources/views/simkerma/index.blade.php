@@ -3032,52 +3032,211 @@
             </div>
 
             <!-- ===================================================================================== -->
-            <!-- MODAL EDIT INFORMASI UMUM DOKUMEN                                                     -->
+            <!-- MODAL EDIT INFORMASI UMUM DOKUMEN (SESUAI FIELD PENGAJUAN AWAL)                      -->
             <!-- ===================================================================================== -->
+            @php
+                $unitOptions = [
+                    'Biro Kerja Sama & Urusan Internasional (BKUI)',
+                    'Program Studi Teknik Informatika',
+                    'Program Studi Sistem Informasi',
+                    'Program Studi Sistem Komputer',
+                    'Program Studi Bisnis Digital',
+                    'Program Studi Kewirausahaan',
+                    'Program Studi Hukum Bisnis',
+                    'Fakultas Ilmu Komputer',
+                    'Fakultas Ekonomi dan Bisnis',
+                    'LPPM',
+                    'Biro Administrasi Akademik & Kemahasiswaan',
+                    'Rektorat'
+                ];
+
+                $categoryOptions = [
+                    'Perguruan Tinggi',
+                    'Perguruan Tinggi Dalam Negeri',
+                    'Perguruan Tinggi Luar Negeri',
+                    'DUDI / Swasta',
+                    'BUMN',
+                    'BUMN / BUMD',
+                    'Instansi Pemerintah',
+                    'Lembaga Keagamaan / Komunitas',
+                    'Organisasi Non-Profit / NGO',
+                    'Kesehatan',
+                    'Lainnya'
+                ];
+
+                preg_match('/(\d+)/', (string)($currentDoc->validity ?? ''), $vMatch);
+                $currentValYears = isset($vMatch[1]) ? (int)$vMatch[1] : '';
+            @endphp
             <div class="modal fade" id="editInfoModal_{{ $currentDoc->id }}" tabindex="-1" aria-labelledby="editInfoModalLabel_{{ $currentDoc->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
                     <div class="modal-content border-0 shadow">
-                        <div class="modal-header py-2 px-3 bg-light border-bottom">
-                            <h6 class="modal-title fw-bold text-dark" id="editInfoModalLabel_{{ $currentDoc->id }}"><i class="bi bi-pencil-square text-primary me-1.5"></i> Edit Informasi Kerja Sama</h6>
+                        <div class="modal-header py-2.5 px-3 bg-light border-bottom">
+                            <div>
+                                <h6 class="modal-title fw-bold text-dark mb-0" id="editInfoModalLabel_{{ $currentDoc->id }}">
+                                    <i class="bi bi-pencil-square text-primary me-1.5"></i> Edit Informasi Kerja Sama
+                                </h6>
+                                <div class="text-muted small" style="font-size: 0.72rem;">
+                                    Sesuaikan data dokumen {{ $currentDoc->doc_number && $currentDoc->doc_number !== '-' ? $currentDoc->doc_number : $currentDoc->doc_id }} agar tetap sinkron dengan draf pengajuan.
+                                </div>
+                            </div>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <form method="POST" action="{{ route('simkerma.update-document') }}">
                             @csrf
                             <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
-                            <div class="modal-body p-3 small">
+                            <div class="modal-body p-3.5 small">
+                                
+                                <!-- 1. JUDUL / TOPIK KERJA SAMA -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.8rem;">
+                                        Judul / Topik Kerja Sama : <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" name="title" class="form-control" value="{{ $currentDoc->title }}" required>
+                                </div>
+
+                                <!-- 2. IDENTITAS PIHAK PERTAMA (UNIPAR) -->
+                                <div class="p-3 bg-light rounded-3 border mb-3">
+                                    <div class="fw-bold text-dark mb-2 pb-1 border-bottom d-flex align-items-center gap-1.5" style="font-size: 0.82rem;">
+                                        <i class="bi bi-building text-primary"></i> IDENTITAS PIHAK PERTAMA (UNIPAR)
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Unit Pengusul : <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="unit" class="form-select form-select-sm" required>
+                                                @foreach ($unitOptions as $u)
+                                                    <option value="{{ $u }}" {{ $currentDoc->unit === $u ? 'selected' : '' }}>{{ $u }}</option>
+                                                @endforeach
+                                                @if (!in_array($currentDoc->unit, $unitOptions) && !empty($currentDoc->unit))
+                                                    <option value="{{ $currentDoc->unit }}" selected>{{ $currentDoc->unit }}</option>
+                                                @endif
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Penandatangan Pihak I :
+                                            </label>
+                                            <input type="text" name="first_party_signer" class="form-control form-control-sm" value="{{ $currentDoc->first_party_signer }}" placeholder="Nama lengkap & gelar penandatangan Pihak 1 (UNIPAR)">
+                                        </div>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Nomor Naskah Pihak 1 : <span class="badge bg-white text-secondary border fw-normal">Opsional</span>
+                                            </label>
+                                            <input type="text" name="doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->doc_number) && $currentDoc->doc_number !== '-') ? $currentDoc->doc_number : '' }}" placeholder="-">
+                                            <div class="text-muted" style="font-size: 0.68rem;">Kosongkan jika belum ada (dicatat sebagai '-')</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                PIC Pihak Pertama (UNIPAR) :
+                                            </label>
+                                            <input type="text" name="pic_first_party" class="form-control form-control-sm" value="{{ $currentDoc->pic_first_party }}" placeholder="Nama narahubung Pihak 1">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. IDENTITAS PIHAK KEDUA (MITRA) -->
+                                <div class="p-3 bg-light rounded-3 border mb-3">
+                                    <div class="fw-bold text-dark mb-2 pb-1 border-bottom d-flex align-items-center gap-1.5" style="font-size: 0.82rem;">
+                                        <i class="bi bi-briefcase text-primary"></i> IDENTITAS PIHAK KEDUA (MITRA)
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Kategori / Sektor Mitra : <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="category" class="form-select form-select-sm" required>
+                                                @foreach ($categoryOptions as $cat)
+                                                    <option value="{{ $cat }}" {{ ($currentDoc->partner_category === $cat) ? 'selected' : '' }}>{{ $cat }}</option>
+                                                @endforeach
+                                                @if (!in_array($currentDoc->partner_category, $categoryOptions) && !empty($currentDoc->partner_category))
+                                                    <option value="{{ $currentDoc->partner_category }}" selected>{{ $currentDoc->partner_category }}</option>
+                                                @endif
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Nama Lembaga Mitra : <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" name="partner_name" class="form-control form-control-sm" value="{{ $currentDoc->partner_name }}" list="editPartnerDatalist_{{ $currentDoc->id }}" required>
+                                            <datalist id="editPartnerDatalist_{{ $currentDoc->id }}">
+                                                @foreach ($partners as $p)
+                                                    <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
+                                                @endforeach
+                                            </datalist>
+                                        </div>
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Penandatangan Pihak II :
+                                            </label>
+                                            <input type="text" name="second_party_signer" class="form-control form-control-sm" value="{{ $currentDoc->second_party_signer }}" placeholder="Nama lengkap & gelar penandatangan Pihak 2 (Mitra)">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Nomor Naskah Pihak 2 : <span class="badge bg-white text-secondary border fw-normal">Opsional</span>
+                                            </label>
+                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '' }}" placeholder="-">
+                                            <div class="text-muted" style="font-size: 0.68rem;">Kosongkan jika belum ada (dicatat sebagai '-')</div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                PIC Pihak Kedua (Mitra) :
+                                            </label>
+                                            <input type="text" name="pic_second_party" class="form-control form-control-sm" value="{{ $currentDoc->pic_second_party }}" placeholder="Nama narahubung Pihak 2">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. PERIODE BERLAKU -->
+                                <div class="p-3 bg-light rounded-3 border mb-3">
+                                    <div class="fw-bold text-dark mb-2 pb-1 border-bottom d-flex align-items-center gap-1.5" style="font-size: 0.82rem;">
+                                        <i class="bi bi-calendar3 text-primary"></i> PERIODE BERLAKU DOKUMEN
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Tanggal Mulai Berlaku :
+                                            </label>
+                                            <input type="date" name="start_date" id="editStartDate_{{ $currentDoc->id }}" class="form-control form-control-sm" value="{{ $currentDoc->start_date }}" onchange="calcEditEndDate_{{ $currentDoc->id }}()">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Masa Berlaku (Tahun) :
+                                            </label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" min="1" max="10" name="validity_years" id="editValidityYears_{{ $currentDoc->id }}" class="form-control" value="{{ $currentValYears }}" oninput="calcEditEndDate_{{ $currentDoc->id }}()">
+                                                <span class="input-group-text bg-white text-muted">Tahun</span>
+                                            </div>
+                                            <input type="hidden" name="validity" id="editValidity_{{ $currentDoc->id }}" value="{{ $currentDoc->validity }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Tanggal Berakhir :
+                                            </label>
+                                            <input type="date" name="end_date" id="editEndDate_{{ $currentDoc->id }}" class="form-control form-control-sm bg-white" value="{{ $currentDoc->end_date }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. RUANG LINGKUP & DESKRIPSI -->
                                 <div class="mb-2">
-                                    <label class="form-label text-muted fw-semibold mb-0.5">Judul / Ruang Lingkup</label>
-                                    <input type="text" name="title" class="form-control form-control-sm" value="{{ $currentDoc->title }}" required>
+                                    <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.8rem;">
+                                        Ruang Lingkup Kegiatan :
+                                    </label>
+                                    <textarea name="scope" class="form-control form-control-sm" rows="2" placeholder="Bidang/kegiatan Tridharma...">{{ $currentDoc->scope }}</textarea>
                                 </div>
-                                <div class="row g-2 mb-2">
-                                    <div class="col-6">
-                                        <label class="form-label text-muted fw-semibold mb-0.5">Unit Pengusul</label>
-                                        <input type="text" name="unit" class="form-control form-control-sm" value="{{ $currentDoc->unit }}" required>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label text-muted fw-semibold mb-0.5">Mitra Kerja Sama</label>
-                                        <input type="text" name="partner_name" class="form-control form-control-sm" value="{{ $currentDoc->partner_name }}" required>
-                                    </div>
-                                </div>
-                                <div class="row g-2 mb-2">
-                                    <div class="col-6">
-                                        <label class="form-label text-muted fw-semibold mb-0.5">Nomor Naskah Pihak 1</label>
-                                        <input type="text" name="doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->doc_number) && $currentDoc->doc_number !== '-') ? $currentDoc->doc_number : '' }}" placeholder="-">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label text-muted fw-semibold mb-0.5">Nomor Naskah Pihak 2</label>
-                                        <input type="text" name="partner_doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '' }}" placeholder="-">
-                                    </div>
-                                </div>
-                                <div class="row g-2 mb-2">
-                                    <div class="col-6">
-                                        <label class="form-label text-muted fw-semibold mb-0.5">Tanggal Mulai</label>
-                                        <input type="date" name="start_date" class="form-control form-control-sm" value="{{ $currentDoc->start_date }}">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label text-muted fw-semibold mb-0.5">Tanggal Berakhir</label>
-                                        <input type="date" name="end_date" class="form-control form-control-sm" value="{{ $currentDoc->end_date }}">
-                                    </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.8rem;">
+                                        Deskripsi / Urgensi Kerja Sama :
+                                    </label>
+                                    <textarea name="description" class="form-control form-control-sm" rows="2" placeholder="Catatan atau deskripsi kerja sama...">{{ $currentDoc->description }}</textarea>
                                 </div>
                             </div>
                             <div class="modal-footer py-2 px-3 bg-light border-top">
@@ -3088,6 +3247,38 @@
                     </div>
                 </div>
             </div>
+
+            <script>
+            function calcEditEndDate_{{ $currentDoc->id }}() {
+                const startEl = document.getElementById('editStartDate_{{ $currentDoc->id }}');
+                const yearsEl = document.getElementById('editValidityYears_{{ $currentDoc->id }}');
+                const endEl = document.getElementById('editEndDate_{{ $currentDoc->id }}');
+                const validityEl = document.getElementById('editValidity_{{ $currentDoc->id }}');
+
+                if (!startEl || !yearsEl || !endEl) return;
+
+                const years = parseInt(yearsEl.value, 10);
+                if (validityEl) {
+                    validityEl.value = (years && !isNaN(years)) ? (years + ' Tahun') : '';
+                }
+
+                if (!startEl.value || isNaN(years) || years <= 0) {
+                    return;
+                }
+
+                const startDate = new Date(startEl.value);
+                if (isNaN(startDate.getTime())) {
+                    return;
+                }
+
+                const endDate = new Date(startDate);
+                endDate.setFullYear(endDate.getFullYear() + years);
+                const yyyy = endDate.getFullYear();
+                const mm = String(endDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(endDate.getDate()).padStart(2, '0');
+                endEl.value = `${yyyy}-${mm}-${dd}`;
+            }
+            </script>
 
             <!-- ===================================================================================== -->
             <!-- MODAL UNGGAH BERKAS DOKUMEN                                                           -->
