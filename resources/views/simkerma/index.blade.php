@@ -2238,7 +2238,7 @@
                                     </div>
                                 </div>
 
-                                <!-- KARTU 2: ALUR PROSES (FINITE STATE MACHINE) -->
+                                <!-- KARTU 2: ALUR PROSES STATUS KERJA SAMA -->
                                 @php
                                     // Lookup Jejak Audit untuk masing-masing fase alur
                                     $auditDraft = $currentDoc->auditTrails->firstWhere('event', 'CREATE_DRAFT') 

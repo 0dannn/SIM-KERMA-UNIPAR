@@ -516,7 +516,8 @@ class SimkermaController extends Controller
     {
         [$newId, $regId] = $this->generateUniqueDocId();
         $partnerName = $request->input('partner_name', 'Mitra PKM Terpadu');
-        $partnerDocNumber = $request->input('partner_doc_number');
+        $rawPartnerDocNumber = trim((string)$request->input('partner_doc_number', ''));
+        $partnerDocNumber = ($rawPartnerDocNumber !== '') ? $rawPartnerDocNumber : '-';
         $unitMain = $request->input('unit_main', 'Fakultas Ilmu Komputer');
         $unitCollab = $request->input('unit_collab', 'Fakultas Ekonomi dan Bisnis');
         $topic = $request->input('topic', 'Pelaksanaan Program PKM Kolaboratif');
@@ -834,14 +835,20 @@ class SimkermaController extends Controller
         // Bersihkan data terkait dalam transaksi aman
         DB::transaction(function () use ($document) {
             // Hapus file draft fisik jika ada
-            if ($document->draft_file && file_exists(public_path('uploads/documents/' . $document->draft_file))) {
-                @unlink(public_path('uploads/documents/' . $document->draft_file));
-            }
-            if ($document->signed_file && file_exists(public_path('uploads/documents/' . $document->signed_file))) {
-                @unlink(public_path('uploads/documents/' . $document->signed_file));
-            }
-            if ($document->docx_path && file_exists(public_path('uploads/documents/' . $document->docx_path))) {
-                @unlink(public_path('uploads/documents/' . $document->docx_path));
+            // Catatan: draft_file/signed_file/docx_path disimpan sebagai 'uploads/documents/xxx.pdf'
+            // atau hanya 'xxx.pdf', jadi perlu penanganan kedua kasus
+            $filesToDelete = [$document->draft_file, $document->signed_file, $document->docx_path];
+            foreach ($filesToDelete as $filePath) {
+                if (!$filePath) continue;
+                // Jika path sudah mengandung 'uploads/documents/', gunakan langsung
+                if (str_starts_with($filePath, 'uploads/')) {
+                    $fullPath = public_path($filePath);
+                } else {
+                    $fullPath = public_path('uploads/documents/' . $filePath);
+                }
+                if (file_exists($fullPath)) {
+                    @unlink($fullPath);
+                }
             }
             // Hapus aktivitas terkait jika ada
             if (method_exists($document, 'activities')) {

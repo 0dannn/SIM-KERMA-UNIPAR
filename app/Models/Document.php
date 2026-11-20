@@ -46,10 +46,14 @@ class Document extends Model
 
     /**
      * Relasi ke Dokumen Turunan (Child Documents / Hierarki IKU 6)
+     * Mencakup child yang menginduk via doc_number ATAU doc_id
      */
     public function children()
     {
         return $this->hasMany(Document::class, 'parent_mou', 'doc_number')
-            ->orWhere('parent_mou', $this->doc_id);
+            ->orWhere(function ($query) {
+                $query->where('parent_mou', $this->doc_id)
+                      ->where('id', '!=', $this->id);
+            });
     }
 }
