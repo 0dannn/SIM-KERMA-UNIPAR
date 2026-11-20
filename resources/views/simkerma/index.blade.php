@@ -2809,11 +2809,11 @@
                                 </button>
                             </div>
                             <div class="row g-2">
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <div class="p-2 border rounded-2 bg-light">
                                         <h6 class="fw-bold text-dark mb-1 small"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>Naskah Draf Pengusul</h6>
                                         @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
-                                            <div class="ratio ratio-16x9 border bg-white mb-1.5 rounded-1 overflow-hidden" style="max-height: 250px;">
+                                            <div class="ratio ratio-16x9 border bg-white mb-1.5 rounded-1 overflow-hidden" style="max-height: 420px;">
                                                 <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Draf"></iframe>
                                             </div>
                                             <div class="d-flex gap-1.5">
@@ -2822,30 +2822,6 @@
                                             </div>
                                         @else
                                             <div class="text-muted py-3 text-center small">Berkas naskah draf belum diunggah.</div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="p-2 border rounded-2 bg-light">
-                                        <h6 class="fw-bold text-dark mb-1 small"><i class="bi bi-file-earmark-check text-success me-1"></i>Naskah Asli / Terverifikasi QR Code</h6>
-                                        @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
-                                            <div class="ratio ratio-16x9 border bg-white mb-1.5 rounded-1 overflow-hidden" style="max-height: 250px;">
-                                                <iframe src="{{ asset($currentDoc->signed_file) }}" title="Preview Naskah Asli"></iframe>
-                                            </div>
-                                            <div class="d-flex gap-1.5">
-                                                <a href="{{ asset($currentDoc->signed_file) }}" target="_blank" class="btn btn-outline-success btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
-                                                <a href="{{ asset($currentDoc->signed_file) }}" download class="btn btn-success btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-download me-1"></i>Unduh Naskah Asli</a>
-                                            </div>
-                                        @elseif ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)) && in_array($currentDoc->status, ['REVIEW', 'VERIFIED', 'ACTIVE', 'WARNING', 'EXPIRED']))
-                                            <div class="ratio ratio-16x9 border bg-white mb-1.5 rounded-1 overflow-hidden" style="max-height: 250px;">
-                                                <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Naskah QR Code"></iframe>
-                                            </div>
-                                            <div class="d-flex gap-1.5">
-                                                <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-outline-primary btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
-                                                <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-primary btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-download me-1"></i>Unduh Naskah Ber-QR</a>
-                                            </div>
-                                        @else
-                                            <div class="text-muted py-3 text-center small">Naskah asli bertandatangan basah belum diunggah. Naskah dapat diunggah pada tahap status VERIFIED &rarr; ACTIVE.</div>
                                         @endif
                                     </div>
                                 </div>
