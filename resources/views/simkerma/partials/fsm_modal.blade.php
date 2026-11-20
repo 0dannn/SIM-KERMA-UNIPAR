@@ -306,7 +306,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="text-muted mb-2" style="font-size: 0.74rem;">
-                                    Setelah naskah ditandatangani basah oleh Rektor dan mitra serta dibubuhi meterai fisik Rp10.000, lengkapi nomor naskah mitra dan unggah berkas scan untuk aktivasi.
+                                    Setelah naskah ditandatangani basah oleh Rektor dan mitra serta dibubuhi meterai fisik Rp10.000, lengkapi nomor naskah Pihak II (Mitra) dan unggah berkas scan untuk aktivasi.
                                 </div>
                                 <div class="row g-2 mb-2">
                                     <div class="col-sm-6">
