@@ -2025,6 +2025,18 @@
                                 @endif
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li><a class="dropdown-item py-1 px-3" href="#" data-bs-toggle="modal" data-bs-target="#fsmModal_{{ $currentDoc->id }}"><i class="bi bi-sliders me-2 text-warning"></i> Kelola Transisi FSM</a></li>
+                                @if ($currentDoc->status === 'DRAFT' || $activeRole === 'MASTER' || $activeRole === 'ADMIN')
+                                    <li><hr class="dropdown-divider my-1"></li>
+                                    <li>
+                                        <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="px-3 py-1" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DOKUMEN (AKSES MASTER):\n\nApakah Anda yakin ingin menghapus dokumen {{ $currentDoc->doc_id }} [Status: {{ $currentDoc->status }}] ({{ addslashes($currentDoc->partner_name) }}) secara permanen?\n\nPERHATIAN: Dokumen yang dihapus tidak dapat dipulihkan kembali.');">
+                                            @csrf
+                                            <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
+                                            <button type="submit" class="btn btn-link p-0 text-danger text-decoration-none small text-start w-100 fw-semibold">
+                                                <i class="bi bi-trash3 me-2"></i> {{ $currentDoc->status === 'DRAFT' ? 'Hapus Draf Ini' : 'Hapus Dokumen (Akses MASTER)' }}
+                                            </button>
+                                        </form>
+                                    </li>
+                                @endif
                             </ul>
                         </div>
                     </div>
@@ -3340,8 +3352,8 @@
                                                     <i class="bi bi-gear-fill fs-6"></i>
                                                 </button>
 
-                                                @if ($doc->status === 'DRAFT')
-                                                    <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline m-0 p-0" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DRAF:\n\nApakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Draf yang dihapus tidak dapat dipulihkan kembali.')">
+                                                @if ($doc->status === 'DRAFT' || $activeRole === 'MASTER' || $activeRole === 'ADMIN')
+                                                    <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline m-0 p-0" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DOKUMEN (AKSES MASTER):\n\nApakah Anda yakin ingin menghapus dokumen {{ $doc->doc_id }} [Status: {{ $doc->status }}] ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Dokumen yang dihapus tidak dapat dipulihkan kembali.')">
                                                         @csrf
                                                         <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
                                                         <button type="submit" 
@@ -3349,7 +3361,7 @@
                                                                 style="width: 31px; height: 31px; border-radius: 4px;" 
                                                                 data-bs-toggle="tooltip" 
                                                                 data-bs-placement="top" 
-                                                                title="Hapus Draf Dokumen">
+                                                                title="{{ $doc->status === 'DRAFT' ? 'Hapus Draf Dokumen' : 'Hapus Dokumen (Akses MASTER)' }}">
                                                             <i class="bi bi-trash-fill fs-6"></i>
                                                         </button>
                                                     </form>
@@ -3357,7 +3369,7 @@
                                                     <button type="button" 
                                                             class="btn btn-sm btn-light border p-0 d-inline-flex align-items-center justify-content-center text-muted disabled opacity-50" 
                                                             style="width: 31px; height: 31px; border-radius: 4px; cursor: not-allowed;" 
-                                                            title="Hanya dapat dihapus pada status DRAFT" 
+                                                            title="Hanya dapat dihapus pada status DRAFT atau oleh Role MASTER" 
                                                             disabled>
                                                         <i class="bi bi-trash fs-6"></i>
                                                     </button>
@@ -3743,14 +3755,14 @@
                                                             </div>
                                                         </form>
 
-                                                        @if ($doc->status === 'DRAFT')
+                                                        @if ($doc->status === 'DRAFT' || $activeRole === 'MASTER' || $activeRole === 'ADMIN')
                                                             <div class="mt-3 pt-3 border-top">
-                                                                <form method="POST" action="{{ route('simkerma.delete-draft') }}" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DRAF:\n\nApakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Draf yang dihapus tidak dapat dipulihkan kembali.')">
+                                                                <form method="POST" action="{{ route('simkerma.delete-draft') }}" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DOKUMEN (AKSES MASTER):\n\nApakah Anda yakin ingin menghapus dokumen {{ $doc->doc_id }} [Status: {{ $doc->status }}] ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Dokumen yang dihapus tidak dapat dipulihkan kembali.')">
                                                                     @csrf
                                                                     <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
                                                                     <button type="submit" class="btn btn-sm btn-outline-danger w-100 py-2 d-flex justify-content-between align-items-center shadow-sm">
-                                                                        <span><i class="bi bi-trash3 me-2"></i>Hapus Draf Dokumen Ini</span>
-                                                                        <span class="badge bg-danger text-white" style="font-size: 0.65rem;">DELETE_DRAFT</span>
+                                                                        <span><i class="bi bi-trash3 me-2"></i>{{ $doc->status === 'DRAFT' ? 'Hapus Draf Dokumen Ini' : 'Hapus Dokumen Ini (Akses MASTER)' }}</span>
+                                                                        <span class="badge bg-danger text-white" style="font-size: 0.65rem;">{{ $doc->status === 'DRAFT' ? 'DELETE_DRAFT' : 'MASTER_FORCE_DELETE' }}</span>
                                                                     </button>
                                                                 </form>
                                                             </div>
@@ -3786,12 +3798,12 @@
                                                     <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-outline-dark btn-sm">
                                                         <i class="bi bi-box-arrow-up-right me-1"></i> Buka Lembar Verifikasi
                                                     </a>
-                                                    @if ($doc->status === 'DRAFT')
-                                                        <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DRAF:\n\nApakah Anda yakin ingin menghapus draf naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Draf yang dihapus tidak dapat dipulihkan kembali.')">
+                                                    @if ($doc->status === 'DRAFT' || $activeRole === 'MASTER' || $activeRole === 'ADMIN')
+                                                        <form method="POST" action="{{ route('simkerma.delete-draft') }}" class="d-inline" onsubmit="return confirm('KONFIRMASI PENGHAPUSAN DOKUMEN (AKSES MASTER):\n\nApakah Anda yakin ingin menghapus dokumen {{ $doc->doc_id }} [Status: {{ $doc->status }}] ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Dokumen yang dihapus tidak dapat dipulihkan kembali.')">
                                                             @csrf
                                                             <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
                                                             <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                                <i class="bi bi-trash3 me-1"></i> Hapus Draf
+                                                                <i class="bi bi-trash3 me-1"></i> {{ $doc->status === 'DRAFT' ? 'Hapus Draf' : 'Hapus Dokumen (Akses MASTER)' }}
                                                             </button>
                                                         </form>
                                                     @endif

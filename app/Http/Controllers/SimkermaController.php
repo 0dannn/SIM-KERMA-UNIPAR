@@ -807,30 +807,43 @@ class SimkermaController extends Controller
     }
 
     /**
-     * Hapus Naskah Dokumen (HANYA DIIZINKAN UNTUK STATUS DRAFT)
+     * Hapus Naskah Dokumen (Role MASTER diizinkan menghapus pada semua status)
      */
     public function deleteDraft(Request $request)
     {
         $docId = $request->input('doc_id');
         $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
+        $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'ADMIN');
 
-        // Aturan Integritas FSM: HANYA DRAFT YANG BOLEH DIHAPUS
-        if ($document->status !== 'DRAFT') {
+        // Aturan Integritas FSM: DRAFT boleh dihapus oleh siapapun yang berwenang.
+        // Khusus Role MASTER / ADMIN diberikan hak khusus untuk menghapus pada SEMUA status (Master Bypass / Super Admin Privilege).
+        if ($document->status !== 'DRAFT' && $activeRole !== 'MASTER' && $activeRole !== 'ADMIN') {
             return redirect()->route('simkerma.index', ['menu' => 4, 'doc' => $document->doc_id])
                 ->with('flash', [
                     'type' => 'danger',
-                    'msg' => "Penghapusan Ditolak! Dokumen {$document->doc_id} berstatus {$document->status}. Sesuai prinsip integritas FSM dan audit institusi, naskah yang sudah melewati tahap DRAFT tidak boleh dihapus dari basis data."
+                    'msg' => "Penghapusan Ditolak! Dokumen {$document->doc_id} berstatus {$document->status}. Sesuai prinsip integritas FSM dan audit institusi, naskah yang sudah melewati tahap DRAFT hanya dapat dihapus oleh Role MASTER / Administrator."
                 ]);
         }
 
         $deletedDocId = $document->doc_id;
         $partnerName = $document->partner_name;
+        $statusBeforeDelete = $document->status;
 
         // Bersihkan data terkait dalam transaksi aman
         DB::transaction(function () use ($document) {
             // Hapus file draft fisik jika ada
             if ($document->draft_file && file_exists(public_path('uploads/documents/' . $document->draft_file))) {
                 @unlink(public_path('uploads/documents/' . $document->draft_file));
+            }
+            if ($document->signed_file && file_exists(public_path('uploads/documents/' . $document->signed_file))) {
+                @unlink(public_path('uploads/documents/' . $document->signed_file));
+            }
+            if ($document->docx_path && file_exists(public_path('uploads/documents/' . $document->docx_path))) {
+                @unlink(public_path('uploads/documents/' . $document->docx_path));
+            }
+            // Hapus aktivitas terkait jika ada
+            if (method_exists($document, 'activities')) {
+                $document->activities()->delete();
             }
             // Hapus audit trails terkait
             $document->auditTrails()->delete();
@@ -843,10 +856,14 @@ class SimkermaController extends Controller
             session()->forget('selected_doc_id');
         }
 
+        $successMsg = ($statusBeforeDelete === 'DRAFT')
+            ? "Draf dokumen {$deletedDocId} bersama mitra {$partnerName} berhasil dihapus permanen dari sistem."
+            : "Dokumen {$deletedDocId} (Status: {$statusBeforeDelete}) bersama mitra {$partnerName} berhasil dihapus permanen oleh Hak Akses MASTER.";
+
         return redirect()->route('simkerma.index', ['menu' => 4])
             ->with('flash', [
                 'type' => 'success',
-                'msg' => "Draf dokumen {$deletedDocId} bersama mitra {$partnerName} berhasil dihapus permanen dari sistem."
+                'msg' => $successMsg
             ]);
     }
 
