@@ -410,6 +410,8 @@
         .badge-soft-secondary { background-color: rgba(116, 120, 141, 0.12) !important; color: #74788d !important; }
 
         /* Subtle helpers */
+        .text-primary { color: #5156be !important; }
+        .border-primary { border-color: #5156be !important; }
         .bg-soft-primary { background-color: rgba(81, 86, 190, 0.1) !important; }
         .bg-soft-success { background-color: rgba(42, 181, 125, 0.1) !important; }
         .bg-soft-warning { background-color: rgba(255, 191, 83, 0.1) !important; }
@@ -479,12 +481,12 @@
             }
         }
         /* =========================================================================
-           FSM WORKFLOW MODAL STYLES (SESUAI UI/FSM-UI.html)
+           FSM WORKFLOW MODAL STYLES (Tema Ungu Harmonis SIMKERMA UNIPAR #5156be)
            ========================================================================= */
         :root {
-            --fsm-royal-violet: #52249E;
-            --fsm-soft-lavender: #EFEBFB;
-            --fsm-on-primary-container: #250059;
+            --fsm-royal-violet: #5156be;
+            --fsm-soft-lavender: rgba(81, 86, 190, 0.08);
+            --fsm-on-primary-container: #2b2e6b;
             --fsm-border: #E2E4EC;
             --fsm-error: #DC2626;
             --fsm-error-container: #FEF2F2;
@@ -502,7 +504,7 @@
             font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         .fsm-header {
-            background-color: #52249E !important;
+            background-color: #5156be !important;
             color: #ffffff !important;
             padding: 16px 24px;
         }
@@ -511,7 +513,7 @@
             height: 40px;
             border-radius: 8px;
             background-color: #ffffff;
-            color: #52249E;
+            color: #5156be;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -534,8 +536,8 @@
             color: #ffffff;
         }
         .fsm-title-banner {
-            background-color: #EFEBFB;
-            border: 1px solid rgba(82, 36, 158, 0.15);
+            background-color: rgba(81, 86, 190, 0.08);
+            border: 1px solid rgba(81, 86, 190, 0.18);
             border-radius: 8px;
             padding: 14px 16px;
         }
@@ -548,10 +550,10 @@
             flex-direction: column;
         }
         .fsm-card-elevated .card-header {
-            background-color: #EFEBFB !important;
+            background-color: rgba(81, 86, 190, 0.08) !important;
             border-bottom: 1px solid #E2E4EC !important;
             padding: 12px 16px;
-            color: #52249E;
+            color: #5156be;
             font-weight: 700;
             font-size: 0.92rem;
             display: flex;
@@ -563,7 +565,7 @@
             font-size: 0.82rem;
         }
         .fsm-btn-primary {
-            background-color: #52249E !important;
+            background-color: #5156be !important;
             color: #ffffff !important;
             border: none !important;
             padding: 10px 20px;
@@ -576,7 +578,7 @@
             transition: all 0.15s ease-in-out;
         }
         .fsm-btn-primary:hover {
-            background-color: #421b80 !important;
+            background-color: #4549a2 !important;
             color: #ffffff !important;
             opacity: 0.95;
         }

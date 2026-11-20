@@ -81,16 +81,16 @@
                                         <span class="mt-2 px-2.5 py-0.5 rounded text-white fw-bold" style="background-color: #DC2626; font-size: 0.72rem;">Dibatalkan</span>
                                     @elseif ($sIdx === $activeIdx)
                                         <!-- Tahap Aktif -->
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-sm" style="width: 32px; height: 32px; background-color: #52249E; font-size: 0.85rem;">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-sm" style="width: 32px; height: 32px; background-color: #5156be; font-size: 0.85rem;">
                                             <i class="bi {{ $stg['icon'] }}"></i>
                                         </div>
-                                        <span class="mt-2 px-3 py-0.5 rounded text-white fw-bold shadow-2xs" style="background-color: #52249E; font-size: 0.72rem;">{{ $stg['label'] }}</span>
+                                        <span class="mt-2 px-3 py-0.5 rounded text-white fw-bold shadow-2xs" style="background-color: #5156be; font-size: 0.72rem;">{{ $stg['label'] }}</span>
                                     @elseif ($sIdx < $activeIdx)
                                         <!-- Tahap Selesai Dilalui -->
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px; margin-top: 4px; background-color: #52249E; font-size: 0.75rem;">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px; margin-top: 4px; background-color: #5156be; font-size: 0.75rem;">
                                             <i class="bi bi-check-lg"></i>
                                         </div>
-                                        <span class="mt-2 fw-semibold" style="color: #52249E; font-size: 0.72rem;">{{ $stg['label'] }}</span>
+                                        <span class="mt-2 fw-semibold" style="color: #5156be; font-size: 0.72rem;">{{ $stg['label'] }}</span>
                                     @else
                                         <!-- Tahap Belum Aktif -->
                                         <div class="rounded-circle d-flex align-items-center justify-content-center bg-white border" style="width: 24px; height: 24px; margin-top: 4px; border-color: #E2E4EC !important; border-width: 2px !important;"></div>
@@ -104,12 +104,12 @@
 
                 <!-- 2. Highlight Banner: Judul Kerja Sama -->
                 <div class="fsm-title-banner d-flex align-items-center gap-3 mb-3">
-                    <div class="fsm-header-icon shadow-none" style="border: 1px solid rgba(82, 36, 158, 0.15);">
+                    <div class="fsm-header-icon shadow-none" style="border: 1px solid rgba(81, 86, 190, 0.2); color: #5156be;">
                         <i class="bi bi-file-earmark-text fs-5"></i>
                     </div>
                     <div class="d-flex flex-column gap-0.5">
                         <span style="font-size: 0.72rem; color: #5E6472; font-weight: 500;">Judul Kerja Sama</span>
-                        <h6 class="mb-0 fw-bold" style="color: #250059; font-size: 0.96rem;">{{ $doc->title ?: 'Naskah Kerja Sama Kemitraan' }}</h6>
+                        <h6 class="mb-0 fw-bold" style="color: #2b2e6b; font-size: 0.96rem;">{{ $doc->title ?: 'Naskah Kerja Sama Kemitraan' }}</h6>
                     </div>
                 </div>
 
@@ -231,11 +231,11 @@
                 <!-- 4. Scope Card: Ruang Lingkup -->
                 <div class="card border rounded p-3 mb-3 shadow-none" style="border-color: #E2E4EC !important; background-color: #ffffff;">
                     <div class="d-flex align-items-start gap-3">
-                        <div class="mt-0.5" style="color: #52249E;">
+                        <div class="mt-0.5" style="color: #5156be;">
                             <i class="bi bi-crosshair fs-5"></i>
                         </div>
                         <div class="d-flex flex-column gap-1">
-                            <h6 class="fw-bold mb-0" style="color: #52249E; font-size: 0.9rem;">Ruang Lingkup</h6>
+                            <h6 class="fw-bold mb-0" style="color: #5156be; font-size: 0.9rem;">Ruang Lingkup</h6>
                             <p class="mb-0 text-dark" style="font-size: 0.82rem; line-height: 1.45;">
                                 {{ $doc->scope ?: ($doc->description ?: 'Pendidikan, Penelitian, Pengabdian kepada Masyarakat, dan Pengembangan SDM.') }}
                             </p>
@@ -258,7 +258,7 @@
                                     <i class="bi bi-clipboard2-check-fill fs-6"></i>
                                     <span>Penelaahan Substansi &amp; Mutu Hukum (Tim Legal)</span>
                                 </div>
-                                <span class="badge" style="background-color: #52249E; font-size: 0.65rem;">Evaluasi Mutu &amp; IKU 6</span>
+                                <span class="badge" style="background-color: #5156be; font-size: 0.65rem;">Evaluasi Mutu &amp; IKU 6</span>
                             </div>
                             <div class="card-body">
                                 <div class="text-muted mb-2" style="font-size: 0.74rem;">
@@ -302,7 +302,7 @@
                                     <i class="bi bi-pen-fill fs-6"></i>
                                     <span>Pengesahan Naskah Fisik &amp; Aktivasi (Pimpinan Rektorat)</span>
                                 </div>
-                                <span class="badge" style="background-color: #52249E; font-size: 0.65rem;">Pengesahan Sah (ACTIVATE)</span>
+                                <span class="badge" style="background-color: #5156be; font-size: 0.65rem;">Pengesahan Sah (ACTIVATE)</span>
                             </div>
                             <div class="card-body">
                                 <div class="text-muted mb-2" style="font-size: 0.74rem;">
