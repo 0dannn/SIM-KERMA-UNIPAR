@@ -937,11 +937,11 @@
                     </div>
                     <div class="col-sm-7">
                         <div class="mb-2">
-                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">NOMOR DOKUMEN INTERNAL:</span>
+                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">NOMOR NASKAH PIHAK 1:</span>
                             <div class="fw-bold font-monospace text-dark" id="qrModalDocNum" style="font-size: 0.85rem;">-</div>
                         </div>
-                        <div class="mb-2" id="qrModalPartnerDocContainer" style="display: none;">
-                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">NOMOR DOKUMEN MITRA (PIHAK II):</span>
+                        <div class="mb-2" id="qrModalPartnerDocContainer">
+                            <span class="text-muted fw-bold d-block" style="font-size: 0.72rem;">NOMOR NASKAH PIHAK 2:</span>
                             <div class="fw-semibold font-monospace text-primary" id="qrModalPartnerDocNum" style="font-size: 0.82rem;">-</div>
                         </div>
                         <div class="mb-2">
@@ -1017,21 +1017,16 @@ let currentQrInstance = null;
 function showQrModal(regId, docNum, title, partner, status, date, partnerDocNum) {
     document.getElementById('qrModalLabel').innerText = 'Lembar Registrasi & QR Code Resmi: ' + regId;
     document.getElementById('qrModalRegBadge').innerText = regId;
-    document.getElementById('qrModalDocNum').innerText = docNum || 'Dalam Proses Registrasi';
+    document.getElementById('qrModalDocNum').innerText = (docNum && docNum.trim() !== '') ? docNum : '-';
     document.getElementById('qrModalTitle').innerText = title || '-';
     document.getElementById('qrModalPartner').innerText = partner || '-';
     document.getElementById('qrModalDate').innerText = date || '30 Oktober 2026';
     
-    // Partner Document Number (Pihak II)
+    // Partner Document Number (Pihak 2)
     const partnerContainer = document.getElementById('qrModalPartnerDocContainer');
     const partnerEl = document.getElementById('qrModalPartnerDocNum');
-    if (partnerContainer && partnerEl) {
-        if (partnerDocNum && partnerDocNum.trim() !== '' && partnerDocNum.trim() !== '-') {
-            partnerEl.innerText = partnerDocNum;
-            partnerContainer.style.display = 'block';
-        } else {
-            partnerContainer.style.display = 'none';
-        }
+    if (partnerEl) {
+        partnerEl.innerText = (partnerDocNum && partnerDocNum.trim() !== '') ? partnerDocNum : '-';
     }
 
     // Pemetaan Lengkap 6 Status Formal Finite State Machine UNIPAR

@@ -952,14 +952,12 @@
                             <tr class="repo-row" data-type="{{ $doc->doc_type }}">
                                 <td>
                                     <div class="fw-bold text-dark">
-                                        {{ $doc->doc_number ?: $doc->doc_id }}
+                                        {{ (!empty($doc->doc_number) && $doc->doc_number !== '-') ? $doc->doc_number : '-' }}
                                         <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">Pihak I</span>
                                     </div>
-                                    @if (!empty($doc->partner_doc_number))
-                                        <div class="small text-secondary" style="font-size: 0.72rem;">
-                                            Pihak II: <strong>{{ $doc->partner_doc_number }}</strong>
-                                        </div>
-                                    @endif
+                                    <div class="small {{ (!empty($doc->partner_doc_number) && $doc->partner_doc_number !== '-') ? 'text-secondary' : 'text-muted' }}" style="font-size: 0.72rem;">
+                                        Pihak II: <strong>{{ (!empty($doc->partner_doc_number) && $doc->partner_doc_number !== '-') ? $doc->partner_doc_number : '-' }}</strong>
+                                    </div>
                                     <div class="mt-1 d-flex align-items-center gap-1">
                                         <span class="badge bg-dark" style="font-size: 0.65rem;">{{ $doc->doc_type }}</span>
                                         <span class="badge {{ $statusBadgeClass }}" style="font-size: 0.65rem;">{{ $doc->status }}</span>
@@ -1184,9 +1182,9 @@
                                 <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
                             </label>
                             <div class="col-md-9">
-                                <input type="text" name="doc_number" class="form-control font-monospace" placeholder="Dapat dikosongkan untuk penomoran otomatis UNIPAR">
+                                <input type="text" name="doc_number" class="form-control font-monospace" placeholder="Kosongkan jika belum ada (otomatis diisi '-')">
                                 <div class="form-text text-muted">
-                                    Nomor naskah resmi UNIPAR (Pihak 1). Jika dikosongkan, nomor akan dibuat otomatis oleh sistem.
+                                    Nomor naskah resmi UNIPAR (Pihak 1). Jika dikosongkan / belum diterbitkan, otomatis akan dicatat sebagai <code>-</code>.
                                 </div>
                             </div>
                         </div>
@@ -1262,9 +1260,9 @@
                                 <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
                             </label>
                             <div class="col-md-9">
-                                <input type="text" name="partner_doc_number" class="form-control font-monospace" placeholder="Nomor naskah resmi pihak kedua / mitra jika sudah ada">
+                                <input type="text" name="partner_doc_number" class="form-control font-monospace" placeholder="Kosongkan jika belum ada (otomatis diisi '-')">
                                 <div class="form-text text-muted">
-                                    Nomor naskah resmi dari pihak mitra (Pihak 2). Opsional pada fase inisiasi DRAFT/SUBMIT.
+                                    Nomor naskah resmi dari pihak mitra (Pihak 2). Jika belum ada, otomatis akan dicatat sebagai <code>-</code>.
                                 </div>
                             </div>
                         </div>
@@ -2190,6 +2188,16 @@
                                                         <td class="text-dark fw-medium py-0.5">{{ $currentDoc->doc_type }}</td>
                                                     </tr>
                                                     <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah Pihak 1</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5 font-monospace">{{ (!empty($currentDoc->doc_number) && $currentDoc->doc_number !== '-') ? $currentDoc->doc_number : '-' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah Pihak 2</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5 font-monospace">{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '-' }}</td>
+                                                    </tr>
+                                                    <tr>
                                                         <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Mitra Kerja Sama</td>
                                                         <td class="py-0.5 px-1 text-muted">:</td>
                                                         <td class="text-dark fw-medium py-0.5">{{ $currentDoc->partner_name }}</td>
@@ -3053,6 +3061,16 @@
                                 </div>
                                 <div class="row g-2 mb-2">
                                     <div class="col-6">
+                                        <label class="form-label text-muted fw-semibold mb-0.5">Nomor Naskah Pihak 1</label>
+                                        <input type="text" name="doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->doc_number) && $currentDoc->doc_number !== '-') ? $currentDoc->doc_number : '' }}" placeholder="-">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-muted fw-semibold mb-0.5">Nomor Naskah Pihak 2</label>
+                                        <input type="text" name="partner_doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '' }}" placeholder="-">
+                                    </div>
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
                                         <label class="form-label text-muted fw-semibold mb-0.5">Tanggal Mulai</label>
                                         <input type="date" name="start_date" class="form-control form-control-sm" value="{{ $currentDoc->start_date }}">
                                     </div>
@@ -3239,10 +3257,8 @@
                                         <!-- 2. Judul -->
                                         <td>
                                             <div class="small text-muted mb-1 d-flex flex-wrap align-items-center gap-2">
-                                                <span><strong>No. Pihak I:</strong> {{ $doc->doc_number ?: 'Dalam Proses' }}</span>
-                                                @if (!empty($doc->partner_doc_number))
-                                                    <span class="text-secondary"><span class="text-muted">|</span> <strong>No. Pihak II:</strong> {{ $doc->partner_doc_number }}</span>
-                                                @endif
+                                                <span><strong>No. Pihak I:</strong> {{ (!empty($doc->doc_number) && $doc->doc_number !== '-') ? $doc->doc_number : '-' }}</span>
+                                                <span class="text-secondary"><span class="text-muted">|</span> <strong>No. Pihak II:</strong> {{ (!empty($doc->partner_doc_number) && $doc->partner_doc_number !== '-') ? $doc->partner_doc_number : '-' }}</span>
                                             </div>
                                             <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="fw-bold text-dark text-decoration-none d-block mb-1" title="{{ $doc->title }}">
                                                 {{ $doc->title ?: $doc->partner_name }}
@@ -3631,13 +3647,11 @@
                                             </span>
                                         </div>
                                         <div class="text-dark">
-                                            <strong>No. Pihak I:</strong> {{ $doc->doc_number ?: $doc->doc_id }}
+                                            <strong>No. Pihak I:</strong> {{ (!empty($doc->doc_number) && $doc->doc_number !== '-') ? $doc->doc_number : '-' }}
                                         </div>
-                                        @if (!empty($doc->partner_doc_number))
-                                            <div class="text-secondary">
-                                                <strong>No. Pihak II:</strong> {{ $doc->partner_doc_number }}
-                                            </div>
-                                        @endif
+                                        <div class="text-secondary">
+                                            <strong>No. Pihak II:</strong> {{ (!empty($doc->partner_doc_number) && $doc->partner_doc_number !== '-') ? $doc->partner_doc_number : '-' }}
+                                        </div>
                                         @if (($doc->status ?? '') === 'WARNING')
                                             <div class="alert alert-warning py-1 px-2 my-1 border-0 rounded text-dark" style="font-size: 0.68rem;">
                                                 <i class="bi bi-clock-history text-warning-emphasis me-1"></i>

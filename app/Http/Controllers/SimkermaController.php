@@ -348,7 +348,12 @@ class SimkermaController extends Controller
         $typePrefix = ($docType === 'MoU') ? 'MoU' : (($docType === 'IA') ? 'IA' : 'MoA');
         $partnerName = $request->input('partner_name', 'Mitra Baru');
         $inputDocNumber = trim((string)$request->input('doc_number', ''));
-        $partnerDocNumber = trim((string)$request->input('partner_doc_number', ''));
+        $inputPartnerDocNumber = trim((string)$request->input('partner_doc_number', ''));
+
+        // Jika nomor pihak tidak diisi, gunakan tanda "-" (jangan mengisi nomor naskah acak/asal-asalan)
+        $docNumber = ($inputDocNumber !== '') ? $inputDocNumber : '-';
+        $partnerDocNumber = ($inputPartnerDocNumber !== '') ? $inputPartnerDocNumber : '-';
+
         $parentMou = ($docType === 'MoU' || empty($rawParentMou)) ? '-' : $rawParentMou;
         $activeRole = session('active_role', 'MASTER');
 
@@ -410,24 +415,16 @@ class SimkermaController extends Controller
 
         $doc = DB::transaction(function () use (
             $request, $newId, $regId, $typePrefix, $docType, $partnerName,
-            $inputDocNumber, $partnerDocNumber, $parentMou, $activeRole, $title,
+            $docNumber, $partnerDocNumber, $parentMou, $activeRole, $title,
             $firstPartySigner, $secondPartySigner, $picFirstParty,
             $picSecondParty, $startDate, $endDate, $nominalValue,
             $description, $validity, $scope, $paperSize, $warningThreshold
         ) {
-            if (!empty($inputDocNumber)) {
-                $docNumber = $inputDocNumber;
-            } else {
-                do {
-                    $docNumber = sprintf('%03d/UNIPAR/%s/X/2026', rand(360, 499), $typePrefix);
-                } while (Document::where('doc_number', $docNumber)->exists());
-            }
-
             $document = Document::create([
                 'doc_id' => $newId,
                 'reg_id' => $regId,
                 'doc_number' => $docNumber,
-                'partner_doc_number' => $partnerDocNumber ?: null,
+                'partner_doc_number' => $partnerDocNumber,
                 'track' => 'Jalur 1: Kemitraan Bertahap',
                 'title' => $title,
                 'unit' => $request->input('unit') ?: 'Program Studi Teknik Informatika',
@@ -1183,7 +1180,7 @@ class SimkermaController extends Controller
         $docId = $request->input('doc_id');
         $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
 
-        $document->update([
+        $updateData = [
             'title' => $request->input('title', $document->title),
             'unit' => $request->input('unit', $document->unit),
             'first_party_signer' => $request->input('first_party_signer', $document->first_party_signer),
@@ -1196,7 +1193,18 @@ class SimkermaController extends Controller
             'end_date' => $request->input('end_date', $document->end_date),
             'validity' => $request->input('validity', $document->validity),
             'warning_threshold' => $request->input('warning_threshold', $document->warning_threshold),
-        ]);
+        ];
+
+        if ($request->has('doc_number')) {
+            $val = trim((string)$request->input('doc_number', ''));
+            $updateData['doc_number'] = ($val !== '') ? $val : '-';
+        }
+        if ($request->has('partner_doc_number')) {
+            $val = trim((string)$request->input('partner_doc_number', ''));
+            $updateData['partner_doc_number'] = ($val !== '') ? $val : '-';
+        }
+
+        $document->update($updateData);
 
         $activeRole = session('active_role', 'ADMIN');
         AuditTrail::create([
@@ -1301,12 +1309,10 @@ class SimkermaController extends Controller
         [$newId, $regId] = $this->generateUniqueDocId();
         $docType = $request->input('doc_type', 'MoU');
         $partnerName = $request->input('partner_name', 'Mitra Lampau');
-        $docNumber = $request->input('doc_number');
-        if (empty($docNumber)) {
-            $prefix = ($docType === 'MoU') ? 'MoU' : (($docType === 'IA') ? 'IA' : 'MoA');
-            $docNumber = sprintf('%03d/UNIPAR/%s/LEGACY/%s', rand(100, 299), $prefix, date('Y'));
-        }
-        $partnerDocNumber = $request->input('partner_doc_number');
+        $rawDocNumber = trim((string)$request->input('doc_number', ''));
+        $docNumber = ($rawDocNumber !== '') ? $rawDocNumber : '-';
+        $rawPartnerDocNumber = trim((string)$request->input('partner_doc_number', ''));
+        $partnerDocNumber = ($rawPartnerDocNumber !== '') ? $rawPartnerDocNumber : '-';
         $title = $request->input('title', 'Kerja Sama ' . $docType . ' dengan ' . $partnerName);
         $activeRole = session('active_role', 'MASTER');
 
@@ -1377,7 +1383,7 @@ class SimkermaController extends Controller
                 'doc_id' => $newId,
                 'reg_id' => $regId,
                 'doc_number' => $docNumber,
-                'partner_doc_number' => $partnerDocNumber ?: null,
+                'partner_doc_number' => $partnerDocNumber,
                 'track' => 'Dokumen Lampau (Legacy)',
                 'title' => $title,
                 'unit' => $unit,
