@@ -9,10 +9,10 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('partial/images/favicon.ico') }}">
 
-    <!-- Google Fonts: IBM Plex Sans & Public Sans -->
+    <!-- Google Fonts: IBM Plex Sans & Public Sans, Mulish, Instrument Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Instrument+Sans:wght@400;500;600;700&family=Mulish:wght@600;700&family=Spline+Sans+Mono:wght@400&display=swap" rel="stylesheet">
 
     <!-- Preloader CSS -->
     <link rel="stylesheet" href="{{ asset('partial/css/preloader.min.css') }}" type="text/css" />
@@ -477,6 +477,160 @@
                 border: 1px solid #ccc !important;
                 box-shadow: none !important;
             }
+        }
+        /* =========================================================================
+           FSM WORKFLOW MODAL STYLES (SESUAI UI/FSM-UI.html)
+           ========================================================================= */
+        :root {
+            --fsm-royal-violet: #52249E;
+            --fsm-soft-lavender: #EFEBFB;
+            --fsm-on-primary-container: #250059;
+            --fsm-border: #E2E4EC;
+            --fsm-error: #DC2626;
+            --fsm-error-container: #FEF2F2;
+        }
+
+        .fsm-modal-dialog {
+            max-width: 960px !important;
+        }
+        .fsm-modal-content {
+            border-radius: 12px !important;
+            border: 1px solid #E2E4EC !important;
+            overflow: hidden;
+            background-color: #ffffff;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .fsm-header {
+            background-color: #52249E !important;
+            color: #ffffff !important;
+            padding: 16px 24px;
+        }
+        .fsm-header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #52249E;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .fsm-close-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            color: #ffffff;
+            background: transparent;
+            border: none;
+            transition: background-color 0.15s ease;
+        }
+        .fsm-close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+        .fsm-title-banner {
+            background-color: #EFEBFB;
+            border: 1px solid rgba(82, 36, 158, 0.15);
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+        .fsm-card-elevated {
+            background-color: #ffffff;
+            border: 1px solid #E2E4EC;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .fsm-card-elevated .card-header {
+            background-color: #EFEBFB !important;
+            border-bottom: 1px solid #E2E4EC !important;
+            padding: 12px 16px;
+            color: #52249E;
+            font-weight: 700;
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .fsm-card-elevated .card-body {
+            padding: 16px;
+            font-size: 0.82rem;
+        }
+        .fsm-btn-primary {
+            background-color: #52249E !important;
+            color: #ffffff !important;
+            border: none !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease-in-out;
+        }
+        .fsm-btn-primary:hover {
+            background-color: #421b80 !important;
+            color: #ffffff !important;
+            opacity: 0.95;
+        }
+        .fsm-btn-secondary {
+            background-color: #ffffff !important;
+            color: #1E202B !important;
+            border: 1px solid #E2E4EC !important;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease-in-out;
+        }
+        .fsm-btn-secondary:hover {
+            background-color: #F8F9FC !important;
+            color: #1E202B !important;
+        }
+        .fsm-btn-destructive {
+            background-color: #ffffff !important;
+            color: #DC2626 !important;
+            border: 1px solid rgba(220, 38, 38, 0.4) !important;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease-in-out;
+        }
+        .fsm-btn-destructive:hover {
+            background-color: #FEF2F2 !important;
+            color: #DC2626 !important;
+        }
+        .fsm-btn-pdf {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background-color: #FEF2F2;
+            color: #DC2626;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            font-weight: 600;
+            font-size: 0.84rem;
+            text-decoration: none;
+            transition: all 0.15s ease-in-out;
+        }
+        .fsm-btn-pdf:hover {
+            background-color: rgba(220, 38, 38, 0.12);
+            color: #B91C1C;
         }
     </style>
     @stack('styles')
