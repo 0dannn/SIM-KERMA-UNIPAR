@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\AuditTrail;
 use App\Models\Activity;
 use App\Models\Partner;
+use App\Models\AppNotification;
 use App\Services\FSMWorkflowEngineService;
 use App\Services\DocxQrStampService;
 use App\Exceptions\IllegalTransitionException;
@@ -360,8 +361,9 @@ class SimkermaController extends Controller
         $title = $request->input('title', 'Kerja Sama ' . $docType . ' dengan ' . $partnerName);
 
         $firstPartySigner = $request->input('first_party_signer');
-
+        $firstPartyPosition = $request->input('first_party_position');
         $secondPartySigner = $request->input('second_party_signer');
+        $secondPartyPosition = $request->input('second_party_position');
         $picFirstParty = $request->input('pic_first_party');
         $picSecondParty = $request->input('pic_second_party');
         $startDate = $request->input('start_date') ?: null;
@@ -416,7 +418,7 @@ class SimkermaController extends Controller
         $doc = DB::transaction(function () use (
             $request, $newId, $regId, $typePrefix, $docType, $partnerName,
             $docNumber, $partnerDocNumber, $parentMou, $activeRole, $title,
-            $firstPartySigner, $secondPartySigner, $picFirstParty,
+            $firstPartySigner, $firstPartyPosition, $secondPartySigner, $secondPartyPosition, $picFirstParty,
             $picSecondParty, $startDate, $endDate, $nominalValue,
             $description, $validity, $scope, $paperSize, $warningThreshold
         ) {
@@ -429,10 +431,12 @@ class SimkermaController extends Controller
                 'title' => $title,
                 'unit' => $request->input('unit') ?: 'Program Studi Teknik Informatika',
                 'first_party_signer' => $firstPartySigner,
+                'first_party_position' => $firstPartyPosition,
                 'collab_unit' => null,
                 'partner_name' => $partnerName,
                 'partner_category' => $request->input('category') ?: 'DUDI / Swasta',
                 'second_party_signer' => $secondPartySigner,
+                'second_party_position' => $secondPartyPosition,
                 'pic_first_party' => $picFirstParty,
                 'pic_second_party' => $picSecondParty,
                 'doc_type' => $docType,
@@ -502,6 +506,14 @@ class SimkermaController extends Controller
 
         session(['selected_doc_id' => $doc->doc_id]);
 
+        $this->createNotification(
+            $doc,
+            'Pengajuan Dokumen Baru',
+            "Draf {$doc->doc_type} baru ({$doc->doc_id}) bersama mitra {$doc->partner_name} berhasil dibuat oleh {$doc->unit}.",
+            'info',
+            'bi-file-earmark-plus'
+        );
+
         return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id])
             ->with('flash', [
                 'type' => 'success',
@@ -526,7 +538,9 @@ class SimkermaController extends Controller
 
         $title = $request->input('title', 'Paket Terpadu PKM: ' . $topic);
         $firstPartySigner = $request->input('first_party_signer');
+        $firstPartyPosition = $request->input('first_party_position');
         $secondPartySigner = $request->input('second_party_signer');
+        $secondPartyPosition = $request->input('second_party_position');
         $picFirstParty = $request->input('pic_first_party');
         $picSecondParty = $request->input('pic_second_party');
         $startDate = $request->input('start_date');
@@ -537,7 +551,7 @@ class SimkermaController extends Controller
         $doc = DB::transaction(function () use (
             $request, $newId, $regId, $partnerName, $partnerDocNumber,
             $unitMain, $unitCollab, $topic, $duration, $activeRole,
-            $title, $firstPartySigner, $secondPartySigner, $picFirstParty,
+            $title, $firstPartySigner, $firstPartyPosition, $secondPartySigner, $secondPartyPosition, $picFirstParty,
             $picSecondParty, $startDate, $endDate, $nominalValue, $description
         ) {
             do {
@@ -553,10 +567,12 @@ class SimkermaController extends Controller
                 'title' => $title,
                 'unit' => $unitMain,
                 'first_party_signer' => $firstPartySigner,
+                'first_party_position' => $firstPartyPosition,
                 'collab_unit' => $unitCollab,
                 'partner_name' => $partnerName,
                 'partner_category' => $request->input('category') ?: 'DUDI / Swasta',
                 'second_party_signer' => $secondPartySigner,
+                'second_party_position' => $secondPartyPosition,
                 'pic_first_party' => $picFirstParty,
                 'pic_second_party' => $picSecondParty,
                 'doc_type' => 'Paket Terpadu (MoU + MoA + IA)',
@@ -701,7 +717,7 @@ class SimkermaController extends Controller
                 }
                 $filename = 'naskah_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '_' . time() . '.' . $uploaded->getClientOriginalExtension();
                 $uploaded->move($dest, $filename);
-                $additionalData['signed_file'] = $filename;
+                $additionalData['signed_file'] = 'uploads/documents/' . $filename;
             }
 
             // Handle Berkas Upload Draf (PDF/DOCX) pada Inisiasi Adendum / Reaktivasi (RENEW)
@@ -720,6 +736,45 @@ class SimkermaController extends Controller
                     $document->draft_file = 'uploads/documents/' . $filename;
                 }
                 $document->save();
+            }
+
+            // Pengolahan khusus untuk event VERIFY (Persetujuan Pimpinan & Telaah Mutu Hukum)
+            if ($event === 'VERIFY') {
+                $hasTridharma = $request->has('substance_tridharma');
+                $hasLegal = $request->has('legal_fairness');
+                $hasIku6 = $request->has('iku6_benefit');
+
+                $evalItems = [];
+                $evalItems[] = 'Tridharma MBKM: ' . ($hasTridharma ? '✓ Memenuhi' : '-');
+                $evalItems[] = 'Klausul Hukum: ' . ($hasLegal ? '✓ Berimbang' : '-');
+                $evalItems[] = 'Capaian IKU 6: ' . ($hasIku6 ? '✓ Berdampak' : '-');
+                $evalSummary = '[Evaluasi Mutu: ' . implode(', ', $evalItems) . ']';
+
+                $customNotes = trim((string)$request->input('notes', ''));
+                if ($customNotes !== '' && $customNotes !== 'Disposisi keputusan FSM dieksekusi oleh pejabat berwenang') {
+                    $notes = $evalSummary . ' ' . $customNotes;
+                } else {
+                    $notes = $evalSummary . ' Draf naskah disetujui, teks dibekukan (Freeze Text), dan siap dicetak untuk proses penandatanganan fisik oleh Pimpinan.';
+                }
+            }
+
+            // Pengolahan khusus untuk event ACTIVATE (Pengesahan Fisik & Pengaktifan Naskah)
+            if ($event === 'ACTIVATE') {
+                $hasSigned = $request->has('physical_signed');
+                $hasStamp = $request->has('physical_stamp_meterai');
+
+                $physicalItems = [];
+                $physicalItems[] = 'TTD Basah: ' . ($hasSigned ? '✓ Lengkap' : '-');
+                $physicalItems[] = 'Meterai & Stempel: ' . ($hasStamp ? '✓ Sah Bermeterai' : '-');
+                $physSummary = '[Legalitas Fisik: ' . implode(', ', $physicalItems) . ']';
+
+                $customNotes = trim((string)$request->input('notes', ''));
+                if ($customNotes !== '' && $customNotes !== 'Disposisi keputusan FSM dieksekusi oleh pejabat berwenang') {
+                    $notes = $physSummary . ' ' . $customNotes;
+                } else {
+                    $partnerNum = !empty($additionalData['partner_doc_number']) ? $additionalData['partner_doc_number'] : $document->partner_doc_number;
+                    $notes = $physSummary . ' Naskah sah bertanda tangan basah & bermeterai aktif. Nomor Pihak I (UNIPAR): ' . ($document->doc_number ?: $document->doc_id) . (!empty($partnerNum) ? ', Nomor Pihak II (Mitra): ' . $partnerNum : '');
+                }
             }
 
             $this->fsmService->transition($document, $event, $activeRole, $actorTitle, $notes, $additionalData);
@@ -751,6 +806,37 @@ class SimkermaController extends Controller
                     \Illuminate\Support\Facades\Log::error("Gagal stempel QR Code dokumen: " . $e->getMessage());
                 }
             }
+
+            // Kirim notifikasi sistem in-app
+            $notifTitle = match($event) {
+                'SUBMIT' => 'Pengajuan Draf ke Pemeriksaan',
+                'VERIFY' => 'Draf Disetujui Pimpinan / Legal',
+                'RETURN_TO_DRAFT' => 'Draf Dikembalikan untuk Revisi',
+                'ACTIVATE' => 'Pengesahan Naskah Aktif Sah',
+                'CANCEL' => 'Pengusulan Naskah Dibatalkan',
+                'RENEW' => 'Inisiasi Perpanjangan Adendum',
+                default => 'Pembaruan Status Dokumen'
+            };
+            $notifType = match($event) {
+                'VERIFY', 'ACTIVATE' => 'success',
+                'RETURN_TO_DRAFT' => 'warning',
+                'CANCEL' => 'danger',
+                default => 'primary'
+            };
+            $notifIcon = match($event) {
+                'SUBMIT' => 'bi-send-fill',
+                'VERIFY' => 'bi-patch-check-fill',
+                'RETURN_TO_DRAFT' => 'bi-arrow-return-left',
+                'ACTIVATE' => 'bi-check-circle-fill',
+                'CANCEL' => 'bi-x-octagon-fill',
+                'RENEW' => 'bi-arrow-repeat',
+                default => 'bi-bell-fill'
+            };
+            $notifMsg = "Naskah {$document->doc_id} ({$document->partner_name}) beralih status: {$oldStatus} → {$document->status} oleh {$actorTitle}.";
+            if ($event === 'RETURN_TO_DRAFT' && $request->filled('notes')) {
+                $notifMsg .= " Catatan revisi: " . Str::limit($request->input('notes'), 120);
+            }
+            $this->createNotification($document, $notifTitle, $notifMsg, $notifType, $notifIcon);
 
             $routeParams = ['menu' => 4, 'doc' => $document->doc_id];
             if ($request->filled('redirect_view')) {
@@ -1207,9 +1293,11 @@ class SimkermaController extends Controller
             'title' => $request->input('title', $document->title),
             'unit' => $request->input('unit', $document->unit),
             'first_party_signer' => $request->input('first_party_signer', $document->first_party_signer),
+            'first_party_position' => $request->input('first_party_position', $document->first_party_position),
             'partner_name' => $request->input('partner_name', $document->partner_name),
             'partner_category' => $category,
             'second_party_signer' => $request->input('second_party_signer', $document->second_party_signer),
+            'second_party_position' => $request->input('second_party_position', $document->second_party_position),
             'pic_first_party' => $request->input('pic_first_party', $document->pic_first_party),
             'pic_second_party' => $request->input('pic_second_party', $document->pic_second_party),
             'scope' => $request->input('scope', $document->scope),
@@ -1494,6 +1582,14 @@ class SimkermaController extends Controller
 
         session(['selected_doc_id' => $doc->doc_id]);
 
+        $this->createNotification(
+            $doc,
+            'Pengajuan Dokumen Baru',
+            "Draf {$doc->doc_type} baru ({$doc->doc_id}) bersama mitra {$doc->partner_name} berhasil dibuat oleh {$doc->unit}.",
+            'info',
+            'bi-file-earmark-plus'
+        );
+
         return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id])
             ->with('flash', [
                 'type' => 'success',
@@ -1522,6 +1618,15 @@ class SimkermaController extends Controller
 
         try {
             $this->fsmService->transition($document, 'RENEW', $activeRole, $actorTitle, $notes);
+
+            $this->createNotification(
+                $document,
+                'Inisiasi Perpanjangan / Reaktivasi',
+                "Dokumen {$document->doc_id} berhasil diperpanjang / direaktivasi kembali ke status DRAFT oleh {$actorTitle}.",
+                'info',
+                'bi-arrow-repeat'
+            );
+
             return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id])
                 ->with('flash', [
                     'type' => 'success',
@@ -1686,5 +1791,52 @@ class SimkermaController extends Controller
         });
 
         return response()->json($results);
+    }
+
+    /**
+     * Helper untuk membuat notifikasi sistem in-app
+     */
+    protected function createNotification($document, string $title, string $message, string $type = 'info', string $icon = 'bi-bell-fill', string $targetRole = 'ALL'): AppNotification
+    {
+        return AppNotification::create([
+            'document_id' => $document?->id,
+            'doc_id' => $document?->doc_id,
+            'title' => $title,
+            'message' => $message,
+            'type' => $type,
+            'icon' => $icon,
+            'link' => $document ? route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id]) : null,
+            'target_role' => $targetRole,
+            'is_read' => false,
+        ]);
+    }
+
+    /**
+     * Tandai satu notifikasi sebagai dibaca dan redirect ke dokumen terkait
+     */
+    public function markNotificationAsRead(Request $request, $id = null)
+    {
+        if ($id) {
+            $notif = AppNotification::find($id);
+            if ($notif) {
+                $notif->update(['is_read' => true]);
+                if ($notif->link) {
+                    return redirect($notif->link);
+                }
+            }
+        }
+        return back();
+    }
+
+    /**
+     * Tandai seluruh notifikasi sebagai telah dibaca
+     */
+    public function markAllNotificationsAsRead()
+    {
+        AppNotification::where('is_read', false)->update(['is_read' => true]);
+        return back()->with('flash', [
+            'type' => 'success',
+            'msg' => 'Seluruh pemberitahuan sistem telah ditandai sebagai dibaca.'
+        ]);
     }
 }

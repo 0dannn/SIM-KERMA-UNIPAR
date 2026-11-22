@@ -139,14 +139,24 @@
                                     <span class="text-dark fw-medium">{{ $doc->unit }}</span>
                                 </div>
                                 <div class="d-flex align-items-baseline">
-                                    <span class="text-muted flex-shrink-0" style="width: 140px;">Penandatangan Pihak I</span>
+                                    <span class="text-muted flex-shrink-0" style="width: 140px;">Penandatangan UNIPAR</span>
                                     <span class="text-muted me-2">:</span>
-                                    <span class="text-dark fw-medium">{{ $doc->first_party_signer ?: 'Rektor Universitas Parna Raya' }}</span>
+                                    <span class="text-dark fw-medium">
+                                        {{ $doc->first_party_signer ?: 'Rektor Universitas Parna Raya' }}
+                                        @if (!empty($doc->first_party_position))
+                                            <small class="text-muted">({{ $doc->first_party_position }})</small>
+                                        @endif
+                                    </span>
                                 </div>
                                 <div class="d-flex align-items-baseline">
-                                    <span class="text-muted flex-shrink-0" style="width: 140px;">Penandatangan Pihak II</span>
+                                    <span class="text-muted flex-shrink-0" style="width: 140px;">Penandatangan Mitra</span>
                                     <span class="text-muted me-2">:</span>
-                                    <span class="text-dark fw-medium">{{ $doc->second_party_signer ?: ($doc->pic_second_party ?: 'Pimpinan Mitra') }}</span>
+                                    <span class="text-dark fw-medium">
+                                        {{ $doc->second_party_signer ?: ($doc->pic_second_party ?: 'Pimpinan Mitra') }}
+                                        @if (!empty($doc->second_party_position))
+                                            <small class="text-muted">({{ $doc->second_party_position }})</small>
+                                        @endif
+                                    </span>
                                 </div>
                                 @if (!empty($doc->doc_number))
                                     <div class="d-flex align-items-baseline">
@@ -256,14 +266,29 @@
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="bi bi-clipboard2-check-fill fs-6"></i>
-                                    <span>Penelaahan Substansi &amp; Mutu Hukum (Tim Legal)</span>
+                                    <span>Penelaahan Mutu &amp; Persetujuan Pimpinan / Tim Legal</span>
                                 </div>
                                 <span class="badge" style="background-color: #5156be; font-size: 0.65rem;">Evaluasi Mutu &amp; IKU 6</span>
                             </div>
                             <div class="card-body">
                                 <div class="text-muted mb-2" style="font-size: 0.74rem;">
-                                    Tim Legal memeriksa kepatuhan Tridharma, keadilan klausul hukum, dan proyeksi capaian IKU 6 sebelum naskah dibekukan untuk pengesahan pimpinan.
+                                    Pimpinan Rektorat &amp; Tim Legal menelaah kepatuhan Tridharma, keadilan klausul hukum, proyeksi capaian IKU 6, serta mengonfirmasi Nomor Naskah resmi UNIPAR sebelum naskah dibekukan untuk penandatanganan fisik.
                                 </div>
+
+                                <!-- ALOKASI / KONFIRMASI NOMOR NASKAH RESMI UNIPAR -->
+                                <div class="mb-3 p-2.5 rounded border bg-light">
+                                    <label class="form-label fw-bold text-dark mb-1 d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
+                                        <span><i class="bi bi-hash text-primary me-1"></i> Nomor Naskah Resmi UNIPAR (Pihak I):</span>
+                                        <span class="badge bg-white text-secondary border fw-normal">Diterbitkan Tata Usaha / Rektorat</span>
+                                    </label>
+                                    <input type="text" name="doc_number" class="form-control form-control-sm font-monospace bg-white" 
+                                           value="{{ (!empty($doc->doc_number) && $doc->doc_number !== '-') ? $doc->doc_number : '' }}" 
+                                           placeholder="Contoh: 045/UNIPAR/MoA/X/2026 (Kosongkan jika tetap menggunakan nomor draf)">
+                                    <div class="text-muted mt-1" style="font-size: 0.68rem;">
+                                        Nomor naskah resmi ini akan dicetak pada lembar fisik sebelum proses penandatanganan basah oleh Pimpinan.
+                                    </div>
+                                </div>
+
                                 <div class="list-group list-group-flush border rounded mb-2">
                                     <label class="list-group-item d-flex align-items-start gap-2 py-2 px-3 bg-light-subtle">
                                         <input class="form-check-input flex-shrink-0 mt-1" type="checkbox" name="substance_tridharma" value="1" checked>
@@ -288,7 +313,7 @@
                                     </label>
                                 </div>
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">
-                                    <i class="bi bi-info-circle text-primary me-1"></i> Verifikasi kelayakan akan membekukan teks (Freeze Text). Penandatanganan fisik dilakukan pada status <strong>VERIFIED</strong>.
+                                    <i class="bi bi-info-circle text-primary me-1"></i> Persetujuan draf akan membekukan teks (Freeze Text). Penandatanganan fisik dilakukan pada status <strong>VERIFIED</strong>.
                                 </small>
                             </div>
                         </div>
@@ -296,6 +321,17 @@
 
                     <!-- FORM KHUSUS STATUS VERIFIED (Pengesahan Fisik: Nomor Mitra, Tanggal Mulai, Scan PDF Asli) -->
                     @if ($doc->status === 'VERIFIED')
+                        @php
+                            $calcEndDate = null;
+                            if (!empty($doc->end_date)) {
+                                $calcEndDate = \Carbon\Carbon::parse($doc->end_date)->format('Y-m-d');
+                            } else {
+                                $stDate = $doc->start_date ? \Carbon\Carbon::parse($doc->start_date) : now();
+                                preg_match('/(\d+)/', (string)($doc->validity ?: '3'), $vm);
+                                $yrs = isset($vm[1]) ? (int)$vm[1] : 3;
+                                $calcEndDate = $stDate->copy()->addYears($yrs)->format('Y-m-d');
+                            }
+                        @endphp
                         <div class="fsm-card-elevated mb-3">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center gap-2">
@@ -308,28 +344,59 @@
                                 <div class="text-muted mb-2" style="font-size: 0.74rem;">
                                     Setelah naskah ditandatangani basah oleh Rektor dan mitra serta dibubuhi meterai fisik Rp10.000, lengkapi nomor naskah Pihak II (Mitra) dan unggah berkas scan untuk aktivasi.
                                 </div>
+
+                                <!-- CHECKLIST KEPATUHAN PENGESAHAN FISIK -->
+                                <div class="mb-3">
+                                    <div class="fw-bold text-dark mb-1 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                        <i class="bi bi-shield-check text-primary"></i> Checklist Kepatuhan Berkas Fisik:
+                                    </div>
+                                    <div class="list-group list-group-flush border rounded">
+                                        <label class="list-group-item d-flex align-items-start gap-2 py-2 px-3 bg-light-subtle">
+                                            <input class="form-check-input flex-shrink-0 mt-0.5" type="checkbox" name="physical_signed" value="1" checked required>
+                                            <div>
+                                                <strong class="d-block text-dark" style="font-size: 0.74rem;">1. Penandatanganan Basah Kedua Belah Pihak</strong>
+                                                <span class="text-muted" style="font-size: 0.68rem;">Naskah fisik telah ditandatangani asli oleh pejabat berwenang dari UNIPAR dan pihak Mitra.</span>
+                                            </div>
+                                        </label>
+                                        <label class="list-group-item d-flex align-items-start gap-2 py-2 px-3 bg-light-subtle">
+                                            <input class="form-check-input flex-shrink-0 mt-0.5" type="checkbox" name="physical_stamp_meterai" value="1" checked required>
+                                            <div>
+                                                <strong class="d-block text-dark" style="font-size: 0.74rem;">2. Pembubuhan Meterai Sah (Rp10.000) &amp; Cap Stempel Resmi</strong>
+                                                <span class="text-muted" style="font-size: 0.68rem;">Naskah telah dibubuhi meterai fisik/e-Meterai dan cap stempel basah resmi dari kedua lembaga.</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div class="row g-2 mb-2">
                                     <div class="col-sm-6">
                                         <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.75rem;">Nomor Naskah Pihak I (UNIPAR):</label>
-                                        <input type="text" name="doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->doc_number }}">
+                                        <input type="text" name="doc_number" class="form-control form-control-sm bg-white font-monospace" value="{{ $doc->doc_number }}">
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.75rem;">Nomor Naskah Pihak II (Mitra): <span class="text-danger">*</span></label>
-                                        <input type="text" name="partner_doc_number" class="form-control form-control-sm bg-white" value="{{ $doc->partner_doc_number }}" placeholder="Nomor resmi dari mitra" required>
+                                        <input type="text" name="partner_doc_number" class="form-control form-control-sm bg-white font-monospace" value="{{ $doc->partner_doc_number }}" placeholder="Nomor resmi dari mitra" required>
+                                        <div class="text-muted mt-0.5" style="font-size: 0.68rem;">Ketik '-' jika instansi mitra tidak menerbitkan nomor naskah internal.</div>
                                     </div>
                                 </div>
                                 <div class="row g-2 mb-2">
-                                    <div class="col-sm-6">
+                                    <div class="col-sm-4">
                                         <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.75rem;">
-                                            <i class="bi bi-calendar-event text-primary me-1"></i> Tanggal Mulai Berlaku: <span class="text-danger">*</span>
+                                            <i class="bi bi-calendar-event text-primary me-1"></i> Tanggal Mulai: <span class="text-danger">*</span>
                                         </label>
-                                        <input type="date" name="start_date" class="form-control form-control-sm bg-white" value="{{ $doc->start_date ? \Carbon\Carbon::parse($doc->start_date)->format('Y-m-d') : date('Y-m-d') }}" required>
+                                        <input type="date" name="start_date" id="modal_start_date_{{ $doc->id }}" class="form-control form-control-sm bg-white" value="{{ $doc->start_date ? \Carbon\Carbon::parse($doc->start_date)->format('Y-m-d') : date('Y-m-d') }}" onchange="calcModalEndDate_{{ $doc->id }}()" required>
                                     </div>
-                                    <div class="col-sm-6">
+                                    <div class="col-sm-4">
                                         <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.75rem;">
                                             <i class="bi bi-hourglass-split text-primary me-1"></i> Masa Berlaku: <span class="text-danger">*</span>
                                         </label>
-                                        <input type="text" name="validity" class="form-control form-control-sm bg-white" value="{{ $doc->validity ?: '3 Tahun' }}" placeholder="Contoh: 3 Tahun atau 5 Tahun" required>
+                                        <input type="text" name="validity" id="modal_validity_{{ $doc->id }}" class="form-control form-control-sm bg-white" value="{{ $doc->validity ?: '3 Tahun' }}" placeholder="Contoh: 3 Tahun" oninput="calcModalEndDate_{{ $doc->id }}()" required>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.75rem;">
+                                            <i class="bi bi-calendar-check text-success me-1"></i> Tanggal Berakhir:
+                                        </label>
+                                        <input type="date" name="end_date" id="modal_end_date_{{ $doc->id }}" class="form-control form-control-sm bg-light" value="{{ $calcEndDate }}" title="Terhitung otomatis berdasarkan tanggal mulai dan masa berlaku">
                                     </div>
                                 </div>
                                 <div class="row g-2 mb-2">
@@ -348,6 +415,22 @@
                                 </div>
                             </div>
                         </div>
+                        <script>
+                            function calcModalEndDate_{{ $doc->id }}() {
+                                var s = document.getElementById('modal_start_date_{{ $doc->id }}').value;
+                                var v = document.getElementById('modal_validity_{{ $doc->id }}').value;
+                                if (!s) return;
+                                var match = v.match(/\d+/);
+                                var years = match ? parseInt(match[0]) : 1;
+                                var parts = s.split('-');
+                                if (parts.length === 3) {
+                                    var y = parseInt(parts[0]) + years;
+                                    var endVal = y + '-' + parts[1] + '-' + parts[2];
+                                    var endEl = document.getElementById('modal_end_date_{{ $doc->id }}');
+                                    if (endEl) endEl.value = endVal;
+                                }
+                            }
+                        </script>
                     @endif
 
                     <!-- FORM KHUSUS STATUS WARNING / EXPIRED (Perpanjangan / Adendum) -->
@@ -455,9 +538,9 @@
                                 <span>Ajukan ke Pemeriksaan</span>
                             </button>
                         @elseif ($doc->status === 'REVIEW')
-                            <button type="submit" name="event" value="VERIFY" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI VERIFIKASI KELAYAKAN DRAF:\n\nNaskah telah memenuhi evaluasi mutu. Loloskan dan bekukan teks naskah untuk penandatanganan fisik?')">
+                            <button type="submit" name="event" value="VERIFY" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI PERSETUJUAN & VERIFIKASI DRAF:\n\nNaskah telah memenuhi evaluasi mutu Tridharma & regulasi. Setujui dan bekukan teks naskah untuk proses penandatanganan fisik oleh Pimpinan?')">
                                 <i class="bi bi-patch-check-fill fs-6"></i>
-                                <span>Verifikasi Kelayakan Draf</span>
+                                <span>Setujui &amp; Verifikasi Kelayakan Draf</span>
                             </button>
                         @elseif ($doc->status === 'VERIFIED')
                             <button type="submit" name="event" value="ACTIVATE" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI PENGESAHAN DOKUMEN:\n\nSahkan dan aktifkan naskah {{ $doc->doc_id }} menjadi status ACTIVE (Berlaku Sah)?')">

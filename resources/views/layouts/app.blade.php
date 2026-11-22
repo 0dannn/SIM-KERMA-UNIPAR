@@ -684,6 +684,89 @@
             </div>
 
             <div class="d-flex align-items-center">
+                <!-- Tautan Kembali ke Portal Publik Beranda -->
+                <a href="{{ route('home') }}" class="btn btn-outline-primary btn-sm rounded-pill me-2 d-none d-sm-inline-flex align-items-center gap-1.5 px-2.5 py-1 font-size-12 shadow-2xs" style="border-color: #cbd5e1; color: #1e293b;" target="_blank" title="Buka Portal Beranda Publik di Tab Baru">
+                    <i class="bi bi-globe text-primary"></i> <span>Portal Publik</span>
+                </a>
+
+                <!-- NOTIFICATION BELL DROPDOWN (SISTEM NOTIFIKASI IN-APP) -->
+                @php
+                    $appNotifs = \App\Models\AppNotification::orderBy('id', 'desc')->take(8)->get();
+                    $unreadCount = \App\Models\AppNotification::where('is_read', false)->count();
+                @endphp
+                <div class="dropdown d-inline-block me-1">
+                    <button type="button" class="btn header-item noti-icon position-relative waves-effect d-flex align-items-center justify-content-center p-2" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Pemberitahuan Sistem">
+                        <i class="bx bx-bell font-size-22 text-secondary"></i>
+                        @if ($unreadCount > 0)
+                            <span class="badge bg-danger rounded-pill position-absolute" style="top: 12px; right: 4px; font-size: 0.65rem; padding: 0.2em 0.45em;">
+                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                            </span>
+                        @endif
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0 shadow-lg border" aria-labelledby="page-header-notifications-dropdown" style="min-width: 320px; max-width: 360px; border-radius: 8px;">
+                        <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="m-0 fw-bold font-size-14 text-dark">
+                                    <i class="bi bi-bell-fill text-primary me-1"></i> Notifikasi Sistem
+                                </h6>
+                                @if ($unreadCount > 0)
+                                    <span class="badge bg-primary rounded-pill font-size-11">{{ $unreadCount }} Baru</span>
+                                @endif
+                            </div>
+                            @if ($unreadCount > 0)
+                                <form method="POST" action="{{ route('simkerma.notifications.mark-all-read') }}" class="m-0">
+                                    @csrf
+                                    <button type="submit" class="btn btn-link p-0 text-primary text-decoration-none" style="font-size: 0.72rem;">
+                                        Tandai Semua Dibaca
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+
+                        <div style="max-height: 330px; overflow-y: auto;">
+                            @forelse ($appNotifs as $notif)
+                                <form method="POST" action="{{ route('simkerma.notifications.mark-read', $notif->id) }}" class="m-0">
+                                    @csrf
+                                    <button type="submit" class="w-100 text-start border-0 border-bottom p-2.5 d-flex align-items-start gap-2.5 text-decoration-none" style="background-color: {{ $notif->is_read ? '#ffffff' : '#f0f7ff' }}; cursor: pointer; transition: background 0.15s;">
+                                        <div class="flex-shrink-0 mt-0.5">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-2xs" style="width: 32px; height: 32px; font-size: 0.85rem; background-color: {{ match($notif->type) { 'success' => '#16a34a', 'warning' => '#d97706', 'danger' => '#dc2626', default => '#2563eb' } }};">
+                                                <i class="bi {{ $notif->icon ?: 'bi-bell' }}"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <div class="d-flex justify-content-between align-items-center mb-0.5">
+                                                <h6 class="mb-0 fw-bold text-dark text-truncate" style="font-size: 0.78rem;">{{ $notif->title }}</h6>
+                                                @if (!$notif->is_read)
+                                                    <span class="badge bg-primary p-1 rounded-circle" style="width: 6px; height: 6px;" title="Belum dibaca"></span>
+                                                @endif
+                                            </div>
+                                            <div class="text-secondary small mb-1" style="font-size: 0.72rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                                {{ $notif->message }}
+                                            </div>
+                                            <div class="text-muted d-flex align-items-center gap-1" style="font-size: 0.66rem;">
+                                                <i class="bi bi-clock"></i> {{ $notif->created_at ? $notif->created_at->diffForHumans() : 'Baru saja' }}
+                                                @if ($notif->doc_id)
+                                                    &bull; <span class="fw-semibold text-primary">{{ $notif->doc_id }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </button>
+                                </form>
+                            @empty
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-bell-slash text-secondary fs-3 d-block mb-1"></i>
+                                    <div class="small">Belum ada pemberitahuan baru</div>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <div class="p-2 border-top text-center bg-light">
+                            <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="small text-primary fw-semibold text-decoration-none" style="font-size: 0.74rem;">
+                                Buka Menu Pengajuan Kerja Sama &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Reset Data Pengajuan (Mode Pengembangan) -->
                 <form method="POST" action="{{ route('simkerma.reset-all-documents') }}" class="d-none d-sm-inline me-2" onsubmit="return confirm('PERINGATAN PENGEMBANGAN:\n\nApakah Anda yakin ingin menghapus SEMUA data pengajuan dan persetujuan kerja sama?\n\nSemua dokumen, jejak audit (audit trails), dan log siklus FSM akan dihapus permanen.')">
@@ -861,7 +944,6 @@
                 </div>
                 <!-- end page title -->
 
-                @if ($current['id'] != 4)
                 <!-- Kotak Informasi Spesifikasi Dokumen Resmi -->
                 <div class="alert alert-secondary alert-dismissible fade show border-0 bg-soft-secondary mb-4" role="alert">
                     <div class="d-flex align-items-start gap-2">
@@ -877,7 +959,6 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-                @endif
 
                 <!-- Dynamic Content Blade -->
                 @yield('content')

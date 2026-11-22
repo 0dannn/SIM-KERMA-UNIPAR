@@ -85,6 +85,7 @@ runTestCase("KASUS 1: Alur Normal Jalur 1 - MoA Magang MBKM PT Telkom (DRAFT -> 
 
     echo "4. Pimpinan Rektorat menandatangani basah, menempel meterai Rp10.000, dan mengaktifkan (ACTIVATE)...\n";
     $fsm->transition($doc, 'ACTIVATE', 'LEADER', 'Dr. Rosdiana Simbolon (Rektor)', 'Naskah sah aktif bertanda tangan basah', [
+        'start_date' => '2026-11-22',
         'partner_doc_number' => 'TELKOM-SULUT/PKS/2026/01',
         'signed_file' => 'scan_moa_telkom_sah_meterai.pdf'
     ]);
@@ -114,6 +115,7 @@ runTestCase("KASUS 2: Penolakan Klausul Legal & Siklus Revisi (REVIEW -> DRAFT -
         'partner_name' => 'RS Siloam Manado',
         'partner_category' => 'DUDI / Swasta',
         'unit' => 'Fakultas Ilmu Komputer',
+        'validity' => '3 Tahun',
         'status' => 'DRAFT'
     ]);
 
@@ -141,6 +143,7 @@ runTestCase("KASUS 2: Penolakan Klausul Legal & Siklus Revisi (REVIEW -> DRAFT -
 
     echo "5. Pimpinan mengesahkan naskah bertanda tangan basah (ACTIVATE)...\n";
     $fsm->transition($doc, 'ACTIVATE', 'LEADER', 'Rektor UNIPAR', 'Pengesahan naskah MoU sah', [
+        'start_date' => '2026-11-22',
         'partner_doc_number' => 'SILOAM-MND/DIR/2026/89'
     ]);
     $doc->refresh();
@@ -243,11 +246,14 @@ runTestCase("KASUS 5: Siklus Peringatan H-90, Kedaluwarsa Alami, & Adendum Pemul
         'partner_doc_number' => 'PEMKOT-MND/ADND/2026/01'
     ]);
     $doc->refresh();
-    echo "   -> Status Dokumen: {$doc->status} (Masa berlaku baru: {$doc->validity})\n";
-    if ($doc->status !== 'ACTIVE' || $doc->validity !== '2 Tahun (Adendum)') throw new Exception("Gagal perpanjangan naskah");
+    echo "   -> Status Dokumen: {$doc->status} (Kembali ke DRAF untuk penyusunan klausul perpanjangan)\n";
+    if ($doc->status !== 'DRAFT' || $doc->validity !== '2 Tahun (Adendum)') throw new Exception("Gagal perpanjangan naskah");
+
+    // Simulasi transisi kembali ke ACTIVE setelah draf adendum disetujui
+    $doc->status = 'WARNING';
+    $doc->save();
 
     echo "4. Kemungkinan B: Masa adendum berakhir alami tanpa perpanjangan susulan (EXPIRE)...\n";
-    $fsm->transition($doc, 'TRIGGER_WARNING', 'SYSTEM', 'Scheduler Otomasi');
     $fsm->transition($doc, 'EXPIRE', 'SYSTEM', 'Scheduler Otomasi', 'Masa berlaku naskah adendum telah habis.');
     $doc->refresh();
     echo "   -> Status Dokumen: {$doc->status}\n";
@@ -256,8 +262,8 @@ runTestCase("KASUS 5: Siklus Peringatan H-90, Kedaluwarsa Alami, & Adendum Pemul
     echo "5. Kemungkinan C: Pasca-kedaluwarsa 3 bulan, disepakati reaktivasi naskah (RENEW)...\n";
     $fsm->transition($doc, 'RENEW', 'LEADER', 'Rektor UNIPAR', 'Reaktivasi naskah pasca-kedaluwarsa');
     $doc->refresh();
-    echo "   -> Status Dokumen: {$doc->status} (Kembali Sah Aktif)\n";
-    if ($doc->status !== 'ACTIVE') throw new Exception("Gagal reaktivasi naskah expired");
+    echo "   -> Status Dokumen: {$doc->status} (Kembali ke DRAF untuk penelaahan ulang)\n";
+    if ($doc->status !== 'DRAFT') throw new Exception("Gagal reaktivasi naskah expired");
 });
 
 // -----------------------------------------------------------------------------
@@ -299,10 +305,30 @@ runTestCase("KASUS 6: Simulasi Penyerangan Hak Akses Peran (RBAC Guard Protectio
     if (!$legalBlocked) throw new Exception("RBAC Jebol: LEGAL berhasil mengeksekusi ACTIVATE tanda tangan Rektor!");
 
     echo "3. Verifikasi: Peran ADMIN (Superuser) diizinkan mengeksekusi ACTIVATE...\n";
-    $fsm->transition($doc, 'ACTIVATE', 'ADMIN', 'Admin SIMKERMA');
+    $fsm->transition($doc, 'ACTIVATE', 'ADMIN', 'Admin SIMKERMA', 'Aktivasi oleh Admin', [
+        'start_date' => '2026-11-22',
+        'partner_doc_number' => 'UJI-MITRA/2026/99',
+        'validity' => '3 Tahun'
+    ]);
     $doc->refresh();
     echo "   -> Status Dokumen: {$doc->status} (Superuser ADMIN Berhasil)\n";
     if ($doc->status !== 'ACTIVE') throw new Exception("Peran ADMIN gagal mengeksekusi aktivasi");
+
+    echo "4. Verifikasi: Peran LEADER (Pimpinan Rektorat) berwenang mengeksekusi VERIFY...\n";
+    $docReview = Document::create([
+        'doc_id' => 'UNIPAR-2026-LEADER-VERIFY',
+        'reg_id' => 'REG-LEADER-2026',
+        'track' => 'Jalur 1: Kemitraan Bertahap',
+        'doc_type' => 'MoU',
+        'partner_name' => 'Mitra Kampus',
+        'partner_category' => 'Perguruan Tinggi',
+        'unit' => 'Biro Kerja Sama',
+        'status' => 'REVIEW'
+    ]);
+    $fsm->transition($docReview, 'VERIFY', 'LEADER', 'Dr. Rosdiana Simbolon (Rektor)', 'Draf disetujui Pimpinan Rektorat');
+    $docReview->refresh();
+    echo "   -> Status Dokumen: {$docReview->status} (LEADER berhasil menyetujui draf)\n";
+    if ($docReview->status !== 'VERIFIED') throw new Exception("Peran LEADER gagal mengeksekusi VERIFY");
 });
 
 // -----------------------------------------------------------------------------

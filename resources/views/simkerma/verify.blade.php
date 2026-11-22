@@ -271,7 +271,7 @@
                             <div class="field-val fw-bold text-dark">{{ $document->partner_name }}</div>
                             <div class="text-muted" style="font-size: 0.74rem;">{{ $document->partner_category }}</div>
                             @if (!empty($document->second_party_signer))
-                                <div class="text-secondary small mt-1">Penandatangan: {{ $document->second_party_signer }}</div>
+                                <div class="text-secondary small mt-1">Penandatangan: {{ $document->second_party_signer }}@if (!empty($document->second_party_position)) <span class="text-muted">({{ $document->second_party_position }})</span>@endif</div>
                             @endif
                             @if (!empty($document->pic_second_party))
                                 <div class="text-muted small">PIC: {{ $document->pic_second_party }}</div>
@@ -284,7 +284,7 @@
                                 <div class="text-muted" style="font-size: 0.74rem;">Kolaborator: {{ $document->collab_unit }}</div>
                             @endif
                             @if (!empty($document->first_party_signer))
-                                <div class="text-secondary small mt-1">Penandatangan: {{ $document->first_party_signer }}</div>
+                                <div class="text-secondary small mt-1">Penandatangan: {{ $document->first_party_signer }}@if (!empty($document->first_party_position)) <span class="text-muted">({{ $document->first_party_position }})</span>@endif</div>
                             @endif
                             @if (!empty($document->pic_first_party))
                                 <div class="text-muted small">PIC: {{ $document->pic_first_party }}</div>

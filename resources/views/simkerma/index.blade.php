@@ -1093,270 +1093,342 @@
                     <form method="POST" action="{{ route('simkerma.store-jalur1') }}" enctype="multipart/form-data" class="form-kerma-submission">
                         @csrf
 
-                        <!-- 0. JENIS DOKUMEN KERJA SAMA & DOKUMEN INDUK -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Jenis Dokumen Kerja Sama : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <select name="doc_type" id="inputDocType" class="form-select" required onchange="toggleParentField()">
-                                    <option value="MoU" selected>MoU (Nota Kesepahaman / Tingkat Institusi/Rektorat)</option>
-                                    <option value="MoA / PKS">MoA / PKS (Perjanjian Kerja Sama / Tingkat Fakultas/UPPS)</option>
-                                    <option value="IA">IA (Implementation Arrangement / Tingkat Program Studi/Unit)</option>
-                                </select>
-                                <div class="form-text text-muted">
-                                    Pilih jenis naskah kerja sama yang diajukan. Untuk <strong>MoA / PKS</strong> dan <strong>IA</strong>, sistem mewajibkan pemilihan Dokumen Induk (MoU / MoA payung).
-                                </div>
+                        <!-- =================================================================== -->
+                        <!-- SECTION 1: KLASIFIKASI & INFORMASI DOKUMEN KERJA SAMA                -->
+                        <!-- =================================================================== -->
+                        <div class="card border mb-4 shadow-sm" style="border-radius: 8px;">
+                            <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center gap-2">
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1"><i class="bi bi-file-earmark-text"></i> Bagian 1</span>
+                                <h6 class="mb-0 fw-bold text-dark fs-6">Klasifikasi &amp; Informasi Dokumen Kerja Sama</h6>
                             </div>
-                        </div>
-
-                        <!-- DOKUMEN INDUK (KONDISIONAL: JIKA MOA / IA) -->
-                        <div class="row mb-3 align-items-center" id="parentDocRow" style="display: none;">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Dokumen Induk Rujukan : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <select name="parent_mou" id="inputParentMou" class="form-select" onchange="autoFillFromParent()">
-                                    <option value="">-- Pilih Dokumen Induk (MoU / MoA yang telah terdaftar) --</option>
-                                    @foreach ($registeredMous as $rMou)
-                                        <option value="{{ $rMou->doc_number ?: $rMou->doc_id }}" 
-                                                data-partner="{{ $rMou->partner_name }}"
-                                                data-category="{{ $rMou->partner_category }}"
-                                                data-scope="{{ $rMou->scope }}"
-                                                data-unit="{{ $rMou->unit }}">
-                                            [{{ $rMou->doc_type }}] {{ $rMou->doc_number ?: $rMou->doc_id }} &bull; {{ $rMou->partner_name }} ({{ Str::limit($rMou->title, 45) }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <div class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i> Wajib untuk MoA/PKS dan IA sesuai tata kelola IKU 6. Data mitra akan otomatis diselaraskan dengan dokumen induk terpilih.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 1. JUDUL / TOPIK KERJA SAMA -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark" id="labelDocTitle">
-                                Judul / Topik Kerja Sama : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <input type="text" name="title" class="form-control" required>
-                            </div>
-                        </div>
-
-                        <!-- 2. IDENTITAS PIHAK PERTAMA (UNIPAR) -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Unit Pengusul : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <select name="unit" class="form-select" required>
-                                    <option>Biro Kerja Sama &amp; Urusan Internasional (BKUI)</option>
-                                    <option>Program Studi Teknik Informatika</option>
-                                    <option>Program Studi Sistem Informasi</option>
-                                    <option>Program Studi Sistem Komputer</option>
-                                    <option>Program Studi Bisnis Digital</option>
-                                    <option>Program Studi Kewirausahaan</option>
-                                    <option>Program Studi Hukum Bisnis</option>
-                                    <option>Fakultas Ilmu Komputer</option>
-                                    <option>Fakultas Ekonomi dan Bisnis</option>
-                                    <option>LPPM</option>
-                                    <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
-                                    <option>Rektorat</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Penandatangan Pihak I :
-                            </label>
-                            <div class="col-md-9">
-                                <input type="text" name="first_party_signer" class="form-control" placeholder="Nama lengkap & gelar penandatangan dari Pihak 1 (UNIPAR)">
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nomor Naskah Pihak 1 :
-                                <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
-                            </label>
-                            <div class="col-md-9">
-                                <input type="text" name="doc_number" class="form-control font-monospace" placeholder="Kosongkan jika belum ada (otomatis diisi '-')">
-                                <div class="form-text text-muted">
-                                    Nomor naskah resmi UNIPAR (Pihak 1). Jika dikosongkan / belum diterbitkan, otomatis akan dicatat sebagai <code>-</code>.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. IDENTITAS PIHAK KEDUA (MITRA) -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Kategori / Sektor Mitra : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <select name="category" id="category_jalur1" class="form-select" required>
-                                    <option value="Perguruan Tinggi" selected>Perguruan Tinggi</option>
-                                    <option value="DUDI / Swasta">DUDI / Swasta</option>
-                                    <option value="BUMN">BUMN</option>
-                                    <option value="Instansi Pemerintah">Instansi Pemerintah</option>
-                                    <option value="Lembaga Keagamaan / Komunitas">Lembaga Keagamaan / Komunitas</option>
-                                    <option value="Kesehatan">Kesehatan</option>
-                                    <option value="Lainnya">Lainnya</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nama Mitra : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <div class="hybrid-partner-combobox position-relative">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-white border-end-0">
-                                            <i class="partner-input-icon bi bi-mortarboard-fill text-primary fs-5"></i>
-                                        </span>
-                                        <input type="text" name="partner_name" id="partner_name_jalur1" class="form-control border-start-0 smart-partner-input" 
-                                               placeholder="Ketik nama kampus (contoh: Sam Ratulangi, ITB, Parna Raya)..." 
-                                               value="{{ request('partner_name') }}"
-                                               list="partnerDatalist"
-                                               autocomplete="off" required>
-                                        <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
-                                        <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" data-bs-toggle="modal" data-bs-target="#quickAddPartnerModal" title="Tambah Mitra Baru ke Master Data (Menu 02)">
-                                            <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
-                                        </button>
+                            <div class="card-body p-3 p-md-4">
+                                <!-- JENIS DOKUMEN -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Jenis Dokumen Kerja Sama : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <select name="doc_type" id="inputDocType" class="form-select" required onchange="toggleParentField()">
+                                            <option value="MoU" selected>MoU (Nota Kesepahaman / Tingkat Institusi/Rektorat)</option>
+                                            <option value="MoA / PKS">MoA / PKS (Perjanjian Kerja Sama / Tingkat Fakultas/UPPS)</option>
+                                            <option value="IA">IA (Implementation Arrangement / Tingkat Program Studi/Unit)</option>
+                                        </select>
+                                        <div class="form-text text-muted">
+                                            Pilih jenis naskah kerja sama yang diajukan. Untuk <strong>MoA / PKS</strong> dan <strong>IA</strong>, sistem mewajibkan pemilihan Dokumen Induk (MoU / MoA payung).
+                                        </div>
                                     </div>
-                                    <datalist id="partnerDatalist">
-                                        @foreach ($partners as $p)
-                                            <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
-                                        @endforeach
-                                    </datalist>
-                                    <!-- Floating Dropdown Suggestions -->
-                                    <div class="partner-dropdown-menu shadow-lg bg-white border rounded mt-1 d-none position-absolute w-100" style="z-index: 1050; max-height: 280px; overflow-y: auto;"></div>
-                                    <!-- Verified Info Banner -->
-                                    <div class="partner-verified-info small mt-1.5 d-none"></div>
-                                    <!-- Helper Tools -->
-                                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-1">
-                                        <small class="partner-mode-desc text-muted"><i class="bi bi-database-check text-success me-1"></i>Direktori Resmi PDDikti Kemendikbudristek (4.650+ PT)</small>
-                                        <a href="javascript:void(0)" class="small text-decoration-none text-primary btn-toggle-manual"><i class="bi bi-pencil-square me-1"></i>Ketik Manual / Luar Negeri</a>
+                                </div>
+
+                                <!-- DOKUMEN INDUK (KONDISIONAL: JIKA MOA / IA) -->
+                                <div class="row mb-3 align-items-center" id="parentDocRow" style="display: none;">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Dokumen Induk Rujukan : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <select name="parent_mou" id="inputParentMou" class="form-select" onchange="autoFillFromParent()">
+                                            <option value="">-- Pilih Dokumen Induk (MoU / MoA yang telah terdaftar) --</option>
+                                            @foreach ($registeredMous as $rMou)
+                                                <option value="{{ $rMou->doc_number ?: $rMou->doc_id }}" 
+                                                        data-partner="{{ $rMou->partner_name }}"
+                                                        data-category="{{ $rMou->partner_category }}"
+                                                        data-scope="{{ $rMou->scope }}"
+                                                        data-unit="{{ $rMou->unit }}">
+                                                    [{{ $rMou->doc_type }}] {{ $rMou->doc_number ?: $rMou->doc_id }} &bull; {{ $rMou->partner_name }} ({{ Str::limit($rMou->title, 45) }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <div class="form-text text-muted">
+                                            <i class="bi bi-info-circle me-1"></i> Wajib untuk MoA/PKS dan IA sesuai tata kelola IKU 6. Data mitra akan otomatis diselaraskan dengan dokumen induk terpilih.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- JUDUL / TOPIK KERJA SAMA -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark" id="labelDocTitle">
+                                        Judul / Topik Kerja Sama : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="title" class="form-control" placeholder="Contoh: Kerja Sama Penyelenggaraan Tridharma Perguruan Tinggi..." required>
+                                    </div>
+                                </div>
+
+                                <!-- NOMOR NASKAH PIHAK 1 (INTERNAL UNIPAR) & NOMOR NASKAH PIHAK 2 (MITRA) -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Nomor Naskah UNIPAR :
+                                        <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="doc_number" class="form-control font-monospace" placeholder="Kosongkan jika belum ada (otomatis diisi '-')">
+                                        <div class="form-text text-muted">
+                                            Nomor naskah resmi UNIPAR. Jika dikosongkan / belum diterbitkan, otomatis akan dicatat sebagai <code>-</code>.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Nomor Naskah Mitra :
+                                        <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="partner_doc_number" class="form-control font-monospace" placeholder="Kosongkan jika belum ada (otomatis diisi '-')">
+                                        <div class="form-text text-muted">
+                                            Nomor naskah resmi dari pihak mitra luar / instansi mitra. Jika belum ada, otomatis akan dicatat sebagai <code>-</code>.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- DESKRIPSI / URGENSI KERJA SAMA -->
+                                <div class="row mb-0 align-items-start">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
+                                        Deskripsi / Urgensi Kerja Sama :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <textarea name="description" class="form-control" rows="3" placeholder="Uraikan ringkasan substansi, tujuan, atau urgensi pelaksanaan kerja sama ini..."></textarea>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Penandatangan Pihak II :
-                            </label>
-                            <div class="col-md-9">
-                                <input type="text" name="second_party_signer" class="form-control" placeholder="Nama lengkap & gelar penandatangan dari Pihak 2 (Mitra)">
+                        <!-- =================================================================== -->
+                        <!-- SECTION 2: IDENTITAS INTERNAL UNIPAR                                -->
+                        <!-- =================================================================== -->
+                        <div class="card border mb-4 shadow-sm" style="border-radius: 8px;">
+                            <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center gap-2">
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1"><i class="bi bi-building"></i> Bagian 2</span>
+                                <h6 class="mb-0 fw-bold text-dark fs-6">Identitas Internal UNIPAR</h6>
                             </div>
-                        </div>
+                            <div class="card-body p-3 p-md-4">
+                                <!-- UNIT PENGUSUL -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Unit Pengusul : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <select name="unit" class="form-select" required>
+                                            <option>Biro Kerja Sama &amp; Urusan Internasional (BKUI)</option>
+                                            <option>Program Studi Teknik Informatika</option>
+                                            <option>Program Studi Sistem Informasi</option>
+                                            <option>Program Studi Sistem Komputer</option>
+                                            <option>Program Studi Bisnis Digital</option>
+                                            <option>Program Studi Kewirausahaan</option>
+                                            <option>Program Studi Hukum Bisnis</option>
+                                            <option>Fakultas Ilmu Komputer</option>
+                                            <option>Fakultas Ekonomi dan Bisnis</option>
+                                            <option>LPPM</option>
+                                            <option>Biro Administrasi Akademik &amp; Kemahasiswaan</option>
+                                            <option>Rektorat</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Nomor Naskah Pihak 2 :
-                                <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
-                            </label>
-                            <div class="col-md-9">
-                                <input type="text" name="partner_doc_number" class="form-control font-monospace" placeholder="Kosongkan jika belum ada (otomatis diisi '-')">
-                                <div class="form-text text-muted">
-                                    Nomor naskah resmi dari pihak mitra (Pihak 2). Jika belum ada, otomatis akan dicatat sebagai <code>-</code>.
+                                <!-- PENANDATANGAN UNIPAR -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Penandatangan UNIPAR :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="first_party_signer" class="form-control" placeholder="Nama lengkap &amp; gelar pejabat penandatangan dari UNIPAR">
+                                    </div>
+                                </div>
+
+                                <!-- JABATAN PENANDATANGAN UNIPAR -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Jabatan Penandatangan :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="first_party_position" class="form-control" placeholder="Contoh: Rektor, Dekan Fakultas Ilmu Komputer, Ketua LPPM">
+                                    </div>
+                                </div>
+
+                                <!-- PIC UNIPAR -->
+                                <div class="row mb-0 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        PIC / Narahubung UNIPAR :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="pic_first_party" class="form-control" placeholder="Nama &amp; kontak narahubung pelaksanaan dari internal kampus">
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 4. UPLOAD DRAFT DOKUMEN (PDF) -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark" id="labelUploadDraft">
-                                Upload Draf Naskah (PDF) : <span class="text-danger">*</span>
-                            </label>
-                            <div class="col-md-9">
-                                <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
-                                <div class="form-text text-muted">Format berkas: <strong>PDF (.pdf)</strong>. Berkas draf awal untuk ditelaah dan diverifikasi oleh Bagian Kerja Sama/Legal.</div>
+                        <!-- =================================================================== -->
+                        <!-- SECTION 3: IDENTITAS MITRA KERJA SAMA                               -->
+                        <!-- =================================================================== -->
+                        <div class="card border mb-4 shadow-sm" style="border-radius: 8px;">
+                            <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center gap-2">
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1"><i class="bi bi-people"></i> Bagian 3</span>
+                                <h6 class="mb-0 fw-bold text-dark fs-6">Identitas Mitra Kerja Sama</h6>
                             </div>
-                        </div>
-
-                        <!-- 5. PERIODE BERLAKU (NORMALISASI: MULAI & MASA BERLAKU TAHUN -> BERAKHIR COMPUTED) -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Tanggal Mulai Berlaku :
-                                <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
-                            </label>
-                            <div class="col-md-9">
-                                <input type="date" name="start_date" id="inputStartDate" class="form-control" onchange="calculateEndDate()">
-                                <div class="form-text text-muted">Opsional pada tahap draf awal; wajib ditetapkan saat transisi pengesahan/ACTIVE.</div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Masa Berlaku (Tahun) :
-                                <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
-                            </label>
-                            <div class="col-md-9">
-                                <div class="input-group">
-                                    <input type="number" min="1" max="10" name="validity_years" id="inputValidityYears" class="form-control" oninput="calculateEndDate()">
-                                    <span class="input-group-text bg-light text-muted">Tahun</span>
+                            <div class="card-body p-3 p-md-4">
+                                <!-- KATEGORI MITRA -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Kategori / Sektor Mitra : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <select name="category" id="category_jalur1" class="form-select" required>
+                                            <option value="Perguruan Tinggi" selected>Perguruan Tinggi</option>
+                                            <option value="DUDI / Swasta">DUDI / Swasta</option>
+                                            <option value="BUMN">BUMN</option>
+                                            <option value="Instansi Pemerintah">Instansi Pemerintah</option>
+                                            <option value="Lembaga Keagamaan / Komunitas">Lembaga Keagamaan / Komunitas</option>
+                                            <option value="Kesehatan">Kesehatan</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <input type="hidden" name="validity" id="inputValidity">
-                                <div class="form-text text-muted">Masa berlaku standar naskah MoU perguruan tinggi berkisar antara 3 hingga 5 tahun.</div>
-                            </div>
-                        </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Tanggal Berakhir :
-                            </label>
-                            <div class="col-md-9">
-                                <input type="date" name="end_date" id="inputEndDate" class="form-control bg-light" readonly>
-                                <div class="form-text text-muted">
-                                    <i class="bi bi-calculator me-1"></i> Terkalkulasi otomatis (read-only): <em>Tanggal Mulai</em> + <em>Masa Berlaku (Tahun)</em>.
+                                <!-- NAMA MITRA -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Nama Mitra : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="hybrid-partner-combobox position-relative">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white border-end-0">
+                                                    <i class="partner-input-icon bi bi-mortarboard-fill text-primary fs-5"></i>
+                                                </span>
+                                                <input type="text" name="partner_name" id="partner_name_jalur1" class="form-control border-start-0 smart-partner-input" 
+                                                       placeholder="Ketik nama kampus (contoh: Sam Ratulangi, ITB, Parna Raya)..." 
+                                                       value="{{ request('partner_name') }}"
+                                                       list="partnerDatalist"
+                                                       autocomplete="off" required>
+                                                <button class="btn btn-outline-secondary btn-clear-partner d-none" type="button" title="Hapus / Reset Pilihan"><i class="bi bi-x-lg"></i></button>
+                                                <button class="btn btn-primary btn-sm px-3 fw-bold btn-open-quick-add" type="button" data-bs-toggle="modal" data-bs-target="#quickAddPartnerModal" title="Tambah Mitra Baru ke Master Data (Menu 02)">
+                                                    <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
+                                                </button>
+                                            </div>
+                                            <datalist id="partnerDatalist">
+                                                @foreach ($partners as $p)
+                                                    <option value="{{ $p->name }}">{{ $p->category }} &bull; {{ $p->city ?: 'Manado' }}</option>
+                                                @endforeach
+                                            </datalist>
+                                            <!-- Floating Dropdown Suggestions -->
+                                            <div class="partner-dropdown-menu shadow-lg bg-white border rounded mt-1 d-none position-absolute w-100" style="z-index: 1050; max-height: 280px; overflow-y: auto;"></div>
+                                            <!-- Verified Info Banner -->
+                                            <div class="partner-verified-info small mt-1.5 d-none"></div>
+                                            <!-- Helper Tools -->
+                                            <div class="d-flex flex-wrap justify-content-between align-items-center mt-1">
+                                                <small class="partner-mode-desc text-muted"><i class="bi bi-database-check text-success me-1"></i>Direktori Resmi PDDikti Kemendikbudristek (4.650+ PT)</small>
+                                                <a href="javascript:void(0)" class="small text-decoration-none text-primary btn-toggle-manual"><i class="bi bi-pencil-square me-1"></i>Ketik Manual / Luar Negeri</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- PENANDATANGAN MITRA -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Penandatangan Mitra :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="second_party_signer" class="form-control" placeholder="Nama lengkap &amp; gelar pejabat penandatangan dari pihak Mitra">
+                                    </div>
+                                </div>
+
+                                <!-- JABATAN PENANDATANGAN MITRA -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Jabatan Penandatangan :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="second_party_position" class="form-control" placeholder="Contoh: Direktur Utama, Rektor, Kepala Dinas, General Manager">
+                                    </div>
+                                </div>
+
+                                <!-- PIC MITRA -->
+                                <div class="row mb-0 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        PIC / Narahubung Mitra :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="pic_second_party" class="form-control" placeholder="Nama &amp; kontak narahubung dari pihak mitra">
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 6. NARAHUBUNG (PIC) KEDUA PIHAK -->
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                PIC Pihak Pertama (UNIPAR) :
-                            </label>
-                            <div class="col-md-9">
-                                <input type="text" name="pic_first_party" class="form-control">
+                        <!-- =================================================================== -->
+                        <!-- SECTION 4: PERIODE MASA BERLAKU & BERKAS NASKAH                     -->
+                        <!-- =================================================================== -->
+                        <div class="card border mb-4 shadow-sm" style="border-radius: 8px;">
+                            <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center gap-2">
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1"><i class="bi bi-clock-history"></i> Bagian 4</span>
+                                <h6 class="mb-0 fw-bold text-dark fs-6">Periode Masa Berlaku &amp; Berkas Naskah</h6>
                             </div>
-                        </div>
+                            <div class="card-body p-3 p-md-4">
+                                <!-- TANGGAL MULAI BERLAKU -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Tanggal Mulai Berlaku :
+                                        <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="date" name="start_date" id="inputStartDate" class="form-control" onchange="calculateEndDate()">
+                                        <div class="form-text text-muted">Opsional pada tahap draf awal; wajib ditetapkan saat transisi pengesahan/ACTIVE.</div>
+                                    </div>
+                                </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <label class="col-md-3 col-form-label fw-bold text-dark">
-                                PIC Pihak Kedua (Mitra) :
-                            </label>
-                            <div class="col-md-9">
-                                <input type="text" name="pic_second_party" class="form-control">
-                            </div>
-                        </div>
+                                <!-- MASA BERLAKU TAHUN -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Masa Berlaku (Tahun) :
+                                        <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="input-group">
+                                            <input type="number" min="1" max="10" name="validity_years" id="inputValidityYears" class="form-control" oninput="calculateEndDate()">
+                                            <span class="input-group-text bg-light text-muted">Tahun</span>
+                                        </div>
+                                        <input type="hidden" name="validity" id="inputValidity">
+                                        <div class="form-text text-muted">Masa berlaku standar naskah MoU/MoA perguruan tinggi berkisar antara 1 hingga 5 tahun.</div>
+                                    </div>
+                                </div>
 
-                        <!-- 7. DESKRIPSI / URGENSI KERJA SAMA -->
-                        <div class="row mb-4 align-items-start">
-                            <label class="col-md-3 col-form-label fw-bold text-dark pt-1">
-                                Deskripsi / Urgensi Kerja Sama :
-                            </label>
-                            <div class="col-md-9">
-                                <textarea name="description" class="form-control" rows="3"></textarea>
+                                <!-- TANGGAL BERAKHIR -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Tanggal Berakhir :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="date" name="end_date" id="inputEndDate" class="form-control bg-light" readonly>
+                                        <div class="form-text text-muted">
+                                            <i class="bi bi-calculator me-1"></i> Terkalkulasi otomatis (read-only): <em>Tanggal Mulai</em> + <em>Masa Berlaku (Tahun)</em>.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- UPLOAD DRAF NASKAH PDF -->
+                                <div class="row mb-0 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark" id="labelUploadDraft">
+                                        Upload Draf Naskah (PDF) : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input type="file" name="draft_file" class="form-control" accept=".pdf" required>
+                                        <div class="form-text text-muted">Format berkas: <strong>PDF (.pdf)</strong>. Berkas draf awal untuk ditelaah dan diverifikasi oleh Bagian Kerja Sama/Legal.</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- TOMBOL AKSI SIMPAN -->
                         <div class="row pt-2">
-                            <div class="col-md-9 offset-md-3">
+                            <div class="col-12 d-flex justify-content-end gap-2">
+                                <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary px-4 py-2">
+                                    <i class="bi bi-x-circle me-1"></i> Batal
+                                </a>
                                 <button type="submit" class="btn btn-primary fw-bold px-4 py-2 shadow-sm" id="btnSubmitSubmission">
                                     <i class="bi bi-save me-1"></i> Simpan Sebagai DRAF Dokumen
                                 </button>
-                                <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary ms-2 px-3 py-2">Batal</a>
                             </div>
                         </div>
-                    </form>
-                </div>
+                    </form>                </div>
             </div>
 
             <script>
@@ -1771,16 +1843,31 @@
                         <!-- 7. PENANDATANGAN PIHAK I & PIHAK II -->
                         <div class="row mb-3 align-items-center">
                             <label class="col-md-3 col-form-label fw-bold text-dark">
-                                Penandatangan Pihak I : <span class="text-danger">*</span>
+                                Penandatangan UNIPAR : <span class="text-danger">*</span>
                             </label>
                             <div class="col-md-4">
-                                <input type="text" name="first_party_signer" class="form-control" required>
+                                <input type="text" name="first_party_signer" class="form-control" placeholder="Nama & gelar" required>
                             </div>
                             <label class="col-md-2 col-form-label fw-bold text-dark text-md-end">
-                                Penandatangan Pihak II : <span class="text-danger">*</span>
+                                Jabatan :
                             </label>
                             <div class="col-md-3">
-                                <input type="text" name="second_party_signer" class="form-control" required>
+                                <input type="text" name="first_party_position" class="form-control" placeholder="Contoh: Rektor">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-3 col-form-label fw-bold text-dark">
+                                Penandatangan Mitra : <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-4">
+                                <input type="text" name="second_party_signer" class="form-control" placeholder="Nama & gelar" required>
+                            </div>
+                            <label class="col-md-2 col-form-label fw-bold text-dark text-md-end">
+                                Jabatan :
+                            </label>
+                            <div class="col-md-3">
+                                <input type="text" name="second_party_position" class="form-control" placeholder="Contoh: Direktur Utama">
                             </div>
                         </div>
 
@@ -3115,24 +3202,32 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
-                                                Penandatangan Pihak I :
+                                                Penandatangan UNIPAR :
                                             </label>
-                                            <input type="text" name="first_party_signer" class="form-control form-control-sm" value="{{ $currentDoc->first_party_signer }}" placeholder="Nama lengkap & gelar penandatangan Pihak 1 (UNIPAR)">
+                                            <input type="text" name="first_party_signer" class="form-control form-control-sm" value="{{ $currentDoc->first_party_signer }}" placeholder="Nama lengkap & gelar penandatangan UNIPAR">
+                                        </div>
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Jabatan Penandatangan :
+                                            </label>
+                                            <input type="text" name="first_party_position" class="form-control form-control-sm" value="{{ $currentDoc->first_party_position }}" placeholder="Contoh: Rektor, Dekan Fakultas Ilmu Komputer">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                PIC / Narahubung UNIPAR :
+                                            </label>
+                                            <input type="text" name="pic_first_party" class="form-control form-control-sm" value="{{ $currentDoc->pic_first_party }}" placeholder="Nama narahubung UNIPAR">
                                         </div>
                                     </div>
                                     <div class="row g-2">
                                         <div class="col-md-6">
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
-                                                Nomor Naskah Pihak 1 : <span class="badge bg-white text-secondary border fw-normal">Opsional</span>
+                                                Nomor Naskah UNIPAR : <span class="badge bg-white text-secondary border fw-normal">Opsional</span>
                                             </label>
                                             <input type="text" name="doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->doc_number) && $currentDoc->doc_number !== '-') ? $currentDoc->doc_number : '' }}" placeholder="-">
                                             <div class="text-muted" style="font-size: 0.68rem;">Kosongkan jika belum ada (dicatat sebagai '-')</div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
-                                                PIC Pihak Pertama (UNIPAR) :
-                                            </label>
-                                            <input type="text" name="pic_first_party" class="form-control form-control-sm" value="{{ $currentDoc->pic_first_party }}" placeholder="Nama narahubung Pihak 1">
                                         </div>
                                     </div>
                                 </div>
@@ -3209,24 +3304,30 @@
                                     <div class="row g-2 mb-2">
                                         <div class="col-md-6">
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
-                                                Penandatangan Pihak II :
+                                                Penandatangan Mitra :
                                             </label>
-                                            <input type="text" name="second_party_signer" class="form-control form-control-sm" value="{{ $currentDoc->second_party_signer }}" placeholder="Nama lengkap & gelar penandatangan Pihak 2 (Mitra)">
+                                            <input type="text" name="second_party_signer" class="form-control form-control-sm" value="{{ $currentDoc->second_party_signer }}" placeholder="Nama lengkap & gelar penandatangan Mitra">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
-                                                Nomor Naskah Pihak 2 : <span class="badge bg-white text-secondary border fw-normal">Opsional</span>
+                                                Jabatan Penandatangan :
                                             </label>
-                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '' }}" placeholder="-">
-                                            <div class="text-muted" style="font-size: 0.68rem;">Kosongkan jika belum ada (dicatat sebagai '-')</div>
+                                            <input type="text" name="second_party_position" class="form-control form-control-sm" value="{{ $currentDoc->second_party_position }}" placeholder="Contoh: Direktur Utama, Rektor, Kepala Dinas">
                                         </div>
                                     </div>
                                     <div class="row g-2">
                                         <div class="col-md-6">
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
-                                                PIC Pihak Kedua (Mitra) :
+                                                PIC / Narahubung Mitra :
                                             </label>
-                                            <input type="text" name="pic_second_party" class="form-control form-control-sm" value="{{ $currentDoc->pic_second_party }}" placeholder="Nama narahubung Pihak 2">
+                                            <input type="text" name="pic_second_party" class="form-control form-control-sm" value="{{ $currentDoc->pic_second_party }}" placeholder="Nama narahubung Mitra">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
+                                                Nomor Naskah Mitra : <span class="badge bg-white text-secondary border fw-normal">Opsional</span>
+                                            </label>
+                                            <input type="text" name="partner_doc_number" class="form-control form-control-sm font-monospace" value="{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '' }}" placeholder="-">
+                                            <div class="text-muted" style="font-size: 0.68rem;">Kosongkan jika belum ada (dicatat sebagai '-')</div>
                                         </div>
                                     </div>
                                 </div>

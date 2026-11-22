@@ -1,16 +1,21 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SimkermaController;
 use App\Http\Controllers\AuthController;
+
+// Rute Portal Publik & Homepage (Statistik, Ringkasan, & Login Akses)
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Rute Autentikasi Pengguna
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Rute Utama Aplikasi SIMKERMA (Mendukung Menu 1 s.d. 7)
-Route::get('/', [SimkermaController::class, 'index'])->name('simkerma.index');
+// Rute Utama Aplikasi Internal SIMKERMA (Mendukung Menu 1 s.d. 7)
+Route::get('/simkerma', [SimkermaController::class, 'index'])->name('simkerma.index');
+Route::get('/dashboard', fn() => redirect()->route('simkerma.index'))->name('dashboard');
 
 // Rute Aksi Formulir dan FSM
 Route::post('/simkerma/change-role', [SimkermaController::class, 'changeRole'])->name('simkerma.change-role');
@@ -30,6 +35,10 @@ Route::post('/simkerma/update-partner', [SimkermaController::class, 'updatePartn
 Route::post('/simkerma/delete-partner', [SimkermaController::class, 'deletePartner'])->name('simkerma.delete-partner');
 Route::post('/simkerma/update-document', [SimkermaController::class, 'updateDocument'])->name('simkerma.update-document');
 Route::post('/simkerma/upload-document-file', [SimkermaController::class, 'uploadDocumentFile'])->name('simkerma.upload-document-file');
+
+// Rute Notifikasi Sistem
+Route::post('/simkerma/notifications/mark-read/{id?}', [SimkermaController::class, 'markNotificationAsRead'])->name('simkerma.notifications.mark-read');
+Route::post('/simkerma/notifications/mark-all-read', [SimkermaController::class, 'markAllNotificationsAsRead'])->name('simkerma.notifications.mark-all-read');
 
 // Rute API Helper & Direktori PDDikti / Master Data Mitra
 Route::get('/simkerma/api/universities', [SimkermaController::class, 'searchUniversities'])->name('simkerma.api.universities');

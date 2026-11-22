@@ -41,14 +41,14 @@ class FSMWorkflowEngineService
         'REVIEW' => [
             'VERIFY' => [
                 'to' => 'VERIFIED',
-                'roles' => ['LEGAL', 'ADMIN', 'MASTER'],
-                'label' => 'Verifikasi Kelayakan Draf (Lolos Telaah Mutu)',
-                'icon' => 'bi-check2-circle',
+                'roles' => ['LEADER', 'LEGAL', 'ADMIN', 'MASTER'],
+                'label' => 'Setujui & Verifikasi Kelayakan Draf (Persetujuan Pimpinan / Legal)',
+                'icon' => 'bi-patch-check-fill',
                 'btn' => 'btn-info text-white'
             ],
             'RETURN_TO_DRAFT' => [
                 'to' => 'DRAFT',
-                'roles' => ['LEGAL', 'LEADER', 'ADMIN', 'MASTER'],
+                'roles' => ['LEADER', 'LEGAL', 'ADMIN', 'MASTER'],
                 'label' => 'Kembalikan ke Pengusul (Ditolak / Perlu Perbaikan)',
                 'icon' => 'bi-arrow-return-left',
                 'btn' => 'btn-warning text-dark'
@@ -182,10 +182,14 @@ class FSMWorkflowEngineService
                 $document->validity = $additionalData['validity'];
             }
 
-            // Jika masuk status VERIFIED: set tanggal verifikasi hukum & bekukan teks
+            // Jika masuk status VERIFIED: set tanggal persetujuan/verifikasi & bekukan teks naskah
             if ($newStatus === 'VERIFIED') {
                 if (empty($document->date_approved)) {
                     $document->date_approved = now()->toDateString();
+                }
+                // Pastikan dokumen memiliki referensi berkas draf naskah resmi
+                if (empty($document->draft_file) && empty($document->docx_path)) {
+                    $document->draft_file = 'draft_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '.pdf';
                 }
             }
 
@@ -232,7 +236,7 @@ class FSMWorkflowEngineService
                     $document->date_signed = $additionalData['date_signed'] ?? now()->toDateString();
                 }
                 if (empty($document->signed_file)) {
-                    $document->signed_file = 'signed_scan_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '.pdf';
+                    $document->signed_file = 'uploads/documents/signed_scan_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '.pdf';
                 }
             }
 
@@ -244,7 +248,7 @@ class FSMWorkflowEngineService
                 if ($newStatus === 'ACTIVE') {
                     $auditNote = 'Naskah sah bertanda tangan basah & bermeterai aktif. Nomor Pihak I (UNIPAR): ' . ($document->doc_number ?: $document->doc_id) . (!empty($document->partner_doc_number) ? ', Nomor Pihak II (Mitra): ' . $document->partner_doc_number : '');
                 } elseif ($newStatus === 'VERIFIED') {
-                    $auditNote = 'Naskah lolos telaah mutu & verifikasi legal oleh Tim Legal. Teks naskah dibekukan (Freeze Text) dan siap dicetak untuk penandatanganan fisik.';
+                    $auditNote = 'Naskah disetujui pimpinan & lolos telaah mutu Tim Legal. Teks naskah dibekukan (Freeze Text) dan siap dicetak untuk proses penandatanganan fisik.';
                 } elseif ($newStatus === 'REVIEW') {
                     $auditNote = 'Naskah diajukan ke meja pemeriksaan legal / pimpinan';
                 } elseif ($newStatus === 'DRAFT' && $event === 'RETURN_TO_DRAFT') {
