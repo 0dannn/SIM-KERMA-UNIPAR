@@ -1061,6 +1061,14 @@ class SimkermaController extends Controller
             'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
         ]);
 
+        if ($request->boolean('redirect_to_detail')) {
+            return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id])
+                ->with('flash', [
+                    'type' => 'success',
+                    'msg' => "Kegiatan '{$activity->activity_name}' berhasil dicatat pada naskah {$document->doc_id} ({$document->partner_name})."
+                ]);
+        }
+
         return redirect()->route('simkerma.index', ['menu' => 5])
             ->with('flash', [
                 'type' => 'success',
@@ -1315,6 +1323,13 @@ class SimkermaController extends Controller
         if ($request->has('partner_doc_number')) {
             $val = trim((string)$request->input('partner_doc_number', ''));
             $updateData['partner_doc_number'] = ($val !== '') ? $val : '-';
+        }
+        if ($request->has('parent_mou')) {
+            $pVal = trim((string)$request->input('parent_mou', ''));
+            $updateData['parent_mou'] = ($pVal !== '') ? $pVal : '-';
+        }
+        if ($request->has('doc_type')) {
+            $updateData['doc_type'] = $request->input('doc_type');
         }
 
         $document->update($updateData);

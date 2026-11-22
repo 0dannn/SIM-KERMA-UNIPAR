@@ -2070,32 +2070,45 @@
                             </form>
                         @endif
 
-                        <!-- Dropdown Tambah Dokumen Turunan -->
-                        <div class="dropdown">
-                            <button class="btn btn-primary btn-sm fw-semibold px-3 py-1.5 shadow-sm dropdown-toggle d-flex align-items-center gap-1.5" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.8rem; background-color: #3b82f6; border-color: #3b82f6;">
-                                <i class="bi bi-plus-lg"></i> Tambah Dokumen Turunan
+                        <!-- Action Buttons Dinamis Berdasarkan Tingkat Dokumen (MoU / MoA / IA) -->
+                        @if ($currentDoc->doc_type === 'MoU')
+                            <!-- MoU: Dapat Menurunkan MoA (Fakultas) & IA (Prodi) -->
+                            <div class="dropdown">
+                                <button class="btn btn-primary btn-sm fw-semibold px-3 py-1.5 shadow-sm dropdown-toggle d-flex align-items-center gap-1.5" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.8rem; background-color: #1e40af; border-color: #1e40af;">
+                                    <i class="bi bi-plus-lg"></i> Tambah Dokumen Turunan
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1" style="min-width: 220px;">
+                                    <li>
+                                        <a class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}">
+                                            <i class="bi bi-file-earmark-text text-primary fs-6"></i>
+                                            <div>
+                                                <div class="fw-bold">MoA / PKS</div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">Tingkat Fakultas / Unit Kerja</div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}">
+                                            <i class="bi bi-file-earmark-check text-success fs-6"></i>
+                                            <div>
+                                                <div class="fw-bold">IA (Implementation)</div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">Tingkat Prodi / Lab / Kegiatan</div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        @elseif ($currentDoc->doc_type === 'IA')
+                            <!-- IA: Dokumen Ujung Tombak Operasional (Mencatat Realisasi IKU 6) -->
+                            <button type="button" class="btn btn-success btn-sm fw-semibold px-3 py-1.5 shadow-sm d-flex align-items-center gap-1.5" style="font-size: 0.8rem; background-color: #059669; border-color: #059669;" data-bs-toggle="modal" data-bs-target="#createActivityModal_{{ $currentDoc->id }}">
+                                <i class="bi bi-calendar-plus"></i> + Catat Pelaksanaan (IKU 6)
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1" style="min-width: 220px;">
-                                <li>
-                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}">
-                                        <i class="bi bi-file-earmark-text text-primary fs-6"></i>
-                                        <div>
-                                            <div class="fw-bold">MoA / PKS</div>
-                                            <div class="text-muted" style="font-size: 0.7rem;">Perjanjian Kerja Sama Tingkat Fakultas</div>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item py-1.5 px-3 d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}">
-                                        <i class="bi bi-file-earmark-check text-success fs-6"></i>
-                                        <div>
-                                            <div class="fw-bold">IA</div>
-                                            <div class="text-muted" style="font-size: 0.7rem;">Implementation Arrangement Tingkat Prodi</div>
-                                        </div>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
+                        @else
+                            <!-- MoA / PKS: Menurunkan IA (Implementation Arrangement) -->
+                            <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-success btn-sm fw-semibold px-3 py-1.5 shadow-sm d-flex align-items-center gap-1.5" style="font-size: 0.8rem; background-color: #0284c7; border-color: #0284c7;">
+                                <i class="bi bi-plus-lg"></i> + Tambah IA (Implementation)
+                            </a>
+                        @endif
 
                         <!-- Dropdown Opsi Lainnya (...) -->
                         <div class="dropdown">
@@ -2146,12 +2159,12 @@
                         <div class="d-flex align-items-center justify-content-between gap-3">
                             <!-- Left Group: Icon + Title info -->
                             <div class="d-flex align-items-center gap-3 text-truncate">
-                                <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background-color: #eff6ff; border: 1px solid #dbeafe;">
-                                    <i class="bi bi-file-earmark-text text-primary fs-3"></i>
+                                <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background-color: {{ $currentDoc->doc_type === 'MoU' ? '#eff6ff' : ($currentDoc->doc_type === 'IA' ? '#ecfdf5' : '#f0f9ff') }}; border: 1px solid {{ $currentDoc->doc_type === 'MoU' ? '#dbeafe' : ($currentDoc->doc_type === 'IA' ? '#a7f3d0' : '#bae6fd') }};">
+                                    <i class="bi {{ $currentDoc->doc_type === 'MoU' ? 'bi-file-earmark-text text-primary' : ($currentDoc->doc_type === 'IA' ? 'bi-file-earmark-check text-success' : 'bi-file-earmark-richtext text-info') }} fs-3"></i>
                                 </div>
                                 <div class="text-truncate">
                                     <div class="d-flex align-items-center gap-2 mb-0.5">
-                                        <span class="badge rounded-pill text-white fw-bold px-2 py-0.5" style="background-color: #1e3a8a; font-size: 0.68rem;">{{ $currentDoc->doc_type }}</span>
+                                        <span class="badge rounded-pill text-white fw-bold px-2 py-0.5" style="background-color: {{ $currentDoc->doc_type === 'MoU' ? '#1e3a8a' : ($currentDoc->doc_type === 'IA' ? '#059669' : '#0284c7') }}; font-size: 0.68rem;">{{ $currentDoc->doc_type }}</span>
                                         <span class="text-muted" style="font-size: 0.76rem;">{{ $currentDoc->doc_type === 'MoU' ? 'Memorandum of Understanding' : ($currentDoc->doc_type === 'IA' ? 'Implementation Arrangement' : 'Memorandum of Agreement') }}</span>
                                         @if ($currentDoc->is_legacy)
                                             <span class="badge rounded-pill bg-dark text-warning border border-warning px-2 py-0.5" style="font-size: 0.68rem;">
@@ -2163,7 +2176,7 @@
                                         {{ $currentDoc->doc_number ?: $currentDoc->doc_id }}
                                     </h5>
                                     <div class="text-secondary text-truncate" style="font-size: 0.78rem;">
-                                        <span>Universitas Parna Raya Manado</span>
+                                        <span class="fw-semibold">Universitas Kristen Papua (UNIPAR)</span>
                                         <span class="text-muted mx-1">&times;</span>
                                         <span class="text-dark fw-medium">{{ $currentDoc->partner_name }}</span>
                                     </div>
@@ -2215,6 +2228,33 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- PARENT DOCUMENT RELATION BANNER (JIKA MERUPAKAN DOKUMEN TURUNAN MoA / IA) -->
+                @if ($parentDoc)
+                    <div class="alert alert-primary py-2 px-3 rounded-3 mb-2 d-flex align-items-center justify-content-between shadow-2xs border-primary-subtle" style="font-size: 0.8rem; background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-diagram-2-fill fs-5 text-success"></i>
+                            <div>
+                                <div class="fw-bold">Dokumen Induk (Rujukan Payung Hukum):</div>
+                                <div>
+                                    Naskah ini merupakan turunan operasional dari 
+                                    <strong>[{{ $parentDoc->doc_type }}] {{ $parentDoc->title ?: $parentDoc->partner_name }}</strong> 
+                                    (Nomor: <span class="font-monospace fw-semibold">{{ $parentDoc->doc_number ?: $parentDoc->doc_id }}</span>).
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $parentDoc->doc_id]) }}" class="btn btn-sm btn-outline-success fw-bold px-2.5 py-1 text-nowrap">
+                            <i class="bi bi-arrow-left-circle me-1"></i> Buka Naskah Induk
+                        </a>
+                    </div>
+                @elseif (!empty($currentDoc->parent_mou) && $currentDoc->parent_mou !== '-')
+                    <div class="alert alert-secondary py-2 px-3 rounded-3 mb-2 d-flex align-items-center gap-2 shadow-2xs" style="font-size: 0.8rem;">
+                        <i class="bi bi-info-circle text-primary fs-5"></i>
+                        <div>
+                            <strong>Dokumen Induk (Rujukan):</strong> <span class="font-monospace fw-bold">{{ $currentDoc->parent_mou }}</span>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- NAV TABS (5 TABS SESUAI MOCKUP detail_MoU.png) -->
                 <ul class="nav nav-tabs border-bottom mb-2" id="detailDocTabs" role="tablist" style="font-size: 0.82rem;">
@@ -2270,41 +2310,100 @@
                                             <table class="table table-borderless table-sm mb-0" style="font-size: 0.78rem; line-height: 1.45;">
                                                 <tbody>
                                                     <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 150px;">Jenis Dokumen</td>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 160px;">Jenis Dokumen</td>
                                                         <td class="py-0.5 px-1 text-muted" style="width: 10px;">:</td>
-                                                        <td class="text-dark fw-medium py-0.5">{{ $currentDoc->doc_type }}</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            <span class="badge rounded-pill fw-bold px-2 py-0.5" style="background-color: {{ $currentDoc->doc_type === 'MoU' ? '#1e3a8a' : ($currentDoc->doc_type === 'IA' ? '#059669' : '#0284c7') }}; font-size: 0.72rem; color: #fff;">{{ $currentDoc->doc_type }}</span>
+                                                            <span class="text-secondary small ms-1">({{ $currentDoc->doc_type === 'MoU' ? 'Memorandum of Understanding / Nota Kesepahaman' : ($currentDoc->doc_type === 'IA' ? 'Implementation Arrangement / Perjanjian Pelaksanaan' : 'Memorandum of Agreement / Perjanjian Kerja Sama') }})</span>
+                                                        </td>
                                                     </tr>
+                                                    @if ($currentDoc->doc_type !== 'MoU' || !empty($currentDoc->parent_mou))
+                                                        <tr>
+                                                            <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Dokumen Induk (Rujukan)</td>
+                                                            <td class="py-0.5 px-1 text-muted">:</td>
+                                                            <td class="text-dark fw-medium py-0.5">
+                                                                @if ($parentDoc)
+                                                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $parentDoc->doc_id]) }}" class="text-primary text-decoration-none fw-bold">
+                                                                        <i class="bi bi-link-45deg me-0.5"></i>[{{ $parentDoc->doc_type }}] {{ $parentDoc->title ?: $parentDoc->partner_name }} <span class="font-monospace text-muted fw-normal">({{ $parentDoc->doc_number ?: $parentDoc->doc_id }})</span>
+                                                                    </a>
+                                                                @elseif (!empty($currentDoc->parent_mou) && $currentDoc->parent_mou !== '-')
+                                                                    <span class="font-monospace text-dark">{{ $currentDoc->parent_mou }}</span>
+                                                                @else
+                                                                    <span class="text-muted fst-italic">Naskah Payung Mandiri (Tingkat Universitas)</span>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    @endif
                                                     <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah Pihak 1</td>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah UNIPAR</td>
                                                         <td class="py-0.5 px-1 text-muted">:</td>
                                                         <td class="text-dark fw-medium py-0.5 font-monospace">{{ (!empty($currentDoc->doc_number) && $currentDoc->doc_number !== '-') ? $currentDoc->doc_number : '-' }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah Pihak 2</td>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah Mitra</td>
                                                         <td class="py-0.5 px-1 text-muted">:</td>
                                                         <td class="text-dark fw-medium py-0.5 font-monospace">{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '-' }}</td>
                                                     </tr>
                                                     <tr>
                                                         <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Mitra Kerja Sama</td>
                                                         <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5">{{ $currentDoc->partner_name }}</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            <strong>{{ $currentDoc->partner_name }}</strong>
+                                                            @if (!empty($currentDoc->partner_category))
+                                                                <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.68rem;">{{ $currentDoc->partner_category }}</span>
+                                                            @endif
+                                                        </td>
                                                     </tr>
                                                     <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Unit Pengusul</td>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Unit Pengusul / Pelaksana</td>
                                                         <td class="py-0.5 px-1 text-muted">:</td>
                                                         <td class="text-dark fw-medium py-0.5">{{ $currentDoc->unit }}</td>
                                                     </tr>
                                                     <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Penandatangan UNIPAR</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            {{ $currentDoc->first_party_signer ?: '-' }}
+                                                            @if (!empty($currentDoc->first_party_position))
+                                                                <span class="text-muted small">({{ $currentDoc->first_party_position }})</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Penandatangan Mitra</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            {{ $currentDoc->second_party_signer ?: '-' }}
+                                                            @if (!empty($currentDoc->second_party_position))
+                                                                <span class="text-muted small">({{ $currentDoc->second_party_position }})</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @if (!empty($currentDoc->pic_first_party) || !empty($currentDoc->pic_second_party))
+                                                        <tr>
+                                                            <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">PIC / Narahubung</td>
+                                                            <td class="py-0.5 px-1 text-muted">:</td>
+                                                            <td class="text-dark fw-medium py-0.5">
+                                                                <span>UNIPAR: {{ $currentDoc->pic_first_party ?: '-' }}</span>
+                                                                <span class="text-muted mx-1">&bull;</span>
+                                                                <span>Mitra: {{ $currentDoc->pic_second_party ?: '-' }}</span>
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                    <tr>
                                                         <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Ruang Lingkup</td>
                                                         <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5 text-truncate" style="max-width: 480px;">{{ $currentDoc->scope ?: $currentDoc->title }}</td>
+                                                        <td class="text-dark fw-medium py-0.5" style="max-width: 480px;">{{ $currentDoc->scope ?: $currentDoc->title }}</td>
                                                     </tr>
                                                     <tr>
                                                         <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Masa Berlaku</td>
                                                         <td class="py-0.5 px-1 text-muted">:</td>
                                                         <td class="text-dark fw-medium py-0.5">
                                                             @if (!empty($currentDoc->start_date) && !empty($currentDoc->end_date))
-                                                                {{ \Carbon\Carbon::parse($currentDoc->start_date)->translatedFormat('d F Y') }} &ndash; {{ \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') }} ({{ trim(str_ireplace("Tahun", "", $currentDoc->validity ?: "1")) }} Tahun)
+                                                                {{ \Carbon\Carbon::parse($currentDoc->start_date)->translatedFormat('d F Y') }} &ndash; {{ \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') }}
+                                                                @if (!empty($currentDoc->validity))
+                                                                    <span class="text-secondary fw-normal">({{ $currentDoc->validity }})</span>
+                                                                @endif
                                                             @else
                                                                 <span class="text-muted fst-italic">{{ $currentDoc->validity ? $currentDoc->validity . ' (Tanggal Belum Ditetapkan)' : 'Belum Ditetapkan (Fase Draf)' }}</span>
                                                             @endif
@@ -2315,7 +2414,7 @@
                                                         <td class="py-0.5 px-1 text-muted">:</td>
                                                         <td class="py-0.5">
                                                             <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.7rem;">
-                                                                <i class="bi bi-bell-fill me-1"></i> H-90 Hari (3 Bulan)
+                                                                <i class="bi bi-bell-fill me-1"></i> H-90 Hari (3 Bulan sebelum berakhir)
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -2680,64 +2779,72 @@
                                         </div>
                                     </div>
                                     <div class="card-body p-0">
-                                        <div class="table-responsive border-0 shadow-none mb-0">
-                                            <table class="table table-hover align-middle mb-0" style="font-size: 0.76rem;">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th class="py-1 text-center text-muted fw-semibold" style="width: 45px;">No.</th>
-                                                        <th class="py-1 text-center text-muted fw-semibold">Judul dan Nomor Dokumen</th>
-                                                        <th class="py-1 text-center text-muted fw-semibold" style="width: 100px;">Jenis</th>
-                                                        <th class="py-1 text-center text-muted fw-semibold">Unit Pelaksana</th>
-                                                        <th class="py-1 text-center text-muted fw-semibold" style="width: 120px;">Status</th>
-                                                        <th class="pe-3 py-1 text-center text-muted fw-semibold" style="width: 80px;">Aksi</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @forelse ($childDocs as $cIdx => $cDoc)
+                                        @if ($currentDoc->doc_type === 'IA')
+                                            <div class="p-3 text-center text-muted small">
+                                                <i class="bi bi-shield-check text-success fs-5 d-block mb-1"></i>
+                                                <div class="fw-semibold text-dark">Naskah IA merupakan Dokumen Tingkat Operasional Terakhir</div>
+                                                <div style="font-size: 0.72rem;">Tidak menerbitkan turunan hukum lagi. Seluruh realisasi kegiatan dicatat langsung pada <strong>Tab Pelaksanaan (IKU 6)</strong>.</div>
+                                            </div>
+                                        @else
+                                            <div class="table-responsive border-0 shadow-none mb-0">
+                                                <table class="table table-hover align-middle mb-0" style="font-size: 0.76rem;">
+                                                    <thead class="table-light">
                                                         <tr>
-                                                            <td class="py-1 text-center text-muted">{{ $cIdx + 1 }}</td>
-                                                            <td class="py-1">
-                                                                <div class="fw-bold text-dark">{{ $cDoc->title ?: 'Dokumen Turunan' }}</div>
-                                                                <small class="text-muted font-monospace">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</small>
-                                                            </td>
-                                                            <td class="py-1 text-center">
-                                                                @if (stripos($cDoc->doc_type, 'MoA') !== false)
-                                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;">MoA / PKS</span>
-                                                                @else
-                                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;">IA</span>
-                                                                @endif
-                                                            </td>
-                                                            <td class="py-1 text-center text-secondary">{{ $cDoc->unit }}</td>
-                                                            <td class="py-1 text-center">
-                                                                @if ($cDoc->status === 'ACTIVE')
-                                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;"><i class="bi bi-check me-0.5"></i> ACTIVE</span>
-                                                                @else
-                                                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;"><i class="bi bi-clock me-0.5"></i> {{ $cDoc->status }}</span>
-                                                                @endif
-                                                            </td>
-                                                            <td class="pe-3 py-1 text-center">
-                                                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat Detail">
-                                                                    <i class="bi bi-eye"></i>
-                                                                </a>
-                                                                <div class="dropdown d-inline-block">
-                                                                    <button class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs dropdown-toggle dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                        <i class="bi bi-three-dots"></i>
-                                                                    </button>
-                                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1">
-                                                                        <li><a class="dropdown-item py-1 px-3" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}"><i class="bi bi-eye me-1.5"></i> Detail Dokumen</a></li>
-                                                                        <li><a class="dropdown-item py-1 px-3" href="{{ route('simkerma.verify', ['reg_id' => $cDoc->reg_id]) }}" target="_blank"><i class="bi bi-qr-code-scan me-1.5"></i> Verifikasi QR</a></li>
-                                                                    </ul>
-                                                                </div>
-                                                            </td>
+                                                            <th class="py-1 text-center text-muted fw-semibold" style="width: 45px;">No.</th>
+                                                            <th class="py-1 text-center text-muted fw-semibold">Judul dan Nomor Dokumen</th>
+                                                            <th class="py-1 text-center text-muted fw-semibold" style="width: 100px;">Jenis</th>
+                                                            <th class="py-1 text-center text-muted fw-semibold">Unit Pelaksana</th>
+                                                            <th class="py-1 text-center text-muted fw-semibold" style="width: 120px;">Status</th>
+                                                            <th class="pe-3 py-1 text-center text-muted fw-semibold" style="width: 80px;">Aksi</th>
                                                         </tr>
-                                                    @empty
-                                                        <tr>
-                                                            <td colspan="6" class="text-center text-muted py-2 small">Belum ada dokumen turunan terdaftar.</td>
-                                                        </tr>
-                                                    @endforelse
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                    </thead>
+                                                    <tbody>
+                                                        @forelse ($childDocs as $cIdx => $cDoc)
+                                                            <tr>
+                                                                <td class="py-1 text-center text-muted">{{ $cIdx + 1 }}</td>
+                                                                <td class="py-1">
+                                                                    <div class="fw-bold text-dark">{{ $cDoc->title ?: 'Dokumen Turunan' }}</div>
+                                                                    <small class="text-muted font-monospace">{{ $cDoc->doc_number ?: $cDoc->doc_id }}</small>
+                                                                </td>
+                                                                <td class="py-1 text-center">
+                                                                    @if (stripos($cDoc->doc_type, 'MoA') !== false)
+                                                                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;">MoA / PKS</span>
+                                                                    @else
+                                                                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;">IA</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="py-1 text-center text-secondary">{{ $cDoc->unit }}</td>
+                                                                <td class="py-1 text-center">
+                                                                    @if ($cDoc->status === 'ACTIVE')
+                                                                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #dcfce7; color: #16a34a; font-size: 0.7rem;"><i class="bi bi-check me-0.5"></i> ACTIVE</span>
+                                                                    @else
+                                                                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background-color: #e0f2fe; color: #0284c7; font-size: 0.7rem;"><i class="bi bi-clock me-0.5"></i> {{ $cDoc->status }}</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="pe-3 py-1 text-center">
+                                                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat Detail">
+                                                                        <i class="bi bi-eye"></i>
+                                                                    </a>
+                                                                    <div class="dropdown d-inline-block">
+                                                                        <button class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs dropdown-toggle dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                            <i class="bi bi-three-dots"></i>
+                                                                        </button>
+                                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1">
+                                                                            <li><a class="dropdown-item py-1 px-3" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $cDoc->doc_id]) }}"><i class="bi bi-eye me-1.5"></i> Detail Dokumen</a></li>
+                                                                            <li><a class="dropdown-item py-1 px-3" href="{{ route('simkerma.verify', ['reg_id' => $cDoc->reg_id]) }}" target="_blank"><i class="bi bi-qr-code-scan me-1.5"></i> Verifikasi QR</a></li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="6" class="text-center text-muted py-2 small">Belum ada dokumen turunan terdaftar.</td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -2761,7 +2868,7 @@
                                                     <i class="bi bi-file-earmark-pdf-fill"></i>
                                                 </div>
                                                 <div class="text-truncate">
-                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">Draf MoU &ndash; {{ $currentDoc->partner_name }}.pdf</div>
+                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">Draf {{ $currentDoc->doc_type }} &ndash; {{ $currentDoc->partner_name }}.pdf</div>
                                                     <div class="text-muted" style="font-size: 0.68rem;">1,2 MB &bull; Diunggah {{ \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') }}</div>
                                                 </div>
                                             </div>
@@ -2782,7 +2889,7 @@
                                                     <i class="bi bi-file-earmark-pdf-fill"></i>
                                                 </div>
                                                 <div class="text-truncate">
-                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">MoU Final (Bertandatangan).pdf</div>
+                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">{{ $currentDoc->doc_type }} Final (Bertandatangan).pdf</div>
                                                     <div class="text-muted" style="font-size: 0.68rem;">2,4 MB &bull; Diunggah {{ $currentDoc->date_signed ? \Carbon\Carbon::parse($currentDoc->date_signed)->format('d M Y') : '03 Nov 2026' }}</div>
                                                 </div>
                                             </div>
@@ -2913,26 +3020,76 @@
                     <!-- TAB 2: DOKUMEN & LAMPIRAN DETAIL -->
                     <div class="tab-pane fade" id="tab-docs-pane" role="tabpanel">
                         <div class="card border rounded-3 p-3 bg-white mb-2 shadow-2xs">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-files text-primary me-1"></i> Manajemen Berkas &amp; Pratinjau Naskah</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-files text-primary me-1"></i> Manajemen Berkas &amp; Pratinjau Naskah {{ $currentDoc->doc_type }}</h6>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Unggah atau periksa draf pengajuan serta naskah asli bertandatangan basah/elektronik</div>
+                                </div>
                                 <button type="button" class="btn btn-primary btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#uploadDocModal_{{ $currentDoc->id }}">
                                     <i class="bi bi-upload me-1"></i> Unggah Berkas Baru
                                 </button>
                             </div>
-                            <div class="row g-2">
-                                <div class="col-12">
-                                    <div class="p-2 border rounded-2 bg-light">
-                                        <h6 class="fw-bold text-dark mb-1 small"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>Naskah Draf Pengusul</h6>
-                                        @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
-                                            <div class="ratio ratio-16x9 border bg-white mb-1.5 rounded-1 overflow-hidden" style="max-height: 420px;">
-                                                <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Draf"></iframe>
+                            <div class="row g-3">
+                                <!-- Kolom 1: Draf Naskah Pengusul -->
+                                <div class="col-lg-6">
+                                    <div class="p-2.5 border rounded-2 bg-light h-100 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <h6 class="fw-bold text-dark mb-0 small"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>Naskah Draf Pengusul</h6>
+                                                @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5" style="font-size: 0.68rem;">Tersedia</span>
+                                                @else
+                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-0.5" style="font-size: 0.68rem;">Belum Diunggah</span>
+                                                @endif
                                             </div>
-                                            <div class="d-flex gap-1.5">
+                                            @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
+                                                <div class="ratio ratio-16x9 border bg-white mb-2 rounded-1 overflow-hidden" style="max-height: 380px;">
+                                                    <iframe src="{{ asset($currentDoc->draft_file) }}" title="Preview Draf {{ $currentDoc->doc_type }}"></iframe>
+                                                </div>
+                                            @else
+                                                <div class="text-muted py-4 text-center small border rounded bg-white mb-2">
+                                                    <i class="bi bi-file-earmark-x text-secondary fs-3 d-block mb-1"></i>
+                                                    Berkas naskah draf belum diunggah.
+                                                </div>
+                                            @endif
+                                        </div>
+                                        @if ($currentDoc->draft_file && file_exists(public_path($currentDoc->draft_file)))
+                                            <div class="d-flex gap-1.5 pt-1 border-top">
                                                 <a href="{{ asset($currentDoc->draft_file) }}" target="_blank" class="btn btn-outline-secondary btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
                                                 <a href="{{ asset($currentDoc->draft_file) }}" download class="btn btn-secondary btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-download me-1"></i>Unduh PDF</a>
                                             </div>
-                                        @else
-                                            <div class="text-muted py-3 text-center small">Berkas naskah draf belum diunggah.</div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Kolom 2: Naskah Final Bertandatangan Resmi -->
+                                <div class="col-lg-6">
+                                    <div class="p-2.5 border rounded-2 bg-light h-100 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <h6 class="fw-bold text-dark mb-0 small"><i class="bi bi-file-earmark-check text-success me-1"></i>Naskah Final Bertandatangan</h6>
+                                                @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5" style="font-size: 0.68rem;">Sah &amp; Bertandatangan</span>
+                                                @else
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-0.5" style="font-size: 0.68rem;">Menunggu Naskah Final</span>
+                                                @endif
+                                            </div>
+                                            @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
+                                                <div class="ratio ratio-16x9 border bg-white mb-2 rounded-1 overflow-hidden" style="max-height: 380px;">
+                                                    <iframe src="{{ asset($currentDoc->signed_file) }}" title="Preview Naskah Final {{ $currentDoc->doc_type }}"></iframe>
+                                                </div>
+                                            @else
+                                                <div class="text-muted py-4 text-center small border rounded bg-white mb-2">
+                                                    <i class="bi bi-patch-exclamation text-warning fs-3 d-block mb-1"></i>
+                                                    Naskah bertandatangan belum diunggah.<br><small class="text-muted">Diunggah saat verifikasi final atau aktivasi naskah resmi.</small>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        @if ($currentDoc->signed_file && file_exists(public_path($currentDoc->signed_file)))
+                                            <div class="d-flex gap-1.5 pt-1 border-top">
+                                                <a href="{{ asset($currentDoc->signed_file) }}" target="_blank" class="btn btn-outline-success btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Buka Tab Baru</a>
+                                                <a href="{{ asset($currentDoc->signed_file) }}" download class="btn btn-success btn-sm py-0.5 px-2" style="font-size: 0.72rem;"><i class="bi bi-download me-1"></i>Unduh PDF</a>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
@@ -2945,19 +3102,39 @@
                         <div class="card border rounded-3 p-3 bg-white mb-2 shadow-2xs">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div>
-                                    <h6 class="fw-bold mb-0 text-dark small">Daftar Dokumen Turunan (MoA &amp; IA)</h6>
-                                    <div class="text-muted" style="font-size: 0.72rem;">Naskah turunan pelaksanaan yang berinduk secara hukum ke dokumen MoU ini</div>
+                                    <h6 class="fw-bold mb-0 text-dark small">Daftar Dokumen Turunan {{ $currentDoc->doc_type === 'MoU' ? '(MoA & IA)' : ($currentDoc->doc_type === 'IA' ? '(Pelaksanaan Operasional)' : '(IA)') }}</h6>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Naskah turunan pelaksanaan yang berinduk secara hukum ke dokumen {{ $currentDoc->doc_type }} ini</div>
                                 </div>
-                                <div class="d-flex gap-1.5">
-                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}" class="btn btn-primary btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;">
-                                        <i class="bi bi-plus-lg me-1"></i> + Tambah MoA / PKS
-                                    </a>
-                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-success btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;">
-                                        <i class="bi bi-plus-lg me-1"></i> + Tambah IA
-                                    </a>
-                                </div>
+                                @if ($currentDoc->doc_type === 'MoU')
+                                    <div class="d-flex gap-1.5">
+                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'MoA / PKS']) }}" class="btn btn-primary btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;">
+                                            <i class="bi bi-plus-lg me-1"></i> + Tambah MoA / PKS
+                                        </a>
+                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-success btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;">
+                                            <i class="bi bi-plus-lg me-1"></i> + Tambah IA
+                                        </a>
+                                    </div>
+                                @elseif ($currentDoc->doc_type !== 'IA')
+                                    <div class="d-flex gap-1.5">
+                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new_derive', 'parent_id' => $currentDoc->doc_id, 'derive_type' => 'IA']) }}" class="btn btn-success btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;">
+                                            <i class="bi bi-plus-lg me-1"></i> + Tambah IA (Implementation)
+                                        </a>
+                                    </div>
+                                @endif
                             </div>
-                            @if ($childDocs->isNotEmpty())
+
+                            @if ($currentDoc->doc_type === 'IA')
+                                <div class="text-center py-4 bg-light rounded-2 border">
+                                    <i class="bi bi-shield-check text-success fs-2 mb-2 d-inline-block"></i>
+                                    <h6 class="fw-bold text-dark mb-1">Dokumen Tingkat Operasional Terakhir (Implementation Arrangement)</h6>
+                                    <p class="text-muted mx-auto mb-3" style="max-width: 560px; font-size: 0.78rem;">
+                                        Sesuai regulasi tata kelola kerja sama perguruan tinggi, dokumen <strong>Implementation Arrangement (IA)</strong> berada di tingkat Program Studi/Laboratorium dan tidak memiliki naskah turunan hukum lebih lanjut. Seluruh implementasi riil dicatat sebagai <strong>Catatan Pelaksanaan Kegiatan (IKU 6)</strong> pada tab di samping.
+                                    </p>
+                                    <button type="button" class="btn btn-primary btn-sm fw-semibold px-3 py-1.5" onclick="document.getElementById('tab-act-btn').click();">
+                                        <i class="bi bi-list-task me-1"></i> Lihat Tab Pelaksanaan Kegiatan
+                                    </button>
+                                </div>
+                            @elseif ($childDocs->isNotEmpty())
                                 <div class="table-responsive border-0">
                                     <table class="table table-bordered table-hover align-middle mb-0" style="font-size: 0.76rem;">
                                         <thead class="table-light">
@@ -3007,7 +3184,7 @@
                                 <div class="text-center py-4 bg-light rounded-2 border">
                                     <i class="bi bi-diagram-3 text-muted fs-3"></i>
                                     <div class="fw-semibold text-dark mt-1 small">Belum Ada Dokumen Turunan Terdaftar</div>
-                                    <div class="text-muted" style="font-size: 0.72rem;">Gunakan tombol di atas untuk menambahkan perjanjian kerja sama turunan (MoA / IA)</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Gunakan tombol di atas untuk menambahkan perjanjian kerja sama turunan ({{ $currentDoc->doc_type === 'MoU' ? 'MoA / IA' : 'IA' }})</div>
                                 </div>
                             @endif
                         </div>
@@ -3019,9 +3196,9 @@
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div>
                                     <h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-calendar2-check text-primary me-1"></i> Catatan Pelaksanaan Kerja Sama (IKU 6)</h6>
-                                    <div class="text-muted" style="font-size: 0.72rem;">Kegiatan riil operasional yang mengimplementasikan kerja sama ini</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Kegiatan riil operasional yang mengimplementasikan naskah {{ $currentDoc->doc_type }} ini</div>
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#createActivityModal">
+                                <button type="button" class="btn btn-primary btn-sm fw-semibold py-1 px-2.5" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#createActivityModal_{{ $currentDoc->id }}">
                                     <i class="bi bi-plus-lg me-1"></i> Catat Kegiatan Baru
                                 </button>
                             </div>
@@ -3030,23 +3207,46 @@
                                     <table class="table table-bordered table-hover align-middle mb-0" style="font-size: 0.76rem;">
                                         <thead class="table-light">
                                             <tr>
-                                                <th class="py-1">Nama Kegiatan</th>
-                                                <th class="py-1">Bentuk Implementasi</th>
-                                                <th class="py-1">Tanggal</th>
-                                                <th class="py-1">Unit Pelaksana</th>
-                                                <th class="py-1">Realisasi Anggaran</th>
-                                                <th class="py-1">Status</th>
+                                                <th class="py-1 text-center" style="width: 40px;">No.</th>
+                                                <th class="py-1">Nama Kegiatan Pelaksanaan</th>
+                                                <th class="py-1" style="width: 140px;">Jadwal Pelaksanaan</th>
+                                                <th class="py-1">Pihak / Peserta Terlibat</th>
+                                                <th class="py-1">Luaran (IKU 6)</th>
+                                                <th class="py-1 text-center" style="width: 100px;">Anggaran</th>
+                                                <th class="py-1 text-center" style="width: 110px;">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($currentDoc->activities as $act)
+                                            @foreach ($currentDoc->activities as $actIdx => $act)
                                                 <tr>
-                                                    <td class="py-1 fw-bold text-dark">{{ $act->title }}</td>
-                                                    <td class="py-1"><span class="badge bg-light text-dark border">{{ $act->type }}</span></td>
-                                                    <td class="py-1">{{ \Carbon\Carbon::parse($act->activity_date)->format('d M Y') }}</td>
-                                                    <td class="py-1">{{ $act->unit }}</td>
-                                                    <td class="py-1 text-dark fw-semibold">Rp {{ number_format($act->budget_spent, 0, ',', '.') }}</td>
-                                                    <td class="py-1"><span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5">{{ $act->status }}</span></td>
+                                                    <td class="py-1 text-center text-muted">{{ $actIdx + 1 }}</td>
+                                                    <td class="py-1">
+                                                        <div class="fw-bold text-dark">{{ $act->activity_name }}</div>
+                                                        @if ($act->notes)
+                                                            <div class="text-muted" style="font-size: 0.68rem;">{{ $act->notes }}</div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="py-1 text-nowrap">
+                                                        <span>{{ $act->schedule_start ?: '-' }}</span>
+                                                        @if ($act->schedule_end)
+                                                            <div class="text-muted" style="font-size: 0.68rem;">s/d {{ $act->schedule_end }}</div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="py-1 text-secondary">{{ $act->parties_involved ?: '-' }}</td>
+                                                    <td class="py-1">{{ $act->outputs ?: '-' }}</td>
+                                                    <td class="py-1 text-center fw-semibold text-dark">{{ $act->budget_info ?: '-' }}</td>
+                                                    <td class="py-1 text-center">
+                                                        @php
+                                                            $actBadge = match($act->execution_status) {
+                                                                'SELESAI' => 'bg-success-subtle text-success border border-success-subtle',
+                                                                'SEDANG_BERJALAN' => 'bg-primary-subtle text-primary border border-primary-subtle',
+                                                                'TERKENDALA' => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                                                'DIBATALKAN' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                                                default => 'bg-secondary-subtle text-secondary border border-secondary-subtle'
+                                                            };
+                                                        @endphp
+                                                        <span class="badge {{ $actBadge }} px-2 py-0.5" style="font-size: 0.68rem;">{{ $act->execution_status }}</span>
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -3056,7 +3256,7 @@
                                 <div class="text-center py-4 bg-light rounded-2 border">
                                     <i class="bi bi-calendar-x text-muted fs-3"></i>
                                     <div class="fw-semibold text-dark mt-1 small">Belum Ada Catatan Pelaksanaan</div>
-                                    <div class="text-muted" style="font-size: 0.72rem;">Klik tombol "Catat Kegiatan Baru" untuk merekam implementasi Tri Dharma perguruan tinggi.</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Klik tombol "Catat Kegiatan Baru" untuk merekam implementasi Tri Dharma perguruan tinggi yang merujuk pada naskah ini.</div>
                                 </div>
                             @endif
                         </div>
@@ -3068,7 +3268,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div>
                                     <h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-shield-lock text-primary me-1"></i> Jejak Audit Relasional FSM (Immutable Audit Trail)</h6>
-                                    <div class="text-muted" style="font-size: 0.72rem;">Catatan mutlak setiap transisi status dan aksi pejabat berwenang di Universitas Parna Raya</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Catatan mutlak setiap transisi status dan aksi pejabat berwenang di Universitas Kristen Papua (UNIPAR)</div>
                                 </div>
                                 <span class="badge bg-light text-dark border font-monospace py-1 px-2" style="font-size: 0.72rem;">
                                     Total: {{ $currentDoc->auditTrails->count() }} Rekaman
@@ -3173,6 +3373,35 @@
                             <input type="hidden" name="doc_id" value="{{ $currentDoc->doc_id }}">
                             <div class="modal-body p-3.5 small overflow-y-auto" style="max-height: calc(85vh - 120px); -webkit-overflow-scrolling: touch;">
                                 
+                                <!-- 0. JENIS DOKUMEN & INDUK DOKUMEN -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.8rem;">
+                                            Jenis Dokumen Kerja Sama : <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="doc_type" id="edit_doc_type_{{ $currentDoc->id }}" class="form-select form-select-sm" required onchange="toggleEditParent_{{ $currentDoc->id }}()">
+                                            <option value="MoU" {{ $currentDoc->doc_type === 'MoU' ? 'selected' : '' }}>MoU (Memorandum of Understanding / Universitas)</option>
+                                            <option value="MoA / PKS" {{ stripos($currentDoc->doc_type, 'MoA') !== false ? 'selected' : '' }}>MoA / PKS (Perjanjian Kerja Sama / Fakultas)</option>
+                                            <option value="IA" {{ $currentDoc->doc_type === 'IA' ? 'selected' : '' }}>IA (Implementation Arrangement / Prodi)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6" id="edit_parent_box_{{ $currentDoc->id }}" style="{{ $currentDoc->doc_type === 'MoU' ? 'display: none;' : '' }}">
+                                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.8rem;">
+                                            Dokumen Induk (Rujukan Payung Hukum) :
+                                        </label>
+                                        <select name="parent_mou" class="form-select form-select-sm">
+                                            <option value="">-- Naskah Mandiri / Tanpa Induk --</option>
+                                            @foreach ($registeredMous as $rm)
+                                                @if ($rm->id !== $currentDoc->id)
+                                                    <option value="{{ $rm->doc_number ?: $rm->doc_id }}" {{ ($currentDoc->parent_mou === ($rm->doc_number ?: $rm->doc_id) || $currentDoc->parent_mou === $rm->doc_id || $currentDoc->parent_mou === $rm->doc_number) ? 'selected' : '' }}>
+                                                        [{{ $rm->doc_type }}] {{ $rm->partner_name }} - No: {{ $rm->doc_number ?: $rm->doc_id }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <!-- 1. JUDUL / TOPIK KERJA SAMA -->
                                 <div class="mb-3">
                                     <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.8rem;">
@@ -3417,6 +3646,17 @@
                 const dd = String(endDate.getDate()).padStart(2, '0');
                 endEl.value = `${yyyy}-${mm}-${dd}`;
             }
+
+            function toggleEditParent_{{ $currentDoc->id }}() {
+                const docTypeEl = document.getElementById('edit_doc_type_{{ $currentDoc->id }}');
+                const parentBoxEl = document.getElementById('edit_parent_box_{{ $currentDoc->id }}');
+                if (!docTypeEl || !parentBoxEl) return;
+                if (docTypeEl.value === 'MoU') {
+                    parentBoxEl.style.display = 'none';
+                } else {
+                    parentBoxEl.style.display = 'block';
+                }
+            }
             </script>
 
             <!-- ===================================================================================== -->
@@ -3448,6 +3688,101 @@
                             <div class="modal-footer py-2 px-3 bg-light border-top">
                                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
                                 <button type="submit" class="btn btn-primary btn-sm fw-semibold"><i class="bi bi-upload me-1"></i> Unggah Berkas</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================================================================================== -->
+            <!-- MODAL CATAT KEGIATAN PELAKSANAAN DARI DETAIL DOKUMEN (TAB 4)                         -->
+            <!-- ===================================================================================== -->
+            <div class="modal fade" id="createActivityModal_{{ $currentDoc->id }}" tabindex="-1" aria-labelledby="createActivityModalLabel_{{ $currentDoc->id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content border-0 shadow-lg">
+                        <form action="{{ route('simkerma.store-activity') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="document_id" value="{{ $currentDoc->id }}">
+                            <input type="hidden" name="redirect_to_detail" value="1">
+                            <div class="modal-header bg-dark text-white py-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-calendar-plus text-warning fs-5"></i>
+                                    <div>
+                                        <h6 class="modal-title fw-bold mb-0 text-uppercase" id="createActivityModalLabel_{{ $currentDoc->id }}">Pencatatan Realisasi Pelaksanaan Kerja Sama</h6>
+                                        <div class="small text-white-50" style="font-size: 0.72rem;">Merujuk pada dokumen: [{{ $currentDoc->doc_type }}] {{ $currentDoc->partner_name }} ({{ $currentDoc->doc_number ?: $currentDoc->doc_id }})</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="alert alert-info py-2 px-3 small border mb-3">
+                                    <i class="bi bi-info-circle-fill me-1"></i> <strong>Realisasi IKU 6:</strong> Kegiatan ini akan langsung tercatat dan berelasi kuat dengan naskah <strong>{{ $currentDoc->doc_number ?: $currentDoc->doc_id }}</strong> ({{ $currentDoc->partner_name }}).
+                                </div>
+
+                                <div class="row g-3 small">
+                                    <!-- Nama Kegiatan -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold text-dark">Nama Kegiatan Pelaksanaan <span class="text-danger">*</span></label>
+                                        <input type="text" name="activity_name" class="form-control form-control-sm" required placeholder="Contoh: Magang Industri MBKM Semester Genap / Workshop Kurikulum">
+                                    </div>
+
+                                    <!-- Jadwal Mulai & Selesai -->
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-bold text-dark">Jadwal Mulai</label>
+                                        <input type="text" name="schedule_start" class="form-control form-control-sm" placeholder="Contoh: 01 Feb 2026" value="{{ now()->format('d M Y') }}">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-bold text-dark">Jadwal Selesai</label>
+                                        <input type="text" name="schedule_end" class="form-control form-control-sm" placeholder="Contoh: 31 Jul 2026">
+                                    </div>
+
+                                    <!-- Target & Realisasi -->
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-bold text-dark">Target Kuantitatif</label>
+                                        <input type="text" name="target_qty" class="form-control form-control-sm" placeholder="Contoh: 20 Mahasiswa">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-bold text-dark">Realisasi Lapangan</label>
+                                        <input type="text" name="realized_qty" class="form-control form-control-sm" placeholder="Contoh: 18 Mahasiswa (90%)">
+                                    </div>
+
+                                    <!-- Pihak Terlibat -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold text-dark">Pihak / Peserta Terlibat</label>
+                                        <textarea name="parties_involved" class="form-control form-control-sm" rows="2" placeholder="Sebutkan mahasiswa, dosen pembina, dan mentor/staf mitra yang terlibat langsung">{{ $currentDoc->unit }} &amp; {{ $currentDoc->partner_name }}</textarea>
+                                    </div>
+
+                                    <!-- Luaran IKU 6 -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold text-dark">Luaran &amp; Manfaat Riil (IKU 6)</label>
+                                        <textarea name="outputs" class="form-control form-control-sm" rows="2" placeholder="Contoh: Laporan Magang, 2 Sertifikat Kompetensi, 1 Modul Ajar"></textarea>
+                                    </div>
+
+                                    <!-- Anggaran & Status Pelaksanaan -->
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-bold text-dark">Anggaran / Biaya Pelaksanaan</label>
+                                        <input type="text" name="budget_info" class="form-control form-control-sm" placeholder="Contoh: Rp 15.000.000 (Mandiri / Hibah Mitra)">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-bold text-dark">Status Pelaksanaan <span class="text-danger">*</span></label>
+                                        <select name="execution_status" class="form-select form-select-sm" required>
+                                            <option value="SEDANG_BERJALAN" selected>SEDANG_BERJALAN</option>
+                                            <option value="SELESAI">SELESAI</option>
+                                            <option value="TERKENDALA">TERKENDALA</option>
+                                            <option value="DIBATALKAN">DIBATALKAN</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Catatan -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold text-dark">Catatan Tambahan</label>
+                                        <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Catatan atau evaluasi singkat pelaksanaan kegiatan..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer py-2.5 px-4 bg-light border-top">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary btn-sm fw-semibold"><i class="bi bi-check-lg me-1"></i> Simpan Catatan Kegiatan</button>
                             </div>
                         </form>
                     </div>
