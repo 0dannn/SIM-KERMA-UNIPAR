@@ -2174,9 +2174,6 @@
                                     <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                                         <span class="badge rounded-pill text-white fw-bold px-2 py-0.5" style="background-color: {{ $currentDoc->doc_type === 'MoU' ? '#1e3a8a' : ($currentDoc->doc_type === 'IA' ? '#059669' : '#0284c7') }}; font-size: 0.68rem;">{{ $currentDoc->doc_type }}</span>
                                         <span class="text-muted small fw-medium" style="font-size: 0.76rem;">{{ $currentDoc->doc_type === 'MoU' ? 'Memorandum of Understanding' : ($currentDoc->doc_type === 'IA' ? 'Implementation Arrangement' : 'Memorandum of Agreement') }}</span>
-                                        <span class="badge bg-light text-secondary border font-monospace px-2 py-0.5" style="font-size: 0.72rem;" title="Nomor Naskah">
-                                            <i class="bi bi-hash me-0.5"></i>{{ $currentDoc->doc_number ?: $currentDoc->doc_id }}
-                                        </span>
                                         @if ($currentDoc->is_legacy)
                                             <span class="badge rounded-pill bg-dark text-warning border border-warning px-2 py-0.5" style="font-size: 0.68rem;">
                                                 <i class="bi bi-clock-history me-1"></i> Data Lampau
