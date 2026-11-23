@@ -19,3 +19,5 @@ yarn-error.log
 /.vscode
 /public/uploads/documents/*
 !/public/uploads/documents/.gitkeep
+/public/uploads/activities/*
+!/public/uploads/activities/.gitkeep
