@@ -12,7 +12,11 @@ class HomeController extends Controller
 {
     /**
      * Tampilkan Halaman Utama (Homepage / Portal Publik Kemitraan)
-     * Sinkron 100% dengan data sistem internal SIM-KERMA UNIPAR
+     * Mengadopsi tata letak & visualisasi standar SIKERMA UNJ (https://sikerma.unj.ac.id/)
+     * Menampilkan:
+     * 1. Statistik ringkas & sederhana hanya MoU, MoA, dan IA.
+     * 2. Grafik dokumen berdasarkan Unit Pengusul, Klasifikasi Mitra, dan Kewarganegaraan Mitra.
+     * 3. Daftar tabel dokumen kerja sama universitas interaktif lengkap dengan modal detail.
      */
     public function index(Request $request)
     {
@@ -21,111 +25,147 @@ class HomeController extends Controller
             return redirect()->route('simkerma.index', $request->all());
         }
 
-        // 1. STATISTIK DOKUMEN (SINKRON DENGAN MENU 4 & MENU 7)
-        $totalDocs = Document::count();
-        $activeDocs = Document::where('status', 'ACTIVE')->count();
-        $warningDocs = Document::where('status', 'WARNING')->count();
-        $reviewDocs = Document::where('status', 'REVIEW')->count();
-        $verifiedDocs = Document::where('status', 'VERIFIED')->count();
-        $draftDocs = Document::where('status', 'DRAFT')->count();
-        $expiredDocs = Document::whereIn('status', ['EXPIRED', 'CANCELLED'])->count();
-
-        // 2. STATISTIK JENIS NASKAH KERJA SAMA
+        // 1. STATISTIK DOKUMEN KERJA SAMA (SEDERHANA: HANYA MoU, MoA, IA - SEPERTI SIKERMA UNJ)
         $mouCount = Document::where('doc_type', 'like', '%MoU%')->count();
         $moaCount = Document::where('doc_type', 'like', '%MoA%')->count();
         $iaCount = Document::where('doc_type', 'like', '%IA%')->count();
+        $totalDocs = Document::count();
 
-        // 3. STATISTIK MITRA (SINKRON DENGAN MENU 1 & MASTER DATA)
-        $totalPartners = Partner::count();
-        $nationalPartners = Partner::where(function ($q) {
-            $q->where('scope_coverage', 'like', '%Dalam Negeri%')
-              ->orWhere('scope_coverage', 'like', '%Nasional%')
-              ->orWhere('scope_coverage', 'like', '%Lokal%');
-        })->count();
-        
-        $internationalPartners = Partner::where(function ($q) {
-            $q->where('scope_coverage', 'like', '%Luar Negeri%')
-              ->orWhere('scope_coverage', 'like', '%Internasional%');
-        })->count();
-
-        // Kategori Mitra untuk Grafik Batang
-        $partnerCategories = Partner::select('category', DB::raw('count(*) as total'))
-            ->groupBy('category')
-            ->orderByDesc('total')
-            ->get();
-
-        // Dokumen per Unit Pengusul / Fakultas untuk Grafik Horizontal
-        $docsByUnit = Document::select('unit', DB::raw('count(*) as total'))
-            ->groupBy('unit')
-            ->orderByDesc('total')
-            ->take(6)
-            ->get();
-
-        // Tren Dokumen per Tahun
-        $docsByYear = Document::select(DB::raw('COALESCE(YEAR(date_signed), YEAR(created_at), 2026) as doc_year'), DB::raw('count(*) as total'))
-            ->groupBy('doc_year')
-            ->orderBy('doc_year', 'asc')
-            ->get();
-
-        // 4. STATISTIK KEGIATAN & IKU 6 (SINKRON DENGAN MENU 5)
-        $totalActivities = Activity::count();
-        $runningActivities = Activity::where('execution_status', 'SEDANG_BERJALAN')->count();
-        $completedActivities = Activity::where('execution_status', 'SELESAI')->count();
-        $pendingActivities = Activity::whereIn('execution_status', ['BELUM_DIMULAI', 'TERTUNDA'])->count();
-
-        // 5. DIREKTORI DOKUMEN PUBLIK
-        $recentDocuments = Document::orderBy('id', 'desc')->take(12)->get();
-
-        // 6. MITRA TERHUBUNG UNGGULAN
-        $featuredPartners = Partner::withCount('documents')
-            ->orderByDesc('documents_count')
-            ->take(8)
-            ->get();
-
-        // Data Siap Pakai untuk ApexCharts (JSON format)
-        $chartTypeLabels = ['Nota Kesepahaman (MoU)', 'Perjanjian Kerja Sama (MoA)', 'Implementation Arrangement (IA)'];
+        // 2. GRAFIK KOMPOSISI DOKUMEN (DONUT CHART APEXCHARTS)
+        $chartTypeLabels = ['MoU', 'MoA', 'IA'];
         $chartTypeSeries = [$mouCount, $moaCount, $iaCount];
 
-        $chartStatusLabels = ['Aktif Sah', 'Dalam Telaah (Review)', 'Disetujui Pimpinan', 'Kedaluwarsa / Selesai'];
-        $chartStatusSeries = [$activeDocs, $reviewDocs, $verifiedDocs, $expiredDocs];
+        // 3. GRAFIK DISTRIBUSI DOKUMEN KERJA SAMA PER TAHUN (5 TAHUN TERAKHIR)
+        $currentYear = (int)date('Y');
+        $yearsRange = range($currentYear - 4, $currentYear); // e.g. 2022 s.d. 2026
 
-        $chartCategoryLabels = $partnerCategories->pluck('category')->toArray();
-        $chartCategorySeries = $partnerCategories->pluck('total')->toArray();
+        $mouPerYear = [];
+        $moaPerYear = [];
+        $iaPerYear = [];
 
-        $chartUnitLabels = $docsByUnit->pluck('unit')->toArray();
-        $chartUnitSeries = $docsByUnit->pluck('total')->toArray();
+        foreach ($yearsRange as $yr) {
+            $mouPerYear[] = Document::where('doc_type', 'like', '%MoU%')
+                ->where(function ($q) use ($yr) {
+                    $q->whereYear('start_date', $yr)
+                      ->orWhereYear('date_signed', $yr)
+                      ->orWhereYear('created_at', $yr);
+                })->count();
+
+            $moaPerYear[] = Document::where('doc_type', 'like', '%MoA%')
+                ->where(function ($q) use ($yr) {
+                    $q->whereYear('start_date', $yr)
+                      ->orWhereYear('date_signed', $yr)
+                      ->orWhereYear('created_at', $yr);
+                })->count();
+
+            $iaPerYear[] = Document::where('doc_type', 'like', '%IA%')
+                ->where(function ($q) use ($yr) {
+                    $q->whereYear('start_date', $yr)
+                      ->orWhereYear('date_signed', $yr)
+                      ->orWhereYear('created_at', $yr);
+                })->count();
+        }
+
+        $docsPerYearSeries = [
+            ['name' => 'MoU', 'data' => $mouPerYear],
+            ['name' => 'MoA', 'data' => $moaPerYear],
+            ['name' => 'IA', 'data' => $iaPerYear],
+        ];
+
+        // 4. STATISTIK DOKUMEN BERDASARKAN TAHUN (INTERAKTIF: UNIT, KLASIFIKASI, KEWARGANEGARAAN)
+        // Ambil daftar tahun unik dari basis data
+        $dbYears = Document::select(DB::raw('DISTINCT COALESCE(YEAR(start_date), YEAR(date_signed), YEAR(created_at), 2026) as yr'))
+            ->orderByDesc('yr')
+            ->pluck('yr')
+            ->map(fn($y) => (int)$y)
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $availableYears = array_unique(array_merge($dbYears, $yearsRange));
+        rsort($availableYears);
+
+        // Helper closure untuk membentuk dataset per unit, klasifikasi mitra, dan kewarganegaraan
+        $buildYearStats = function ($targetYear = 'all') {
+            $query = Document::query();
+            if ($targetYear !== 'all') {
+                $query->where(function ($q) use ($targetYear) {
+                    $q->whereYear('start_date', $targetYear)
+                      ->orWhereYear('date_signed', $targetYear)
+                      ->orWhereYear('created_at', $targetYear);
+                });
+            }
+
+            $docs = $query->get();
+
+            // A. Dokumen berdasarkan Unit Pengusul / Fakultas
+            $unitsCount = [];
+            foreach ($docs as $d) {
+                $u = $d->unit ?: 'Lainnya / Universitas';
+                $unitsCount[$u] = ($unitsCount[$u] ?? 0) + 1;
+            }
+            arsort($unitsCount);
+            $topUnits = array_slice($unitsCount, 0, 8, true);
+            $unitLabels = array_keys($topUnits);
+            $unitSeries = array_values($topUnits);
+
+            // B. Dokumen berdasarkan Klasifikasi Mitra
+            $catCount = [];
+            foreach ($docs as $d) {
+                $c = $d->partner_category ?: 'DUDI / Swasta';
+                $catCount[$c] = ($catCount[$c] ?? 0) + 1;
+            }
+            arsort($catCount);
+            $catLabels = array_keys($catCount);
+            $catSeries = array_values($catCount);
+
+            // C. Dokumen berdasarkan Kewarganegaraan Mitra (Dalam Negeri vs Luar Negeri)
+            $natCount = [
+                'Dalam Negeri (Indonesia)' => 0,
+                'Luar Negeri (Internasional)' => 0,
+            ];
+            foreach ($docs as $d) {
+                $pName = strtolower($d->partner_name ?? '');
+                $pCat = strtolower($d->partner_category ?? '');
+                if (str_contains($pName, 'international') || str_contains($pCat, 'luar negeri') || str_contains($pCat, 'international')) {
+                    $natCount['Luar Negeri (Internasional)']++;
+                } else {
+                    $natCount['Dalam Negeri (Indonesia)']++;
+                }
+            }
+            $natLabels = array_keys($natCount);
+            $natSeries = array_values($natCount);
+
+            return [
+                'units' => ['labels' => $unitLabels, 'series' => $unitSeries],
+                'categories' => ['labels' => $catLabels, 'series' => $catSeries],
+                'nationalities' => ['labels' => $natLabels, 'series' => $natSeries],
+            ];
+        };
+
+        $interactiveStats = [
+            'all' => $buildYearStats('all')
+        ];
+        foreach ($availableYears as $yr) {
+            $interactiveStats[(string)$yr] = $buildYearStats($yr);
+        }
+
+        // 5. DAFTAR DOKUMEN KERJA SAMA LENGKAP (UNTUK TABEL SIKERMA)
+        $allDocuments = Document::orderBy('id', 'desc')->get();
 
         return view('home', compact(
-            'totalDocs',
-            'activeDocs',
-            'warningDocs',
-            'reviewDocs',
-            'verifiedDocs',
-            'draftDocs',
-            'expiredDocs',
             'mouCount',
             'moaCount',
             'iaCount',
-            'totalPartners',
-            'nationalPartners',
-            'internationalPartners',
-            'partnerCategories',
-            'docsByUnit',
-            'docsByYear',
-            'totalActivities',
-            'runningActivities',
-            'completedActivities',
-            'pendingActivities',
-            'recentDocuments',
-            'featuredPartners',
+            'totalDocs',
             'chartTypeLabels',
             'chartTypeSeries',
-            'chartStatusLabels',
-            'chartStatusSeries',
-            'chartCategoryLabels',
-            'chartCategorySeries',
-            'chartUnitLabels',
-            'chartUnitSeries'
+            'yearsRange',
+            'docsPerYearSeries',
+            'availableYears',
+            'interactiveStats',
+            'allDocuments'
         ));
     }
 }

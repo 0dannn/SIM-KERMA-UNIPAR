@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('doc_id')->unique(); // e.g. UNIPAR-2026-042
             $table->string('reg_id')->unique(); // e.g. REG-UNIPAR-2026-042
             $table->string('doc_number')->nullable(); // e.g. 341/UNIPAR/MoU/X/2026
-            $table->string('track'); // Jalur 1: Kemitraan Bertahap / Jalur 2: Paket Terpadu PKM
-            $table->string('doc_type'); // MoU / MoA / IA / Paket Terpadu
+            $table->string('track'); // Jalur 1: Kemitraan Bertahap / Dokumen Lampau (Legacy)
+            $table->string('doc_type'); // MoU / MoA / IA
             $table->string('parent_mou')->default('-'); // Rujukan Dokumen Induk (IKU 6)
             $table->string('unit'); // Unit Pengusul Utama
             $table->string('collab_unit')->nullable(); // Unit Kolaborator Multi-Fakultas

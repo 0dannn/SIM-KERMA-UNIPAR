@@ -522,21 +522,21 @@ class SimkermaController extends Controller
     }
 
     /**
-     * Simpan Pengajuan Baru Jalur 2 (Paket Terpadu Tridharma & PKM)
+     * Simpan Pengajuan Baru Dokumen Lampau (Legacy / Jalur Terpadu Historis)
      */
     public function storeJalur2(Request $request)
     {
         [$newId, $regId] = $this->generateUniqueDocId();
-        $partnerName = $request->input('partner_name', 'Mitra PKM Terpadu');
+        $partnerName = $request->input('partner_name', 'Mitra Kerja Sama Lampau');
         $rawPartnerDocNumber = trim((string)$request->input('partner_doc_number', ''));
         $partnerDocNumber = ($rawPartnerDocNumber !== '') ? $rawPartnerDocNumber : '-';
         $unitMain = $request->input('unit_main', 'Fakultas Ilmu Komputer');
         $unitCollab = $request->input('unit_collab', 'Fakultas Ekonomi dan Bisnis');
-        $topic = $request->input('topic', 'Pelaksanaan Program PKM Kolaboratif');
+        $topic = $request->input('topic', 'Pelaksanaan Program Kerja Sama');
         $duration = $request->input('duration', '1 Tahun');
         $activeRole = session('active_role', 'MASTER');
 
-        $title = $request->input('title', 'Paket Terpadu PKM: ' . $topic);
+        $title = $request->input('title', 'Dokumen Lampau: ' . $topic);
         $firstPartySigner = $request->input('first_party_signer');
         $firstPartyPosition = $request->input('first_party_position');
         $secondPartySigner = $request->input('second_party_signer');
@@ -555,7 +555,7 @@ class SimkermaController extends Controller
             $picSecondParty, $startDate, $endDate, $nominalValue, $description
         ) {
             do {
-                $docNumber = sprintf('%03d/UNIPAR/PKM/X/2026', rand(360, 499));
+                $docNumber = sprintf('%03d/UNIPAR/IA/X/2026', rand(360, 499));
             } while (Document::where('doc_number', $docNumber)->exists());
 
             $document = Document::create([
@@ -563,7 +563,8 @@ class SimkermaController extends Controller
                 'reg_id' => $regId,
                 'doc_number' => $docNumber,
                 'partner_doc_number' => $partnerDocNumber,
-                'track' => 'Jalur 2: Paket Terpadu PKM',
+                'track' => 'Dokumen Lampau (Legacy)',
+                'is_legacy' => true,
                 'title' => $title,
                 'unit' => $unitMain,
                 'first_party_signer' => $firstPartySigner,
@@ -575,20 +576,20 @@ class SimkermaController extends Controller
                 'second_party_position' => $secondPartyPosition,
                 'pic_first_party' => $picFirstParty,
                 'pic_second_party' => $picSecondParty,
-                'doc_type' => 'Paket Terpadu (MoU + MoA + IA)',
+                'doc_type' => $request->input('doc_type', 'IA'),
                 'paper_size' => $request->input('paper_size') ?: 'A4',
                 'parent_mou' => '-',
-                'scope' => 'Paket Terpadu 1 Pintu: ' . $topic,
+                'scope' => $topic,
                 'description' => $description,
-                'students_data' => $request->input('students_data') ?: 'Mahasiswa Peserta PKM UNIPAR',
-                'validity' => ($duration ?: '1 Tahun') . ' (Siklus PKM)',
+                'students_data' => $request->input('students_data') ?: 'Mahasiswa UNIPAR',
+                'validity' => ($duration ?: '1 Tahun'),
                 'start_date' => $startDate ?: null,
                 'end_date' => $endDate ?: null,
                 'nominal_value' => $nominalValue,
                 'warning_threshold' => $request->input('warning_threshold') ?: 'H-90 Hari (3 Bulan)',
                 'status' => 'DRAFT',
-                'draft_file' => 'paket_pkm_' . strtolower(str_replace(' ', '_', $newId)) . '.pdf',
-                'notes' => 'Penyusunan berkas paket terpadu PKM (MoU, MoA, IA) oleh unit pengusul.',
+                'draft_file' => 'legacy_' . strtolower(str_replace(' ', '_', $newId)) . '.pdf',
+                'notes' => 'Pencatatan berkas dokumen lampau (legacy) oleh unit pengusul.',
             ]);
 
             // Handle Berkas Upload Draf Pengusul (PDF / DOCX)
@@ -616,7 +617,7 @@ class SimkermaController extends Controller
                 'event' => 'CREATE_DRAFT',
                 'from_status' => '-',
                 'to_status' => 'DRAFT',
-                'notes' => 'Penyusunan paket terpadu Tridharma & PKM bersama ' . $partnerName . '. QR Code registrasi resmi diterbitkan dalam status DRAFT.',
+                'notes' => 'Penyusunan dokumen lampau (legacy) bersama ' . $partnerName . '. QR Code registrasi resmi diterbitkan dalam status DRAFT.',
                 'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
             ]);
 
@@ -646,7 +647,7 @@ class SimkermaController extends Controller
         return redirect()->route('simkerma.index', ['menu' => 4, 'doc' => $doc->doc_id])
             ->with('flash', [
                 'type' => 'success',
-                'msg' => 'Paket terpadu baru ' . $doc->doc_id . ' berhasil dibuat dengan status DRAFT. QR Code registrasi resmi aktif.'
+                'msg' => 'Dokumen lampau baru ' . $doc->doc_id . ' berhasil dibuat dengan status DRAFT. QR Code registrasi resmi aktif.'
             ]);
     }
 

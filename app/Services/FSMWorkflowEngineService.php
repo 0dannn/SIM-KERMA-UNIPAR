@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
  * Service Utama FSM Engine (Finite State Machine) Laravel 11
  * Model Ramping 6-Status Sesuai Konteks Organisasi Universitas Parna Raya (UNIPAR)
  * 
- * Mengendalikan siklus hidup dokumen kerja sama (MoU, MoA, IA, Paket Terpadu),
+ * Mengendalikan siklus hidup dokumen kerja sama (MoU, MoA, IA, Dokumen Lampau/Legacy),
  * menegakkan Anti-Bypass Guard, Role-Based Access Control (RBAC),
  * serta pencatatan jejak audit relasional permanen di MySQL.
  */

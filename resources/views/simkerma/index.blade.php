@@ -913,7 +913,7 @@
                             <button class="nav-link text-muted py-2 px-3 repo-tab-btn" data-type="IA">IA (Implementasi Prodi)</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link text-muted py-2 px-3 repo-tab-btn" data-type="Paket">Paket Terpadu (PKM)</button>
+                            <button class="nav-link text-muted py-2 px-3 repo-tab-btn" data-type="Legacy">Dokumen Lampau (Legacy)</button>
                         </li>
                     </ul>
                     <div class="pb-2">
@@ -949,7 +949,7 @@
                                     default => 'bg-secondary text-white'
                                 };
                             @endphp
-                            <tr class="repo-row" data-type="{{ $doc->doc_type }}">
+                            <tr class="repo-row" data-type="{{ $doc->doc_type }}" data-legacy="{{ $doc->is_legacy ? '1' : '0' }}" data-track="{{ $doc->track }}">
                                 <td>
                                     <div class="fw-bold text-dark">
                                         {{ (!empty($doc->doc_number) && $doc->doc_number !== '-') ? $doc->doc_number : '-' }}
@@ -1027,7 +1027,15 @@
 
                 rows.forEach(function(row) {
                     const rowType = row.getAttribute('data-type') || '';
-                    const matchType = (t === 'ALL' || rowType.includes(t));
+                    const isLegacy = row.getAttribute('data-legacy') === '1' || (row.getAttribute('data-track') || '').toLowerCase().includes('lampau') || (row.getAttribute('data-track') || '').toLowerCase().includes('legacy');
+                    let matchType = false;
+                    if (t === 'ALL') {
+                        matchType = true;
+                    } else if (t === 'Legacy') {
+                        matchType = isLegacy;
+                    } else {
+                        matchType = rowType.includes(t);
+                    }
                     const matchSearch = (!q || row.innerText.toLowerCase().includes(q));
 
                     row.style.display = (matchType && matchSearch) ? '' : 'none';
@@ -3814,7 +3822,7 @@
                                 <option value="MoU">MoU (Kesepahaman)</option>
                                 <option value="MoA">MoA / PKS (Perjanjian Kerjasama)</option>
                                 <option value="IA">IA (Implementation Arrangement)</option>
-                                <option value="Paket">Paket Terpadu (PKM)</option>
+                                <option value="legacy">Dokumen Lampau (Legacy)</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -3915,7 +3923,7 @@
                                             }
                                         }
                                     @endphp
-                                    <tr class="doc-row" data-status="{{ $doc->status }}" data-type="{{ $doc->doc_type }}" data-unit="{{ $doc->unit }}">
+                                    <tr class="doc-row" data-status="{{ $doc->status }}" data-type="{{ $doc->doc_type }}" data-unit="{{ $doc->unit }}" data-legacy="{{ $doc->is_legacy ? '1' : '0' }}" data-track="{{ $doc->track }}">
                                         <!-- 1. No. -->
                                         <td class="text-center">{{ $loop->iteration }}</td>
 
@@ -4059,6 +4067,7 @@
                 const rowStatus = (row.getAttribute('data-status') || '').trim();
                 const rowType = (row.getAttribute('data-type') || '').toLowerCase().trim();
                 const rowUnit = (row.getAttribute('data-unit') || '').toLowerCase().trim();
+                const isLegacy = row.getAttribute('data-legacy') === '1' || (row.getAttribute('data-track') || '').toLowerCase().includes('lampau') || (row.getAttribute('data-track') || '').toLowerCase().includes('legacy');
 
                 const matchesQuery = !query || text.includes(query);
                 let matchesStatus = !statusFilter || rowStatus === statusFilter;
@@ -4067,7 +4076,14 @@
                     if (statusFilter === 'VERIFIED' && (rowStatus === 'APPROVED' || rowStatus === 'VERIFIED')) matchesStatus = true;
                     if (statusFilter === 'WARNING' && (rowStatus === 'WARNING_EXPIRY' || rowStatus === 'WARNING')) matchesStatus = true;
                 }
-                const matchesType = !typeFilter || rowType.includes(typeFilter);
+                let matchesType = false;
+                if (!typeFilter) {
+                    matchesType = true;
+                } else if (typeFilter === 'legacy') {
+                    matchesType = isLegacy;
+                } else {
+                    matchesType = rowType.includes(typeFilter);
+                }
                 const matchesUnit = !unitFilter || rowUnit.includes(unitFilter);
 
                 if (matchesQuery && matchesStatus && matchesType && matchesUnit) {
@@ -4220,7 +4236,7 @@
                         </h6>
                         <span class="badge bg-primary text-white font-monospace" style="font-size: 0.65rem;">SINKRON MENU 04 &bull; MYSQL</span>
                     </div>
-                    <small class="text-muted">Memastikan Perjanjian Benar-Benar Dilaksanakan Berdasarkan Naskah Rujukan Resmi (MoU / MoA / IA / Paket Terpadu)</small>
+                    <small class="text-muted">Memastikan Perjanjian Benar-Benar Dilaksanakan Berdasarkan Naskah Rujukan Resmi (MoU / MoA / IA / Dokumen Lampau)</small>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm fw-semibold">
