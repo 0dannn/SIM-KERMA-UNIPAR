@@ -2321,13 +2321,6 @@
                                             <table class="table table-borderless table-sm mb-0" style="font-size: 0.78rem; line-height: 1.45;">
                                                 <tbody>
                                                     <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 160px;">Judul Kerja Sama</td>
-                                                        <td class="py-0.5 px-1 text-muted" style="width: 10px;">:</td>
-                                                        <td class="text-dark fw-bold py-0.5" style="font-size: 0.85rem; color: #1e3a8a;">
-                                                            {{ $currentDoc->title ?: ($currentDoc->scope ?: '-') }}
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
                                                         <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 160px;">Jenis Dokumen</td>
                                                         <td class="py-0.5 px-1 text-muted" style="width: 10px;">:</td>
                                                         <td class="text-dark fw-medium py-0.5">
