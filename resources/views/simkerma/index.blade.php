@@ -2054,7 +2054,7 @@
                     <ol class="breadcrumb mb-0 small" style="font-size: 0.75rem;">
                         <li class="breadcrumb-item"><a href="{{ route('simkerma.index', ['menu' => 1]) }}" class="text-decoration-none text-muted"><i class="bi bi-house me-1"></i></a></li>
                         <li class="breadcrumb-item"><a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="text-decoration-none text-muted">Pengajuan &amp; Persetujuan</a></li>
-                        <li class="breadcrumb-item active text-dark fw-medium" aria-current="page">Detail Dokumen</li>
+                        <li class="breadcrumb-item active text-dark fw-medium text-truncate" style="max-width: 480px;" aria-current="page" title="{{ $currentDoc->title ?: 'Detail Dokumen' }}">{{ $currentDoc->title ?: 'Detail Dokumen' }}</li>
                     </ol>
                 </nav>
 
@@ -2166,27 +2166,30 @@
                     <div class="card-body p-2 px-3">
                         <div class="d-flex align-items-center justify-content-between gap-3">
                             <!-- Left Group: Icon + Title info -->
-                            <div class="d-flex align-items-center gap-3 text-truncate">
+                            <div class="d-flex align-items-center gap-3 flex-grow-1" style="min-width: 0;">
                                 <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background-color: {{ $currentDoc->doc_type === 'MoU' ? '#eff6ff' : ($currentDoc->doc_type === 'IA' ? '#ecfdf5' : '#f0f9ff') }}; border: 1px solid {{ $currentDoc->doc_type === 'MoU' ? '#dbeafe' : ($currentDoc->doc_type === 'IA' ? '#a7f3d0' : '#bae6fd') }};">
                                     <i class="bi {{ $currentDoc->doc_type === 'MoU' ? 'bi-file-earmark-text text-primary' : ($currentDoc->doc_type === 'IA' ? 'bi-file-earmark-check text-success' : 'bi-file-earmark-richtext text-info') }} fs-3"></i>
                                 </div>
-                                <div class="text-truncate">
-                                    <div class="d-flex align-items-center gap-2 mb-0.5">
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                                         <span class="badge rounded-pill text-white fw-bold px-2 py-0.5" style="background-color: {{ $currentDoc->doc_type === 'MoU' ? '#1e3a8a' : ($currentDoc->doc_type === 'IA' ? '#059669' : '#0284c7') }}; font-size: 0.68rem;">{{ $currentDoc->doc_type }}</span>
-                                        <span class="text-muted" style="font-size: 0.76rem;">{{ $currentDoc->doc_type === 'MoU' ? 'Memorandum of Understanding' : ($currentDoc->doc_type === 'IA' ? 'Implementation Arrangement' : 'Memorandum of Agreement') }}</span>
+                                        <span class="text-muted small fw-medium" style="font-size: 0.76rem;">{{ $currentDoc->doc_type === 'MoU' ? 'Memorandum of Understanding' : ($currentDoc->doc_type === 'IA' ? 'Implementation Arrangement' : 'Memorandum of Agreement') }}</span>
+                                        <span class="badge bg-light text-secondary border font-monospace px-2 py-0.5" style="font-size: 0.72rem;" title="Nomor Naskah">
+                                            <i class="bi bi-hash me-0.5"></i>{{ $currentDoc->doc_number ?: $currentDoc->doc_id }}
+                                        </span>
                                         @if ($currentDoc->is_legacy)
                                             <span class="badge rounded-pill bg-dark text-warning border border-warning px-2 py-0.5" style="font-size: 0.68rem;">
                                                 <i class="bi bi-clock-history me-1"></i> Data Lampau
                                             </span>
                                         @endif
                                     </div>
-                                    <h5 class="fw-bold text-dark mb-0 text-truncate" style="letter-spacing: -0.3px; font-size: 1.15rem;">
-                                        {{ $currentDoc->doc_number ?: $currentDoc->doc_id }}
+                                    <h5 class="fw-bold text-dark mb-1" style="letter-spacing: -0.3px; font-size: 1.15rem; line-height: 1.35;" title="{{ $currentDoc->title ?: ($currentDoc->scope ?: ($currentDoc->doc_number ?: $currentDoc->doc_id)) }}">
+                                        {{ $currentDoc->title ?: ($currentDoc->scope ?: ($currentDoc->doc_number ?: $currentDoc->doc_id)) }}
                                     </h5>
-                                    <div class="text-secondary text-truncate" style="font-size: 0.78rem;">
-                                        <span class="fw-semibold">Universitas Kristen Papua (UNIPAR)</span>
+                                    <div class="text-secondary d-flex align-items-center flex-wrap gap-1" style="font-size: 0.78rem;">
+                                        <span class="fw-semibold text-primary">Universitas Parna Raya (UNIPAR)</span>
                                         <span class="text-muted mx-1">&times;</span>
-                                        <span class="text-dark fw-medium">{{ $currentDoc->partner_name }}</span>
+                                        <span class="text-dark fw-semibold">{{ $currentDoc->partner_name }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -2317,6 +2320,13 @@
                                         <div class="table-responsive border-0 shadow-none mb-0">
                                             <table class="table table-borderless table-sm mb-0" style="font-size: 0.78rem; line-height: 1.45;">
                                                 <tbody>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 160px;">Judul Kerja Sama</td>
+                                                        <td class="py-0.5 px-1 text-muted" style="width: 10px;">:</td>
+                                                        <td class="text-dark fw-bold py-0.5" style="font-size: 0.85rem; color: #1e3a8a;">
+                                                            {{ $currentDoc->title ?: ($currentDoc->scope ?: '-') }}
+                                                        </td>
+                                                    </tr>
                                                     <tr>
                                                         <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 160px;">Jenis Dokumen</td>
                                                         <td class="py-0.5 px-1 text-muted" style="width: 10px;">:</td>
@@ -3276,7 +3286,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div>
                                     <h6 class="fw-bold mb-0 text-dark small"><i class="bi bi-shield-lock text-primary me-1"></i> Jejak Audit Relasional FSM (Immutable Audit Trail)</h6>
-                                    <div class="text-muted" style="font-size: 0.72rem;">Catatan mutlak setiap transisi status dan aksi pejabat berwenang di Universitas Kristen Papua (UNIPAR)</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Catatan mutlak setiap transisi status dan aksi pejabat berwenang di Universitas Parna Raya (UNIPAR)</div>
                                 </div>
                                 <span class="badge bg-light text-dark border font-monospace py-1 px-2" style="font-size: 0.72rem;">
                                     Total: {{ $currentDoc->auditTrails->count() }} Rekaman

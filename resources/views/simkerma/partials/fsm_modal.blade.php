@@ -53,9 +53,14 @@
                         <i class="bi bi-file-earmark-text fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold text-white mb-0" id="fsmModalLabel_{{ $doc->id }}" style="font-size: 1.15rem; letter-spacing: -0.2px;">Detail Pengajuan Kerja Sama</h5>
-                        <p class="text-white-50 mb-0" style="font-size: 0.8rem;">
-                            {{ $doc->doc_type }} &bull; {{ $doc->doc_number ?: 'Registrasi: ' . $doc->reg_id }}
+                        <h5 class="fw-bold text-white mb-0" id="fsmModalLabel_{{ $doc->id }}" style="font-size: 1.15rem; letter-spacing: -0.2px;">
+                            {{ $doc->title ?: ($doc->scope ?: 'Detail Pengajuan Kerja Sama') }}
+                        </h5>
+                        <p class="text-white-50 mb-0 d-flex align-items-center flex-wrap gap-2 mt-0.5" style="font-size: 0.8rem;">
+                            <span class="badge bg-white text-dark fw-bold px-1.5 py-0.5" style="font-size: 0.7rem;">{{ $doc->doc_type }}</span>
+                            <span class="font-monospace">{{ $doc->doc_number ?: 'No. Reg: ' . $doc->reg_id }}</span>
+                            <span>&bull;</span>
+                            <span class="text-white">{{ $doc->partner_name }}</span>
                         </p>
                     </div>
                 </div>
