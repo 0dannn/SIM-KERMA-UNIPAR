@@ -2238,7 +2238,7 @@
                 </div>
 
                 <!-- PARENT DOCUMENT RELATION BANNER (JIKA MERUPAKAN DOKUMEN TURUNAN MoA / IA) -->
-                @if ($parentDoc)
+                @if ($currentDoc->doc_type !== 'MoU' && $parentDoc)
                     <div class="alert alert-primary py-2 px-3 rounded-3 mb-2 d-flex align-items-center justify-content-between shadow-2xs border-primary-subtle" style="font-size: 0.8rem; background-color: #f0fdf4; border-color: #bbf7d0; color: #166534;">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-diagram-2-fill fs-5 text-success"></i>
@@ -2255,7 +2255,7 @@
                             <i class="bi bi-arrow-left-circle me-1"></i> Buka Naskah Induk
                         </a>
                     </div>
-                @elseif (!empty($currentDoc->parent_mou) && $currentDoc->parent_mou !== '-')
+                @elseif ($currentDoc->doc_type !== 'MoU' && !empty($currentDoc->parent_mou) && $currentDoc->parent_mou !== '-')
                     <div class="alert alert-secondary py-2 px-3 rounded-3 mb-2 d-flex align-items-center gap-2 shadow-2xs" style="font-size: 0.8rem;">
                         <i class="bi bi-info-circle text-primary fs-5"></i>
                         <div>
@@ -2325,7 +2325,7 @@
                                                             <span class="text-secondary small ms-1">({{ $currentDoc->doc_type === 'MoU' ? 'Memorandum of Understanding / Nota Kesepahaman' : ($currentDoc->doc_type === 'IA' ? 'Implementation Arrangement / Perjanjian Pelaksanaan' : 'Memorandum of Agreement / Perjanjian Kerja Sama') }})</span>
                                                         </td>
                                                     </tr>
-                                                    @if ($currentDoc->doc_type !== 'MoU' || !empty($currentDoc->parent_mou))
+                                                    @if ($currentDoc->doc_type !== 'MoU')
                                                         <tr>
                                                             <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Dokumen Induk (Rujukan)</td>
                                                             <td class="py-0.5 px-1 text-muted">:</td>
@@ -2337,7 +2337,7 @@
                                                                 @elseif (!empty($currentDoc->parent_mou) && $currentDoc->parent_mou !== '-')
                                                                     <span class="font-monospace text-dark">{{ $currentDoc->parent_mou }}</span>
                                                                 @else
-                                                                    <span class="text-muted fst-italic">Naskah Payung Mandiri (Tingkat Universitas)</span>
+                                                                    <span class="text-muted fst-italic">-</span>
                                                                 @endif
                                                             </td>
                                                         </tr>
