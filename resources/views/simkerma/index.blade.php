@@ -2303,136 +2303,7 @@
                             <!-- KOLOM KIRI (7-8 COLS) -->
                             <div class="col-lg-8">
 
-                                <!-- KARTU 1: INFORMASI UMUM -->
-                                <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
-                                    <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
-                                            <i class="bi bi-info-circle text-primary"></i> Informasi Umum
-                                        </div>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2.5 fw-semibold d-flex align-items-center gap-1" style="font-size: 0.72rem; border-color: #cbd5e1;" data-bs-toggle="modal" data-bs-target="#editInfoModal_{{ $currentDoc->id }}">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </button>
-                                    </div>
-                                    <div class="card-body py-2 px-3">
-                                        <div class="table-responsive border-0 shadow-none mb-0">
-                                            <table class="table table-borderless table-sm mb-0" style="font-size: 0.78rem; line-height: 1.45;">
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 160px;">Jenis Dokumen</td>
-                                                        <td class="py-0.5 px-1 text-muted" style="width: 10px;">:</td>
-                                                        <td class="text-dark fw-medium py-0.5">
-                                                            <span class="badge rounded-pill fw-bold px-2 py-0.5" style="background-color: {{ $currentDoc->doc_type === 'MoU' ? '#1e3a8a' : ($currentDoc->doc_type === 'IA' ? '#059669' : '#0284c7') }}; font-size: 0.72rem; color: #fff;">{{ $currentDoc->doc_type }}</span>
-                                                            <span class="text-secondary small ms-1">({{ $currentDoc->doc_type === 'MoU' ? 'Memorandum of Understanding / Nota Kesepahaman' : ($currentDoc->doc_type === 'IA' ? 'Implementation Arrangement / Perjanjian Pelaksanaan' : 'Memorandum of Agreement / Perjanjian Kerja Sama') }})</span>
-                                                        </td>
-                                                    </tr>
-                                                    @if ($currentDoc->doc_type !== 'MoU')
-                                                        <tr>
-                                                            <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Dokumen Induk (Rujukan)</td>
-                                                            <td class="py-0.5 px-1 text-muted">:</td>
-                                                            <td class="text-dark fw-medium py-0.5">
-                                                                @if ($parentDoc)
-                                                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $parentDoc->doc_id]) }}" class="text-primary text-decoration-none fw-bold">
-                                                                        <i class="bi bi-link-45deg me-0.5"></i>[{{ $parentDoc->doc_type }}] {{ $parentDoc->title ?: $parentDoc->partner_name }} <span class="font-monospace text-muted fw-normal">({{ $parentDoc->doc_number ?: $parentDoc->doc_id }})</span>
-                                                                    </a>
-                                                                @elseif (!empty($currentDoc->parent_mou) && $currentDoc->parent_mou !== '-')
-                                                                    <span class="font-monospace text-dark">{{ $currentDoc->parent_mou }}</span>
-                                                                @else
-                                                                    <span class="text-muted fst-italic">-</span>
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                    @endif
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah UNIPAR</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5 font-monospace">{{ (!empty($currentDoc->doc_number) && $currentDoc->doc_number !== '-') ? $currentDoc->doc_number : '-' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah Mitra</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5 font-monospace">{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '-' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Mitra Kerja Sama</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5">
-                                                            <strong>{{ $currentDoc->partner_name }}</strong>
-                                                            @if (!empty($currentDoc->partner_category))
-                                                                <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.68rem;">{{ $currentDoc->partner_category }}</span>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Unit Pengusul / Pelaksana</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5">{{ $currentDoc->unit }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Penandatangan UNIPAR</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5">
-                                                            {{ $currentDoc->first_party_signer ?: '-' }}
-                                                            @if (!empty($currentDoc->first_party_position))
-                                                                <span class="text-muted small">({{ $currentDoc->first_party_position }})</span>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Penandatangan Mitra</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5">
-                                                            {{ $currentDoc->second_party_signer ?: '-' }}
-                                                            @if (!empty($currentDoc->second_party_position))
-                                                                <span class="text-muted small">({{ $currentDoc->second_party_position }})</span>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                    @if (!empty($currentDoc->pic_first_party) || !empty($currentDoc->pic_second_party))
-                                                        <tr>
-                                                            <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">PIC / Narahubung</td>
-                                                            <td class="py-0.5 px-1 text-muted">:</td>
-                                                            <td class="text-dark fw-medium py-0.5">
-                                                                <span>UNIPAR: {{ $currentDoc->pic_first_party ?: '-' }}</span>
-                                                                <span class="text-muted mx-1">&bull;</span>
-                                                                <span>Mitra: {{ $currentDoc->pic_second_party ?: '-' }}</span>
-                                                            </td>
-                                                        </tr>
-                                                    @endif
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Ruang Lingkup</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5" style="max-width: 480px;">{{ $currentDoc->scope ?: $currentDoc->title }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Masa Berlaku</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="text-dark fw-medium py-0.5">
-                                                            @if (!empty($currentDoc->start_date) && !empty($currentDoc->end_date))
-                                                                {{ \Carbon\Carbon::parse($currentDoc->start_date)->translatedFormat('d F Y') }} &ndash; {{ \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') }}
-                                                                @if (!empty($currentDoc->validity))
-                                                                    <span class="text-secondary fw-normal">({{ $currentDoc->validity }})</span>
-                                                                @endif
-                                                            @else
-                                                                <span class="text-muted fst-italic">{{ $currentDoc->validity ? $currentDoc->validity . ' (Tanggal Belum Ditetapkan)' : 'Belum Ditetapkan (Fase Draf)' }}</span>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Peringatan</td>
-                                                        <td class="py-0.5 px-1 text-muted">:</td>
-                                                        <td class="py-0.5">
-                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.7rem;">
-                                                                <i class="bi bi-bell-fill me-1"></i> H-90 Hari (3 Bulan sebelum berakhir)
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- KARTU 2: ALUR PROSES STATUS KERJA SAMA -->
+                                <!-- KARTU 1: ALUR PROSES STATUS KERJA SAMA -->
                                 @php
                                     // Lookup Jejak Audit untuk masing-masing fase alur
                                     $auditDraft = $currentDoc->auditTrails->firstWhere('event', 'CREATE_DRAFT') 
@@ -2772,6 +2643,135 @@
                                         <div class="alert d-flex align-items-center py-1 px-2.5 mb-0 rounded-2" style="font-size: 0.78rem; background-color: {{ $alertConfig['bg'] }}; border-color: {{ $alertConfig['border'] }}; color: {{ $alertConfig['color'] }};">
                                             <i class="bi {{ $alertConfig['icon'] }} me-2 fs-6"></i>
                                             <span>{{ $alertConfig['text'] }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- KARTU 2: INFORMASI UMUM -->
+                                <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
+                                    <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
+                                            <i class="bi bi-info-circle text-primary"></i> Informasi Umum
+                                        </div>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2.5 fw-semibold d-flex align-items-center gap-1" style="font-size: 0.72rem; border-color: #cbd5e1;" data-bs-toggle="modal" data-bs-target="#editInfoModal_{{ $currentDoc->id }}">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                    </div>
+                                    <div class="card-body py-2 px-3">
+                                        <div class="table-responsive border-0 shadow-none mb-0">
+                                            <table class="table table-borderless table-sm mb-0" style="font-size: 0.78rem; line-height: 1.45;">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap" style="width: 160px;">Jenis Dokumen</td>
+                                                        <td class="py-0.5 px-1 text-muted" style="width: 10px;">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            <span class="badge rounded-pill fw-bold px-2 py-0.5" style="background-color: {{ $currentDoc->doc_type === 'MoU' ? '#1e3a8a' : ($currentDoc->doc_type === 'IA' ? '#059669' : '#0284c7') }}; font-size: 0.72rem; color: #fff;">{{ $currentDoc->doc_type }}</span>
+                                                            <span class="text-secondary small ms-1">({{ $currentDoc->doc_type === 'MoU' ? 'Memorandum of Understanding / Nota Kesepahaman' : ($currentDoc->doc_type === 'IA' ? 'Implementation Arrangement / Perjanjian Pelaksanaan' : 'Memorandum of Agreement / Perjanjian Kerja Sama') }})</span>
+                                                        </td>
+                                                    </tr>
+                                                    @if ($currentDoc->doc_type !== 'MoU')
+                                                        <tr>
+                                                            <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Dokumen Induk (Rujukan)</td>
+                                                            <td class="py-0.5 px-1 text-muted">:</td>
+                                                            <td class="text-dark fw-medium py-0.5">
+                                                                @if ($parentDoc)
+                                                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $parentDoc->doc_id]) }}" class="text-primary text-decoration-none fw-bold">
+                                                                        <i class="bi bi-link-45deg me-0.5"></i>[{{ $parentDoc->doc_type }}] {{ $parentDoc->title ?: $parentDoc->partner_name }} <span class="font-monospace text-muted fw-normal">({{ $parentDoc->doc_number ?: $parentDoc->doc_id }})</span>
+                                                                    </a>
+                                                                @elseif (!empty($currentDoc->parent_mou) && $currentDoc->parent_mou !== '-')
+                                                                    <span class="font-monospace text-dark">{{ $currentDoc->parent_mou }}</span>
+                                                                @else
+                                                                    <span class="text-muted fst-italic">-</span>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah UNIPAR</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5 font-monospace">{{ (!empty($currentDoc->doc_number) && $currentDoc->doc_number !== '-') ? $currentDoc->doc_number : '-' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Nomor Naskah Mitra</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5 font-monospace">{{ (!empty($currentDoc->partner_doc_number) && $currentDoc->partner_doc_number !== '-') ? $currentDoc->partner_doc_number : '-' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Mitra Kerja Sama</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            <strong>{{ $currentDoc->partner_name }}</strong>
+                                                            @if (!empty($currentDoc->partner_category))
+                                                                <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.68rem;">{{ $currentDoc->partner_category }}</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Unit Pengusul / Pelaksana</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">{{ $currentDoc->unit }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Penandatangan UNIPAR</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            {{ $currentDoc->first_party_signer ?: '-' }}
+                                                            @if (!empty($currentDoc->first_party_position))
+                                                                <span class="text-muted small">({{ $currentDoc->first_party_position }})</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Penandatangan Mitra</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            {{ $currentDoc->second_party_signer ?: '-' }}
+                                                            @if (!empty($currentDoc->second_party_position))
+                                                                <span class="text-muted small">({{ $currentDoc->second_party_position }})</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @if (!empty($currentDoc->pic_first_party) || !empty($currentDoc->pic_second_party))
+                                                        <tr>
+                                                            <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">PIC / Narahubung</td>
+                                                            <td class="py-0.5 px-1 text-muted">:</td>
+                                                            <td class="text-dark fw-medium py-0.5">
+                                                                <span>UNIPAR: {{ $currentDoc->pic_first_party ?: '-' }}</span>
+                                                                <span class="text-muted mx-1">&bull;</span>
+                                                                <span>Mitra: {{ $currentDoc->pic_second_party ?: '-' }}</span>
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Ruang Lingkup</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5" style="max-width: 480px;">{{ $currentDoc->scope ?: $currentDoc->title }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Masa Berlaku</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="text-dark fw-medium py-0.5">
+                                                            @if (!empty($currentDoc->start_date) && !empty($currentDoc->end_date))
+                                                                {{ \Carbon\Carbon::parse($currentDoc->start_date)->translatedFormat('d F Y') }} &ndash; {{ \Carbon\Carbon::parse($currentDoc->end_date)->translatedFormat('d F Y') }}
+                                                                @if (!empty($currentDoc->validity))
+                                                                    <span class="text-secondary fw-normal">({{ $currentDoc->validity }})</span>
+                                                                @endif
+                                                            @else
+                                                                <span class="text-muted fst-italic">{{ $currentDoc->validity ? $currentDoc->validity . ' (Tanggal Belum Ditetapkan)' : 'Belum Ditetapkan (Fase Draf)' }}</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted py-0.5 ps-0 pe-2 text-nowrap">Peringatan</td>
+                                                        <td class="py-0.5 px-1 text-muted">:</td>
+                                                        <td class="py-0.5">
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.7rem;">
+                                                                <i class="bi bi-bell-fill me-1"></i> H-90 Hari (3 Bulan sebelum berakhir)
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
