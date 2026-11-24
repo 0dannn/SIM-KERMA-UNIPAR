@@ -981,12 +981,16 @@
                                     <div class="text-muted small">&amp; Pimpinan {{ $doc->partner_name }}</div>
                                 </td>
                                 <td>
-                                    <div class="mb-1">
-                                        <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
-                                        <span>{{ $doc->signed_file ?: ($doc->draft_file ?: 'naskah_kerjasama.pdf') }}</span>
+                                    @php
+                                        $rawFile = $doc->signed_file ?: ($doc->draft_file ?: 'naskah_kerjasama.pdf');
+                                        $baseFileName = basename($rawFile);
+                                    @endphp
+                                    <div class="mb-1 d-flex align-items-center">
+                                        <i class="bi bi-file-earmark-pdf text-danger me-1 flex-shrink-0"></i>
+                                        <span class="text-truncate d-inline-block text-dark fw-medium" style="max-width: 220px;" title="{{ $baseFileName }}">{{ $baseFileName }}</span>
                                     </div>
                                     <small class="badge bg-light text-secondary border">
-                                        <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Jejak Audit Tercatat
+                                        <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Jejak Audit
                                     </small>
                                 </td>
                                 <td class="text-center">
@@ -2059,7 +2063,7 @@
                 </nav>
 
                 <!-- HEADER BAR (TITLE & ACTION BUTTONS) -->
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
                         <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="btn btn-outline-secondary btn-sm bg-white rounded-3 d-flex align-items-center justify-content-center shadow-2xs" style="width: 32px; height: 32px; border-color: #cbd5e1;" title="Kembali ke Daftar Pengajuan">
                             <i class="bi bi-arrow-left text-dark"></i>
@@ -2067,7 +2071,7 @@
                         <h5 class="fw-bold mb-0 text-dark" style="font-size: 1.15rem;">Detail Dokumen Kerja Sama</h5>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center flex-wrap gap-2">
                         @if ($currentDoc->status === 'ACTIVE' || $currentDoc->status === 'WARNING' || $currentDoc->status === 'EXPIRED')
                             <form method="POST" action="{{ route('simkerma.renew-draft') }}" class="d-inline" onsubmit="return confirm('Inisiasi pembaruan/reaktivasi dokumen {{ $currentDoc->doc_id }}?\n\nDokumen akan kembali ke status DRAFT untuk penyusunan dan penelaahan ketentuan naskah.');">
                                 @csrf
@@ -2478,13 +2482,14 @@
                                     </div>
                                     <div class="card-body py-2 px-3">
                                         <!-- HORIZONTAL STEPPER 7 TAHAPAN -->
-                                        <div class="stepper-wrap position-relative py-1 px-2 mb-2">
-                                            <!-- Connecting line background & active line -->
-                                            <div class="position-absolute" style="top: 15px; left: 35px; right: 35px; height: 3px; background-color: #e2e8f0; z-index: 1;">
-                                                <div style="width: {{ $progressWidth }}; height: 100%; background-color: {{ $progressColor }}; transition: width 0.3s ease;"></div>
-                                            </div>
+                                        <div class="overflow-x-auto pb-1 mb-2" style="-webkit-overflow-scrolling: touch;">
+                                            <div class="stepper-wrap position-relative py-1 px-2" style="min-width: 580px;">
+                                                <!-- Connecting line background & active line -->
+                                                <div class="position-absolute" style="top: 15px; left: 35px; right: 35px; height: 3px; background-color: #e2e8f0; z-index: 1;">
+                                                    <div style="width: {{ $progressWidth }}; height: 100%; background-color: {{ $progressColor }}; transition: width 0.3s ease;"></div>
+                                                </div>
 
-                                            <div class="d-flex justify-content-between position-relative" style="z-index: 2;">
+                                                <div class="d-flex justify-content-between position-relative" style="z-index: 2;">
                                                 <!-- Node 1: Draft -->
                                                 <div class="text-center" style="width: 70px;">
                                                     @if ($docStatus === 'CANCELLED')
@@ -2638,6 +2643,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
                                         <!-- Single Line Alert Strip Dinamis Sesuai Status FSM Aktual -->
                                         <div class="alert d-flex align-items-center py-1 px-2.5 mb-0 rounded-2" style="font-size: 0.78rem; background-color: {{ $alertConfig['bg'] }}; border-color: {{ $alertConfig['border'] }}; color: {{ $alertConfig['color'] }};">
@@ -3579,7 +3585,7 @@
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
                                                 Tanggal Mulai Berlaku :
                                             </label>
-                                            <input type="date" name="start_date" id="editStartDate_{{ $currentDoc->id }}" class="form-control form-control-sm" value="{{ $currentDoc->start_date }}" onchange="calcEditEndDate_{{ $currentDoc->id }}()">
+                                            <input type="date" name="start_date" id="editStartDate_{{ $currentDoc->id }}" class="form-control form-control-sm" value="{{ $currentDoc->start_date ? \Carbon\Carbon::parse($currentDoc->start_date)->format('Y-m-d') : '' }}" onchange="calcEditEndDate_{{ $currentDoc->id }}()">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
@@ -3595,7 +3601,7 @@
                                             <label class="form-label text-muted fw-semibold mb-0.5" style="font-size: 0.76rem;">
                                                 Tanggal Berakhir :
                                             </label>
-                                            <input type="date" name="end_date" id="editEndDate_{{ $currentDoc->id }}" class="form-control form-control-sm bg-white" value="{{ $currentDoc->end_date }}">
+                                            <input type="date" name="end_date" id="editEndDate_{{ $currentDoc->id }}" class="form-control form-control-sm bg-white" value="{{ $currentDoc->end_date ? \Carbon\Carbon::parse($currentDoc->end_date)->format('Y-m-d') : '' }}">
                                         </div>
                                     </div>
                                 </div>
@@ -4395,14 +4401,17 @@
                                 <!-- 7. BUKTI BERKAS -->
                                 <td>
                                     @if ($act->evidence_file)
-                                        <a href="#" class="text-decoration-none text-dark fw-bold d-block mb-1" style="font-size: 0.74rem;">
-                                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i>{{ $act->evidence_file }}
+                                        @php
+                                            $actFileName = basename($act->evidence_file);
+                                        @endphp
+                                        <a href="{{ asset($act->evidence_file) }}" target="_blank" class="text-decoration-none text-dark fw-semibold d-inline-block text-truncate mb-1" style="font-size: 0.74rem; max-width: 200px; vertical-align: middle;" title="{{ $actFileName }}">
+                                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i>{{ $actFileName }}
                                         </a>
                                     @else
                                         <span class="text-muted small">-</span>
                                     @endif
                                     @if ($act->evidence_photos)
-                                        <span class="badge bg-light text-secondary border" style="font-size: 0.65rem;">
+                                        <span class="badge bg-light text-secondary border d-inline-block" style="font-size: 0.65rem;">
                                             <i class="bi bi-image me-1"></i>Foto Kegiatan
                                         </span>
                                     @endif
