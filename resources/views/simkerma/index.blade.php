@@ -924,15 +924,15 @@
 
             <!-- TABEL REPOSITORI DOKUMEN DINAMIS -->
             <div class="table-responsive">
-                <table class="table table-wireframe table-hover align-middle mb-0 small" id="repoTable">
+                <table class="table table-wireframe table-hover table-sm align-middle mb-0 small" id="repoTable">
                     <thead class="bg-light">
                         <tr>
-                            <th style="min-width: 170px;">Nomor Dokumen &amp; Jenis Naskah</th>
-                            <th style="min-width: 180px;">Judul Kerja Sama &amp; Mitra</th>
-                            <th style="min-width: 130px;">Tanggal TTD &amp; Masa Berlaku</th>
-                            <th style="min-width: 130px;">Pihak Penandatangan</th>
-                            <th style="min-width: 130px;">Berkas &amp; Riwayat Audit</th>
-                            <th style="min-width: 110px;" class="text-center">Aksi Dokumen</th>
+                            <th style="min-width: 160px;">Nomor Dokumen &amp; Jenis Naskah</th>
+                            <th style="min-width: 170px;">Judul Kerja Sama &amp; Mitra</th>
+                            <th style="min-width: 120px;">Tanggal TTD &amp; Masa Berlaku</th>
+                            <th style="min-width: 120px;">Pihak Penandatangan</th>
+                            <th style="min-width: 120px;">Berkas &amp; Riwayat Audit</th>
+                            <th style="min-width: 95px;" class="text-center">Aksi Dokumen</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -987,7 +987,7 @@
                                     @endphp
                                     <div class="mb-1 d-flex align-items-center">
                                         <i class="bi bi-file-earmark-pdf text-danger me-1 flex-shrink-0"></i>
-                                        <span class="text-truncate d-inline-block text-dark fw-medium" style="max-width: 220px;" title="{{ $baseFileName }}">{{ $baseFileName }}</span>
+                                        <span class="text-truncate d-inline-block text-dark fw-medium" style="max-width: 140px;" title="{{ $baseFileName }}">{{ $baseFileName }}</span>
                                     </div>
                                     <small class="badge bg-light text-secondary border">
                                         <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Jejak Audit
@@ -4278,17 +4278,17 @@
 
             <!-- TABEL REALISASI PELAKSANAAN KEGIATAN TERHUBUNG MENU 04 -->
             <div class="table-responsive">
-                <table class="table table-wireframe table-hover align-middle mb-0 small" id="activityTable">
+                <table class="table table-wireframe table-hover table-sm align-middle mb-0 small" id="activityTable">
                     <thead class="bg-light">
                         <tr>
-                            <th style="min-width: 190px;">Daftar Kegiatan &amp; Dokumen Rujukan (Menu 04)</th>
-                            <th style="min-width: 130px;">Mitra &amp; Unit PJ</th>
-                            <th style="min-width: 110px;">Target &amp; Realisasi</th>
-                            <th style="min-width: 120px;">Peserta / Pihak Terlibat</th>
-                            <th style="min-width: 130px;">Luaran IKU 6</th>
-                            <th style="min-width: 100px;">Kontribusi / Anggaran</th>
+                            <th style="min-width: 165px;">Daftar Kegiatan &amp; Dokumen Rujukan (Menu 04)</th>
+                            <th style="min-width: 115px;">Mitra &amp; Unit PJ</th>
+                            <th style="min-width: 85px;">Target &amp; Realisasi</th>
+                            <th style="min-width: 100px;">Peserta / Pihak Terlibat</th>
+                            <th style="min-width: 105px;">Luaran IKU 6</th>
+                            <th style="min-width: 95px;">Kontribusi / Anggaran</th>
                             <th style="min-width: 90px;">Bukti Berkas</th>
-                            <th style="min-width: 105px;" class="text-center">Status &amp; QR FSM</th>
+                            <th style="min-width: 90px;" class="text-center">Status &amp; QR FSM</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -4360,7 +4360,7 @@
                                 <!-- 2. MITRA & UNIT PJ -->
                                 <td>
                                     <div class="fw-bold text-dark">{{ $doc->partner_name ?? '-' }}</div>
-                                    <span class="badge bg-light text-secondary border mb-1" style="font-size: 0.65rem;">{{ $doc->partner_category ?? 'Mitra Eksternal' }}</span>
+                                    <span class="badge bg-light text-secondary border mb-1 text-wrap text-start" style="font-size: 0.65rem; max-width: 130px; line-height: 1.25;">{{ $doc->partner_category ?? 'Mitra Eksternal' }}</span>
                                     <div class="small text-muted">
                                         <i class="bi bi-person-badge me-1"></i>PJ: <strong>{{ $doc->unit ?? '-' }}</strong>
                                         @if(!empty($doc->collab_unit))
@@ -4385,17 +4385,17 @@
 
                                 <!-- 4. PESERTA & PIHAK TERLIBAT -->
                                 <td>
-                                    <div class="text-dark">{{ $act->parties_involved ?: '-' }}</div>
+                                    <div class="text-dark small" style="max-width: 95px; line-height: 1.3;">{{ $act->parties_involved ?: '-' }}</div>
                                 </td>
 
                                 <!-- 5. LUARAN IKU 6 -->
                                 <td>
-                                    <div class="text-dark">{{ $act->outputs ?: '-' }}</div>
+                                    <div class="text-dark small" style="max-width: 95px; line-height: 1.3;">{{ $act->outputs ?: '-' }}</div>
                                 </td>
 
                                 <!-- 6. ANGGARAN / KONTRIBUSI -->
                                 <td>
-                                    <span class="badge bg-light text-dark border">{{ $act->budget_info ?: '-' }}</span>
+                                    <div class="small text-dark fw-medium" style="max-width: 100px; line-height: 1.3;">{{ $act->budget_info ?: '-' }}</div>
                                 </td>
 
                                 <!-- 7. BUKTI BERKAS -->
@@ -4404,16 +4404,18 @@
                                         @php
                                             $actFileName = basename($act->evidence_file);
                                         @endphp
-                                        <a href="{{ asset($act->evidence_file) }}" target="_blank" class="text-decoration-none text-dark fw-semibold d-inline-block text-truncate mb-1" style="font-size: 0.74rem; max-width: 200px; vertical-align: middle;" title="{{ $actFileName }}">
-                                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i>{{ $actFileName }}
-                                        </a>
+                                        <div class="d-flex flex-column gap-1">
+                                            <a href="{{ asset($act->evidence_file) }}" target="_blank" class="text-decoration-none text-dark fw-semibold d-inline-block text-truncate" style="font-size: 0.72rem; max-width: 85px; vertical-align: middle;" title="{{ $actFileName }}">
+                                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i>{{ $actFileName }}
+                                            </a>
+                                            @if ($act->evidence_photos)
+                                                <span class="badge bg-light text-secondary border d-inline-block text-truncate" style="font-size: 0.62rem; max-width: 85px;">
+                                                    <i class="bi bi-image me-1"></i>Foto
+                                                </span>
+                                            @endif
+                                        </div>
                                     @else
                                         <span class="text-muted small">-</span>
-                                    @endif
-                                    @if ($act->evidence_photos)
-                                        <span class="badge bg-light text-secondary border d-inline-block" style="font-size: 0.65rem;">
-                                            <i class="bi bi-image me-1"></i>Foto Kegiatan
-                                        </span>
                                     @endif
                                 </td>
 
