@@ -245,7 +245,9 @@
                         <h6 class="mb-0 fw-bold text-uppercase">
                             <i class="bi bi-building text-primary me-1"></i> Direktori &amp; Master Data Mitra
                         </h6>
-                        <span class="badge bg-primary text-white font-monospace" style="font-size: 0.65rem;">{{ $partners->count() }} MITRA TERDAFTAR &bull; MYSQL</span>
+                        <span class="badge bg-primary text-white font-monospace" id="partnerTotalBadge" style="font-size: 0.65rem;">
+                            <span id="partnerVisibleCount">{{ $partners->count() }}</span> / {{ $partners->count() }} MITRA TERDAFTAR &bull; MYSQL
+                        </span>
                     </div>
                     <small class="text-muted">Penyimpanan Terpusat Profil, Alamat, Kontak, PIC, &amp; Riwayat Kemitraan Tridharma UNIPAR</small>
                 </div>
@@ -262,13 +264,13 @@
             <!-- FILTER & PENCARIAN BERSIH SISI KLIEN -->
             <div class="card-body border-bottom bg-light py-2 px-3">
                 <div class="row g-2 align-items-center">
-                    <div class="col-12 col-md-5">
+                    <div class="col-12 col-lg-5">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                             <input type="text" id="partnerSearchInput" class="form-control border-start-0" placeholder="Cari nama mitra, PIC, kota, atau bidang..." onkeyup="filterPartnersTable()">
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
+                    <div class="col-12 col-sm-6 col-lg-3">
                         <select id="partnerCategoryFilter" class="form-select form-select-sm" onchange="filterPartnersTable()">
                             <option value="">-- Semua Kategori Mitra --</option>
                             <option value="DUDI / Swasta">DUDI / Swasta (Industri)</option>
@@ -278,7 +280,7 @@
                             <option value="Organisasi">Organisasi / Komunitas / Lainnya</option>
                         </select>
                     </div>
-                    <div class="col-6 col-md-2">
+                    <div class="col-12 col-sm-6 col-lg-2">
                         <select id="partnerStatusFilter" class="form-select form-select-sm" onchange="filterPartnersTable()">
                             <option value="">-- Semua Status --</option>
                             <option value="Terverifikasi Sah">Terverifikasi Sah</option>
@@ -287,7 +289,7 @@
                             <option value="Mitra Terdaftar">Mitra Terdaftar</option>
                         </select>
                     </div>
-                    <div class="col-12 col-md-2 text-md-end">
+                    <div class="col-12 col-lg-2 text-lg-end">
                         <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="resetPartnerFilters()">
                             <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                         </button>
@@ -297,16 +299,16 @@
 
             <!-- TABEL PENGELOLAAN DATA MITRA PROPORSI RAPI -->
             <div class="table-responsive">
-                <table class="table table-wireframe table-hover align-middle mb-0 small" id="partnerTable">
+                <table class="table table-wireframe table-hover table-sm align-middle mb-0 small" id="partnerTable">
                     <thead class="bg-light">
                         <tr>
-                            <th style="min-width: 160px;">Nama &amp; Profil Mitra</th>
-                            <th style="min-width: 120px;">Kategori Mitra</th>
-                            <th style="min-width: 140px;">Unit Kampus &amp; Mitra Rujukan</th>
-                            <th style="min-width: 150px;">Lingkup Kerja Sama Utama</th>
-                            <th style="min-width: 100px;">Riwayat Dokumen</th>
-                            <th style="min-width: 105px;" class="text-center">Status Kemitraan</th>
-                            <th style="min-width: 110px;" class="text-end">Aksi Terintegrasi</th>
+                            <th style="min-width: 150px;">Nama &amp; Profil Mitra</th>
+                            <th style="min-width: 110px;">Kategori Mitra</th>
+                            <th style="min-width: 130px;">Unit Kampus &amp; Mitra Rujukan</th>
+                            <th style="min-width: 130px;">Lingkup Kerja Sama Utama</th>
+                            <th style="min-width: 90px;">Riwayat Dokumen</th>
+                            <th style="min-width: 95px;" class="text-center">Status Kemitraan</th>
+                            <th style="min-width: 100px;" class="text-end">Aksi Terintegrasi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -333,7 +335,7 @@
 
                                 <!-- 2. Kategori Mitra & Verifikasi -->
                                 <td>
-                                    <span class="badge bg-light text-dark border">{{ $partner->category ?: 'Kemitraan Strategis' }}</span>
+                                    <span class="badge bg-light text-dark border text-wrap text-start" style="font-size: 0.68rem; max-width: 120px; line-height: 1.25;">{{ $partner->category ?: 'Kemitraan Strategis' }}</span>
                                     <div class="mt-1">
                                         <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.62rem;">
                                             <i class="bi bi-patch-check-fill me-1"></i>{{ $partner->status_verification ?: 'Profil Terverifikasi' }}
@@ -344,9 +346,16 @@
                                 <!-- 3. Unit Kampus & Mitra Rujukan -->
                                 <td>
                                     @if ($units->isNotEmpty())
-                                        <div class="text-dark fw-semibold">{{ $units->join(', ') }}</div>
+                                        @if ($units->count() > 2)
+                                            <div class="text-dark fw-semibold" style="max-width: 140px;" title="{{ $units->join(', ') }}">
+                                                {{ $units->take(2)->join(', ') }}
+                                                <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.62rem;">+{{ $units->count() - 2 }}</span>
+                                            </div>
+                                        @else
+                                            <div class="text-dark fw-semibold" style="max-width: 140px;">{{ $units->join(', ') }}</div>
+                                        @endif
                                         <div class="text-muted small" style="font-size: 0.72rem;">
-                                            Dokumen Terbaru: <span class="font-monospace text-primary">{{ $firstDoc->doc_number ?: $firstDoc->doc_id }}</span>
+                                            Dokumen: <span class="font-monospace text-primary">{{ $firstDoc->doc_number ?: $firstDoc->doc_id }}</span>
                                         </div>
                                     @else
                                         <div class="text-muted fst-italic" style="font-size: 0.75rem;">Belum ada naskah terkait</div>
@@ -356,8 +365,8 @@
 
                                 <!-- 4. Lingkup Kerja Sama Utama -->
                                 <td>
-                                    <div class="text-secondary" style="font-size: 0.75rem;">
-                                        {{ Str::limit($partner->profile_desc ?: ($firstDoc ? $firstDoc->scope : 'Kerja sama kemitraan institusional Tridharma'), 85) }}
+                                    <div class="text-secondary" style="font-size: 0.75rem; max-width: 150px; line-height: 1.35;">
+                                        {{ Str::limit($partner->profile_desc ?: ($firstDoc ? $firstDoc->scope : 'Kerja sama kemitraan institusional Tridharma'), 75) }}
                                     </div>
                                 </td>
 
@@ -376,40 +385,58 @@
                                 <!-- 6. Status Kemitraan FSM -->
                                 <td class="text-center">
                                     @if ($hasActive)
-                                        <span class="badge bg-success py-1 px-2 shadow-sm d-block"><i class="bi bi-check-circle-fill me-1"></i>Terverifikasi Sah</span>
+                                        <span class="badge bg-success py-1 px-2 shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-check-circle-fill me-1"></i>Aktif / Sah</span>
                                     @elseif ($hasWarning)
-                                        <span class="badge bg-warning text-dark py-1 px-2 border shadow-sm d-block"><i class="bi bi-exclamation-triangle-fill me-1"></i>Peringatan Masa</span>
+                                        <span class="badge bg-warning text-dark py-1 px-2 border shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Peringatan</span>
                                     @elseif ($pDocs->isNotEmpty())
-                                        <span class="badge bg-primary py-1 px-2 shadow-sm d-block"><i class="bi bi-hourglass-split me-1"></i>Tahap FSM</span>
+                                        <span class="badge bg-primary py-1 px-2 shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-hourglass-split me-1"></i>Tahap FSM</span>
                                     @else
-                                        <span class="badge bg-secondary py-1 px-2 shadow-sm d-block"><i class="bi bi-journal-check me-1"></i>Mitra Terdaftar</span>
+                                        <span class="badge bg-secondary py-1 px-2 shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-journal-check me-1"></i>Terdaftar</span>
                                     @endif
                                 </td>
 
                                 <!-- 7. Aksi Terintegrasi -->
                                 <td class="text-end">
-                                    <button type="button" class="btn btn-warning btn-sm py-1 px-2 fw-semibold w-100 mb-1 shadow-sm text-dark" style="font-size: 0.72rem;" data-bs-toggle="modal" data-bs-target="#editPartnerModal_{{ $partner->id }}">
-                                        <i class="bi bi-pencil-square me-1"></i>Edit Data Mitra
-                                    </button>
-                                    <button type="button" class="btn btn-dark btn-sm py-1 px-2 fw-semibold w-100 mb-1 shadow-sm" style="font-size: 0.72rem;" data-bs-toggle="modal" data-bs-target="#partnerModal_{{ $partner->id }}">
-                                        <i class="bi bi-eye-fill text-warning me-1"></i>Profil &amp; Riwayat
-                                    </button>
-                                    @if ($firstDoc)
-                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'doc' => $firstDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0 px-2 w-100 mb-1" style="font-size: 0.68rem;" title="Buka Dokumen Mitra di Menu 04">
-                                            <i class="bi bi-box-arrow-up-right me-1"></i>Dokumen Menu 04
-                                        </a>
-                                    @else
-                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'partner_name' => $partner->name]) }}" class="btn btn-outline-success btn-sm py-0 px-2 w-100 mb-1" style="font-size: 0.68rem;" title="Ajukan Naskah Baru dengan Mitra Ini">
-                                            <i class="bi bi-plus-lg me-1"></i>Ajukan Naskah
-                                        </a>
-                                    @endif
-                                    <form method="POST" action="{{ route('simkerma.delete-partner') }}" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data mitra \'{{ addslashes($partner->name) }}\' dari master data?');">
-                                        @csrf
-                                        <input type="hidden" name="id" value="{{ $partner->id }}">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2 w-100" style="font-size: 0.68rem;" title="Hapus Data Mitra">
-                                            <i class="bi bi-trash me-1"></i>Hapus Mitra
+                                    <div class="d-flex justify-content-end align-items-center gap-1">
+                                        <button type="button" class="btn btn-dark btn-sm py-1 px-2 fw-semibold shadow-2xs d-inline-flex align-items-center gap-1" style="font-size: 0.72rem;" data-bs-toggle="modal" data-bs-target="#partnerModal_{{ $partner->id }}" title="Lihat Profil &amp; Riwayat Dokumen">
+                                            <i class="bi bi-eye-fill text-warning"></i><span>Profil</span>
                                         </button>
-                                    </form>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm py-1 px-2 shadow-2xs" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.72rem;" title="Opsi Tindakan Lainnya">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1" style="font-size: 0.78rem; min-width: 175px;">
+                                                <li>
+                                                    <button type="button" class="dropdown-item py-1.5 px-3 text-dark d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#editPartnerModal_{{ $partner->id }}">
+                                                        <i class="bi bi-pencil-square text-warning"></i> Edit Data Mitra
+                                                    </button>
+                                                </li>
+                                                @if ($firstDoc)
+                                                    <li>
+                                                        <a class="dropdown-item py-1.5 px-3 text-primary d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'doc' => $firstDoc->doc_id]) }}">
+                                                            <i class="bi bi-box-arrow-up-right"></i> Dokumen Menu 04
+                                                        </a>
+                                                    </li>
+                                                @else
+                                                    <li>
+                                                        <a class="dropdown-item py-1.5 px-3 text-success d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'partner_name' => $partner->name]) }}">
+                                                            <i class="bi bi-plus-lg"></i> Ajukan Naskah Baru
+                                                        </a>
+                                                    </li>
+                                                @endif
+                                                <li><hr class="dropdown-divider my-1"></li>
+                                                <li>
+                                                    <form method="POST" action="{{ route('simkerma.delete-partner') }}" class="m-0" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data mitra \'{{ addslashes($partner->name) }}\' dari master data?');">
+                                                        @csrf
+                                                        <input type="hidden" name="id" value="{{ $partner->id }}">
+                                                        <button type="submit" class="dropdown-item py-1.5 px-3 text-danger d-flex align-items-center gap-2">
+                                                            <i class="bi bi-trash"></i> Hapus Mitra
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -417,6 +444,18 @@
                                 <td colspan="7" class="text-center py-4 text-muted">Belum ada data mitra terdaftar.</td>
                             </tr>
                         @endforelse
+                        <!-- BARIS EMPTY STATE KETIKA PENCARIAN / FILTER TIDAK COCOK -->
+                        <tr id="noPartnerMatchRow" style="display: none;">
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-search fs-3 d-block mb-1 text-secondary"></i>
+                                <div>Tidak ada data mitra yang cocok dengan filter atau kata kunci pencarian.</div>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm py-1 px-3" onclick="resetPartnerFilters()">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Pencarian
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -424,9 +463,9 @@
 
         {{-- MODAL INPUT MANDIRI DATA MITRA BARU --}}
         <div class="modal fade" id="createPartnerModal" tabindex="-1" aria-labelledby="createPartnerModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
-                    <form method="POST" action="{{ route('simkerma.store-partner') }}">
+                    <form method="POST" action="{{ route('simkerma.store-partner') }}" class="d-flex flex-column overflow-hidden h-100">
                         @csrf
                         <div class="modal-header bg-dark text-white py-3">
                             <div class="d-flex align-items-center gap-2">
@@ -554,9 +593,9 @@
 
             <!-- MODAL EDIT DATA MITRA -->
             <div class="modal fade" id="editPartnerModal_{{ $partner->id }}" tabindex="-1" aria-labelledby="editPartnerModalLabel_{{ $partner->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content border-0 shadow-lg">
-                        <form method="POST" action="{{ route('simkerma.update-partner') }}">
+                        <form method="POST" action="{{ route('simkerma.update-partner') }}" class="d-flex flex-column overflow-hidden h-100">
                             @csrf
                             <input type="hidden" name="id" value="{{ $partner->id }}">
                             <div class="modal-header bg-warning py-3 text-dark">
@@ -821,7 +860,7 @@
 
                         <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between">
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-warning btn-sm fw-semibold text-dark" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#editPartnerModal_{{ $partner->id }}">
+                                <button type="button" class="btn btn-warning btn-sm fw-semibold text-dark" onclick="switchPartnerModal('partnerModal_{{ $partner->id }}', 'editPartnerModal_{{ $partner->id }}')">
                                     <i class="bi bi-pencil-square me-1"></i> Edit Data Mitra
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
@@ -845,6 +884,8 @@
             const categoryFilter = (document.getElementById('partnerCategoryFilter').value || '').toLowerCase();
             const statusFilter = (document.getElementById('partnerStatusFilter').value || '').toLowerCase();
             const rows = document.querySelectorAll('#partnerTable tbody tr.partner-row');
+            const noMatchRow = document.getElementById('noPartnerMatchRow');
+            const visibleBadge = document.getElementById('partnerVisibleCount');
 
             let visibleCount = 0;
             rows.forEach(function(row) {
@@ -863,13 +904,44 @@
                     row.style.display = 'none';
                 }
             });
+
+            if (noMatchRow) {
+                noMatchRow.style.display = (visibleCount === 0) ? '' : 'none';
+            }
+            if (visibleBadge) {
+                visibleBadge.textContent = visibleCount;
+            }
         }
 
         function resetPartnerFilters() {
-            document.getElementById('partnerSearchInput').value = '';
-            document.getElementById('partnerCategoryFilter').value = '';
-            document.getElementById('partnerStatusFilter').value = '';
+            const searchInput = document.getElementById('partnerSearchInput');
+            const catFilter = document.getElementById('partnerCategoryFilter');
+            const statFilter = document.getElementById('partnerStatusFilter');
+
+            if (searchInput) searchInput.value = '';
+            if (catFilter) catFilter.value = '';
+            if (statFilter) statFilter.value = '';
             filterPartnersTable();
+        }
+
+        function switchPartnerModal(closeModalId, openModalId) {
+            const closeEl = document.getElementById(closeModalId);
+            const openEl = document.getElementById(openModalId);
+            if (!closeEl || !openEl) return;
+
+            const closeInst = bootstrap.Modal.getInstance(closeEl);
+            if (closeInst) {
+                const handler = function() {
+                    closeEl.removeEventListener('hidden.bs.modal', handler);
+                    const openInst = bootstrap.Modal.getInstance(openEl) || new bootstrap.Modal(openEl);
+                    openInst.show();
+                };
+                closeEl.addEventListener('hidden.bs.modal', handler);
+                closeInst.hide();
+            } else {
+                const openInst = bootstrap.Modal.getInstance(openEl) || new bootstrap.Modal(openEl);
+                openInst.show();
+            }
         }
         </script>
         @endpush
