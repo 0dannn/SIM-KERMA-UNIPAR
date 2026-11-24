@@ -239,78 +239,81 @@
     {{-- ===================================================================================== --}}
     @elseif ($activeMenu === 2)
         <div class="card card-wireframe shadow-sm border mb-4">
-            <div class="card-header bg-white py-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
-                <div>
-                    <div class="d-flex align-items-center gap-2">
-                        <h6 class="mb-0 fw-bold text-uppercase">
-                            <i class="bi bi-building text-primary me-1"></i> Direktori &amp; Master Data Mitra
-                        </h6>
-                        <span class="badge bg-primary text-white font-monospace" id="partnerTotalBadge" style="font-size: 0.65rem;">
-                            <span id="partnerVisibleCount">{{ $partners->count() }}</span> / {{ $partners->count() }} MITRA TERDAFTAR &bull; MYSQL
-                        </span>
-                    </div>
-                    <small class="text-muted">Penyimpanan Terpusat Profil, Alamat, Kontak, PIC, &amp; Riwayat Kemitraan Tridharma UNIPAR</small>
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-primary btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#createPartnerModal">
-                        <i class="bi bi-plus-circle-fill me-1"></i> + Input Mitra Mandiri
-                    </button>
-                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm">
-                        <i class="bi bi-file-earmark-plus me-1"></i> Ajukan Naskah Baru
-                    </a>
-                </div>
-            </div>
-
-            <!-- FILTER & PENCARIAN BERSIH SISI KLIEN -->
-            <div class="card-body border-bottom bg-light py-2 px-3">
-                <div class="row g-2 align-items-center">
-                    <div class="col-12 col-lg-5">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" id="partnerSearchInput" class="form-control border-start-0" placeholder="Cari nama mitra, PIC, kota, atau bidang..." onkeyup="filterPartnersTable()">
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
+            <!-- 1. KONSOL FILTER BERLABEL DI CARD-HEADER (PERSIS MENU 4) -->
+            <div class="card-header bg-white py-3 border-bottom">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold mb-1 text-secondary small">Kategori Mitra</label>
                         <select id="partnerCategoryFilter" class="form-select form-select-sm" onchange="filterPartnersTable()">
-                            <option value="">-- Semua Kategori Mitra --</option>
+                            <option value="">Semua Kategori Mitra</option>
                             <option value="DUDI / Swasta">DUDI / Swasta (Industri)</option>
                             <option value="Instansi Pemerintah">Instansi Pemerintah</option>
                             <option value="BUMN">BUMN / BUMD</option>
                             <option value="Perguruan Tinggi">Perguruan Tinggi</option>
-                            <option value="Organisasi">Organisasi / Komunitas / Lainnya</option>
+                            <option value="Organisasi">Organisasi / Komunitas</option>
                         </select>
                     </div>
-                    <div class="col-12 col-sm-6 col-lg-2">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold mb-1 text-secondary small">Status Kemitraan</label>
                         <select id="partnerStatusFilter" class="form-select form-select-sm" onchange="filterPartnersTable()">
-                            <option value="">-- Semua Status --</option>
+                            <option value="">Semua Status</option>
                             <option value="Terverifikasi Sah">Terverifikasi Sah</option>
-                            <option value="Peringatan Masa">Peringatan Masa</option>
                             <option value="Tahap FSM">Tahap FSM</option>
+                            <option value="Peringatan Masa">Peringatan Masa</option>
                             <option value="Mitra Terdaftar">Mitra Terdaftar</option>
                         </select>
                     </div>
-                    <div class="col-12 col-lg-2 text-lg-end">
-                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="resetPartnerFilters()">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
-                        </button>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold mb-1 text-secondary small">Pencarian Mitra &amp; PIC</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="partnerSearchInput" class="form-control" placeholder="Cari nama mitra, PIC, kota, bidang..." onkeyup="filterPartnersTable()">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetPartnerFilters()" title="Bersihkan Pencarian">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TABEL PENGELOLAAN DATA MITRA PROPORSI RAPI -->
-            <div class="table-responsive">
-                <table class="table table-wireframe table-hover table-sm align-middle mb-0 small" id="partnerTable">
-                    <thead class="bg-light">
-                        <tr>
-                            <th style="min-width: 150px;">Nama &amp; Profil Mitra</th>
-                            <th style="min-width: 110px;">Kategori Mitra</th>
-                            <th style="min-width: 130px;">Unit Kampus &amp; Mitra Rujukan</th>
-                            <th style="min-width: 130px;">Lingkup Kerja Sama Utama</th>
-                            <th style="min-width: 90px;">Riwayat Dokumen</th>
-                            <th style="min-width: 95px;" class="text-center">Status Kemitraan</th>
-                            <th style="min-width: 100px;" class="text-end">Aksi Terintegrasi</th>
-                        </tr>
-                    </thead>
+            <!-- 2. TOOLBAR AKSI & TABEL DATA MITRA (PERSIS MENU 4) -->
+            <div class="card-body p-3">
+                <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <button type="button" class="btn btn-primary btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#createPartnerModal">
+                            <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
+                        </button>
+                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm">
+                            <i class="bi bi-file-earmark-plus me-1"></i> Ajukan Naskah Baru
+                        </a>
+                        <button type="button" class="btn btn-success btn-sm fw-semibold shadow-sm text-white" onclick="exportTableToExcel('partnerTable', 'Data_Master_Mitra')">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                        </button>
+                        <button type="button" class="btn btn-info btn-sm fw-semibold shadow-sm text-white" onclick="resetPartnerFilters()">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Reload
+                        </button>
+                    </div>
+                    <div>
+                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                            Total: <span id="partnerVisibleCount" class="fw-bold text-primary">{{ $partners->count() }}</span> Mitra Terdaftar
+                        </span>
+                    </div>
+                </div>
+
+                <!-- TABEL PENGELOLAAN DATA MITRA PROPORSI RAPI (SESUAI STANDAR MENU 4) -->
+                <div class="table-responsive" style="border: 0">
+                    <table class="w-100 table table-bordered table-striped table-hover align-middle mb-0" id="partnerTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center py-1 px-2" style="width: 45px; font-size: 0.82rem; line-height: 1.2;">No.</th>
+                                <th class="text-start py-1 px-2" style="min-width: 160px; font-size: 0.82rem; line-height: 1.2;">Mitra / Instansi</th>
+                                <th class="text-center py-1 px-2" style="width: 125px; font-size: 0.82rem; line-height: 1.2;">Kategori</th>
+                                <th class="text-start py-1 px-2" style="min-width: 135px; font-size: 0.82rem; line-height: 1.2;">Unit Terkait</th>
+                                <th class="text-start py-1 px-2" style="min-width: 145px; font-size: 0.82rem; line-height: 1.2;">Lingkup Kerma</th>
+                                <th class="text-center py-1 px-2" style="width: 105px; font-size: 0.82rem; line-height: 1.2;">Naskah</th>
+                                <th class="text-center py-1 px-2" style="width: 115px; font-size: 0.82rem; line-height: 1.2;">Status</th>
+                                <th class="text-center py-1 px-2" style="width: 105px; font-size: 0.82rem; line-height: 1.2;">Aksi</th>
+                            </tr>
+                        </thead>
                     <tbody>
                         @forelse ($partners as $partner)
                             @php
@@ -324,7 +327,10 @@
                                 $stLabel = $hasActive ? 'Terverifikasi Sah' : ($hasWarning ? 'Peringatan Masa' : ($pDocs->isNotEmpty() ? 'Tahap FSM' : 'Mitra Terdaftar'));
                             @endphp
                             <tr class="partner-row" data-category="{{ $partner->category }}" data-status="{{ $stLabel }}">
-                                <!-- 1. Nama & Profil Mitra -->
+                                <!-- 1. No. -->
+                                <td class="text-center text-muted fw-semibold" style="font-size: 0.82rem;">{{ $loop->iteration }}</td>
+
+                                <!-- 2. Mitra / Instansi -->
                                 <td>
                                     <div class="fw-bold text-dark fs-6">{{ $partner->name }}</div>
                                     <div class="text-muted small mt-1" style="font-size: 0.72rem;">
@@ -333,9 +339,9 @@
                                     </div>
                                 </td>
 
-                                <!-- 2. Kategori Mitra & Verifikasi -->
-                                <td>
-                                    <span class="badge bg-light text-dark border text-wrap text-start" style="font-size: 0.68rem; max-width: 120px; line-height: 1.25;">{{ $partner->category ?: 'Kemitraan Strategis' }}</span>
+                                <!-- 3. Kategori & Verifikasi -->
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border text-wrap d-inline-block" style="font-size: 0.68rem; max-width: 120px; line-height: 1.25;">{{ $partner->category ?: 'Kemitraan Strategis' }}</span>
                                     <div class="mt-1">
                                         <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.62rem;">
                                             <i class="bi bi-patch-check-fill me-1"></i>{{ $partner->status_verification ?: 'Profil Terverifikasi' }}
@@ -343,7 +349,7 @@
                                     </div>
                                 </td>
 
-                                <!-- 3. Unit Kampus & Mitra Rujukan -->
+                                <!-- 4. Unit Terkait -->
                                 <td>
                                     @if ($units->isNotEmpty())
                                         @if ($units->count() > 2)
@@ -363,15 +369,15 @@
                                     @endif
                                 </td>
 
-                                <!-- 4. Lingkup Kerja Sama Utama -->
+                                <!-- 5. Lingkup Kerma -->
                                 <td>
                                     <div class="text-secondary" style="font-size: 0.75rem; max-width: 150px; line-height: 1.35;">
                                         {{ Str::limit($partner->profile_desc ?: ($firstDoc ? $firstDoc->scope : 'Kerja sama kemitraan institusional Tridharma'), 75) }}
                                     </div>
                                 </td>
 
-                                <!-- 5. Riwayat Dokumen -->
-                                <td>
+                                <!-- 6. Naskah Kerma -->
+                                <td class="text-center">
                                     @if ($pDocs->isNotEmpty())
                                         <span class="badge bg-dark rounded-pill">{{ $pDocs->count() }} Dokumen</span>
                                         <div class="small text-muted mt-1" style="font-size: 0.7rem;">
@@ -382,7 +388,7 @@
                                     @endif
                                 </td>
 
-                                <!-- 6. Status Kemitraan FSM -->
+                                <!-- 7. Status -->
                                 <td class="text-center">
                                     @if ($hasActive)
                                         <span class="badge bg-success py-1 px-2 shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-check-circle-fill me-1"></i>Aktif / Sah</span>
@@ -395,9 +401,9 @@
                                     @endif
                                 </td>
 
-                                <!-- 7. Aksi Terintegrasi -->
-                                <td class="text-end">
-                                    <div class="d-flex justify-content-end align-items-center gap-1">
+                                <!-- 8. Aksi -->
+                                <td class="text-center">
+                                    <div class="d-inline-flex justify-content-center align-items-center gap-1">
                                         <button type="button" class="btn btn-dark btn-sm py-1 px-2 fw-semibold shadow-2xs d-inline-flex align-items-center gap-1" style="font-size: 0.72rem;" data-bs-toggle="modal" data-bs-target="#partnerModal_{{ $partner->id }}" title="Lihat Profil &amp; Riwayat Dokumen">
                                             <i class="bi bi-eye-fill text-warning"></i><span>Profil</span>
                                         </button>
@@ -441,12 +447,12 @@
                             </tr>
                         @empty
                             <tr id="emptyPartnerRow">
-                                <td colspan="7" class="text-center py-4 text-muted">Belum ada data mitra terdaftar.</td>
+                                <td colspan="8" class="text-center py-4 text-muted">Belum ada data mitra terdaftar.</td>
                             </tr>
                         @endforelse
                         <!-- BARIS EMPTY STATE KETIKA PENCARIAN / FILTER TIDAK COCOK -->
                         <tr id="noPartnerMatchRow" style="display: none;">
-                            <td colspan="7" class="text-center py-4 text-muted">
+                            <td colspan="8" class="text-center py-4 text-muted">
                                 <i class="bi bi-search fs-3 d-block mb-1 text-secondary"></i>
                                 <div>Tidak ada data mitra yang cocok dengan filter atau kata kunci pencarian.</div>
                                 <div class="mt-2">
@@ -460,6 +466,7 @@
                 </table>
             </div>
         </div>
+    </div>
 
         {{-- MODAL INPUT MANDIRI DATA MITRA BARU --}}
         <div class="modal fade" id="createPartnerModal" tabindex="-1" aria-labelledby="createPartnerModalLabel" aria-hidden="true">
