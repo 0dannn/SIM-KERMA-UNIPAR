@@ -38,6 +38,23 @@
         default => 0
     };
 
+    $isWarningStatus = ($curStatus === 'WARNING');
+    $fsmMatrixRow = $fullFsmMatrix[$curStatus] ?? [];
+    $canFsmEvent = function (string $ev) use ($activeRole, $fsmMatrixRow): bool {
+        if (in_array($activeRole, ['MASTER', 'ADMIN'], true)) {
+            return true;
+        }
+        $allowed = $fsmMatrixRow[$ev]['roles'] ?? [];
+        return in_array($activeRole, $allowed, true);
+    };
+    $hasAnyTransitionAuth = false;
+    foreach (array_keys($fsmMatrixRow) as $evKey) {
+        if ($canFsmEvent($evKey)) {
+            $hasAnyTransitionAuth = true;
+            break;
+        }
+    }
+
     $canDelete = ($doc->status === 'DRAFT' || $activeRole === 'MASTER' || $activeRole === 'ADMIN');
 @endphp
 
@@ -86,10 +103,17 @@
                                         <span class="mt-2 px-2.5 py-0.5 rounded text-white fw-bold" style="background-color: #DC2626; font-size: 0.72rem;">Dibatalkan</span>
                                     @elseif ($sIdx === $activeIdx)
                                         <!-- Tahap Aktif -->
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-sm" style="width: 32px; height: 32px; background-color: #5156be; font-size: 0.85rem;">
-                                            <i class="bi {{ $stg['icon'] }}"></i>
-                                        </div>
-                                        <span class="mt-2 px-3 py-0.5 rounded text-white fw-bold shadow-2xs" style="background-color: #5156be; font-size: 0.72rem;">{{ $stg['label'] }}</span>
+                                        @if ($isWarningStatus)
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-dark shadow-sm" style="width: 32px; height: 32px; background-color: #f59e0b; font-size: 0.85rem;">
+                                                <i class="bi bi-bell-fill"></i>
+                                            </div>
+                                            <span class="mt-2 px-2.5 py-0.5 rounded text-dark fw-bold shadow-2xs" style="background-color: #fbbf24; font-size: 0.72rem;">Peringatan (H-90)</span>
+                                        @else
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-sm" style="width: 32px; height: 32px; background-color: #5156be; font-size: 0.85rem;">
+                                                <i class="bi {{ $stg['icon'] }}"></i>
+                                            </div>
+                                            <span class="mt-2 px-3 py-0.5 rounded text-white fw-bold shadow-2xs" style="background-color: #5156be; font-size: 0.72rem;">{{ $stg['label'] }}</span>
+                                        @endif
                                     @elseif ($sIdx < $activeIdx)
                                         <!-- Tahap Selesai Dilalui -->
                                         <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px; margin-top: 4px; background-color: #5156be; font-size: 0.75rem;">
@@ -264,9 +288,22 @@
                     <input type="hidden" name="doc_id" value="{{ $doc->doc_id }}">
                     <input type="hidden" name="actor_role" value="{{ $activeRole }}">
                     <input type="hidden" name="actor_name" value="{{ auth()->check() ? auth()->user()->name : 'Pejabat UNIPAR' }}">
+                    @if (request()->query('view') === 'detail')
+                        <input type="hidden" name="redirect_view" value="detail">
+                    @endif
+
+                    @if ($isWarningStatus)
+                        <div class="alert alert-warning py-2 px-3 small mb-3 d-flex align-items-center gap-2 border-warning-subtle">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 text-warning-emphasis"></i>
+                            <div>
+                                <strong>Peringatan Dini Masa Berlaku (WARNING H-90):</strong> Masa berlaku dokumen mendekati akhir. Segera inisiasi perpanjangan atau adendum ke status <strong>DRAFT</strong>.
+                            </div>
+                        </div>
+                    @endif
 
                     <!-- FORM KHUSUS STATUS REVIEW (Checklist Telaah Substansi & Mutu Hukum) -->
                     @if ($doc->status === 'REVIEW')
+                        @if ($canFsmEvent('VERIFY') || $canFsmEvent('RETURN_TO_DRAFT'))
                         <div class="fsm-card-elevated mb-3">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center gap-2">
@@ -322,10 +359,19 @@
                                 </small>
                             </div>
                         </div>
+                        @else
+                        <div class="alert alert-info py-2 px-3 small mb-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-shield-lock text-primary fs-5"></i>
+                            <div>
+                                <strong>Menunggu Penelaahan &amp; Persetujuan:</strong> Peran aktif Anda (<code>{{ $activeRole }}</code>) hanya dapat melihat status. Persetujuan/pengembalian pada tahap <strong>REVIEW</strong> dilakukan oleh peran <strong>LEADER</strong> atau <strong>LEGAL</strong>.
+                            </div>
+                        </div>
+                        @endif
                     @endif
 
                     <!-- FORM KHUSUS STATUS VERIFIED (Pengesahan Fisik: Nomor Mitra, Tanggal Mulai, Scan PDF Asli) -->
                     @if ($doc->status === 'VERIFIED')
+                        @if ($canFsmEvent('ACTIVATE'))
                         @php
                             $calcEndDate = null;
                             if (!empty($doc->end_date)) {
@@ -436,10 +482,18 @@
                                 }
                             }
                         </script>
+                        @else
+                        <div class="alert alert-info py-2 px-3 small mb-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-shield-lock text-primary fs-5"></i>
+                            <div>
+                                <strong>Menunggu Pengesahan Fisik:</strong> Peran aktif Anda (<code>{{ $activeRole }}</code>) hanya dapat melihat status. Aktivasi naskah pada tahap <strong>VERIFIED</strong> dilakukan oleh peran <strong>LEADER</strong>.
+                            </div>
+                        </div>
+                        @endif
                     @endif
 
                     <!-- FORM KHUSUS STATUS WARNING / EXPIRED (Perpanjangan / Adendum) -->
-                    @if ($doc->status === 'WARNING' || $doc->status === 'EXPIRED')
+                    @if (($doc->status === 'WARNING' || $doc->status === 'EXPIRED') && $canFsmEvent('RENEW'))
                         <div class="fsm-card-elevated mb-3">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center gap-2">
@@ -467,6 +521,7 @@
                     @endif
 
                     <!-- 5. Disposition / Notes Input Card Sesuai FSM-UI.html -->
+                    @if ($hasAnyTransitionAuth)
                     <div class="fsm-card-elevated mb-3">
                         <div class="card-header">
                             <i class="bi bi-chat-left-text fs-6"></i>
@@ -479,6 +534,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
 
                     <!-- 6. Riwayat Jejak Audit (Collapsible) -->
                     <div class="mb-3">
@@ -489,7 +545,7 @@
                         </button>
                         <div class="collapse mt-2" id="auditCollapse_{{ $doc->id }}">
                             <div class="border rounded p-2 bg-light small" style="max-height: 140px; overflow-y: auto; font-size: 0.74rem;">
-                                @forelse ($doc->auditTrails as $audit)
+                                @forelse ($doc->auditTrails->sortByDesc('id') as $audit)
                                     <div class="border-bottom pb-1 mb-1">
                                         <div class="d-flex justify-content-between text-muted" style="font-size: 0.68rem;">
                                             <span class="fw-bold text-dark">{{ $audit->actor }} [{{ $audit->role }}]</span>
@@ -508,63 +564,73 @@
                         </div>
                     </div>
 
-                    <!-- 7. Footer Action Bar (Sesuai FSM-UI.html) -->
-                    <div class="pt-2 border-top d-flex flex-wrap items-center justify-content-end gap-2">
-                        <!-- Tombol Hapus Draft / Dokumen (Destructive Button di Footer) -->
-                        @if ($canDelete)
-                            <button type="button" class="fsm-btn-destructive" onclick="if (confirm('KONFIRMASI PENGHAPUSAN DOKUMEN:\n\nApakah Anda yakin ingin menghapus naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Tindakan ini tidak dapat dibatalkan.')) { document.getElementById('deleteForm_{{ $doc->id }}').submit(); }">
-                                <i class="bi bi-trash fs-6"></i>
-                                <span>{{ $doc->status === 'DRAFT' ? 'Hapus Draft' : 'Hapus Dokumen' }}</span>
-                            </button>
-                        @endif
+                    <!-- 7. Footer Action Bar (Sesuai FSM-UI.html & Terproteksi RBAC) -->
+                    <div class="pt-2 border-top d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="small text-muted">
+                            <i class="bi bi-person-badge text-primary me-1"></i>Peran Aktif: <strong class="text-dark">{{ $activeRole }}</strong>
+                            @if (!$hasAnyTransitionAuth && $doc->status !== 'CANCELLED')
+                                <span class="ms-1 text-warning-emphasis">(Hanya Lihat)</span>
+                            @endif
+                        </div>
 
-                        <!-- Tombol Kembalikan (Secondary Button) -->
-                        @if (in_array($doc->status, ['REVIEW', 'VERIFIED']))
-                            <button type="submit" name="event" value="RETURN_TO_DRAFT" class="fsm-btn-secondary" onclick="return confirm('KONFIRMASI PENGEMBALIAN KE DRAF:\n\nApakah Anda yakin ingin mengembalikan naskah {{ $doc->doc_id }} ke status DRAFT?')">
-                                <i class="bi bi-arrow-counterclockwise fs-6"></i>
-                                <span>Kembalikan</span>
-                            </button>
-                        @elseif ($doc->status !== 'DRAFT')
-                            <button type="button" class="fsm-btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-lg fs-6"></i>
-                                <span>Tutup</span>
-                            </button>
-                        @else
-                            <button type="button" class="fsm-btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-lg fs-6"></i>
-                                <span>Tutup</span>
-                            </button>
-                        @endif
-
-                        <!-- Tombol Aksi Utama (Primary Button Sesuai Status FSM) -->
-                        @if ($doc->status === 'DRAFT')
-                            <button type="submit" name="event" value="SUBMIT" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI PENGAJUAN KE MEJA PEMERIKSAAN:\n\nAjukan naskah {{ $doc->doc_id }} ke meja pemeriksaan/telaah legal?')">
-                                <i class="bi bi-send fs-6"></i>
-                                <span>Ajukan ke Pemeriksaan</span>
-                            </button>
-                        @elseif ($doc->status === 'REVIEW')
-                            <button type="submit" name="event" value="VERIFY" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI PERSETUJUAN & VERIFIKASI DRAF:\n\nNaskah telah memenuhi evaluasi mutu Tridharma & regulasi. Setujui dan bekukan teks naskah untuk proses penandatanganan fisik oleh Pimpinan?')">
-                                <i class="bi bi-patch-check-fill fs-6"></i>
-                                <span>Setujui &amp; Verifikasi Kelayakan Draf</span>
-                            </button>
-                        @elseif ($doc->status === 'VERIFIED')
-                            <button type="submit" name="event" value="ACTIVATE" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI PENGESAHAN DOKUMEN:\n\nSahkan dan aktifkan naskah {{ $doc->doc_id }} menjadi status ACTIVE (Berlaku Sah)?')">
-                                <i class="bi bi-check-circle-fill fs-6"></i>
-                                <span>Sahkan &amp; Aktifkan</span>
-                            </button>
-                        @elseif ($doc->status === 'WARNING' || $doc->status === 'EXPIRED')
-                            <button type="submit" name="event" value="RENEW" class="fsm-btn-primary shadow-sm">
-                                <i class="bi bi-arrow-repeat fs-6"></i>
-                                <span>Inisiasi Perpanjangan</span>
-                            </button>
-                        @elseif ($doc->status === 'ACTIVE')
-                            @if (!empty($fullFsmMatrix['ACTIVE']['TRIGGER_WARNING']))
-                                <button type="submit" name="event" value="TRIGGER_WARNING" class="btn btn-warning text-dark fw-bold d-inline-flex align-items-center gap-1 shadow-sm" style="border-radius: 8px; padding: 10px 16px;">
-                                    <i class="bi bi-bell-fill"></i>
-                                    <span>Pemeriksaan Masa Berlaku</span>
+                        <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                            <!-- Tombol Hapus Draft / Dokumen (Destructive Button di Footer) -->
+                            @if ($canDelete)
+                                <button type="button" class="fsm-btn-destructive" onclick="if (confirm('KONFIRMASI PENGHAPUSAN DOKUMEN:\n\nApakah Anda yakin ingin menghapus naskah {{ $doc->doc_id }} ({{ addslashes($doc->partner_name) }}) secara permanen?\n\nPERHATIAN: Tindakan ini tidak dapat dibatalkan.')) { document.getElementById('deleteForm_{{ $doc->id }}').submit(); }">
+                                    <i class="bi bi-trash fs-6"></i>
+                                    <span>{{ $doc->status === 'DRAFT' ? 'Hapus Draft' : 'Hapus Dokumen' }}</span>
                                 </button>
                             @endif
-                        @endif
+
+                            <!-- Tombol Kembalikan (Secondary Button) -->
+                            @if (in_array($doc->status, ['REVIEW', 'VERIFIED']) && $canFsmEvent('RETURN_TO_DRAFT'))
+                                <button type="submit" name="event" value="RETURN_TO_DRAFT" class="fsm-btn-secondary" onclick="return confirm('KONFIRMASI PENGEMBALIAN KE DRAF:\n\nApakah Anda yakin ingin mengembalikan naskah {{ $doc->doc_id }} ke status DRAFT?')">
+                                    <i class="bi bi-arrow-counterclockwise fs-6"></i>
+                                    <span>Kembalikan</span>
+                                </button>
+                            @else
+                                <button type="button" class="fsm-btn-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-lg fs-6"></i>
+                                    <span>Tutup</span>
+                                </button>
+                            @endif
+
+                            <!-- Tombol Aksi Utama (Primary Button Sesuai Status FSM & RBAC) -->
+                            @if ($doc->status === 'DRAFT' && $canFsmEvent('SUBMIT'))
+                                <button type="submit" name="event" value="SUBMIT" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI PENGAJUAN KE MEJA PEMERIKSAAN:\n\nAjukan naskah {{ $doc->doc_id }} ke meja pemeriksaan/telaah legal?')">
+                                    <i class="bi bi-send fs-6"></i>
+                                    <span>Ajukan ke Pemeriksaan</span>
+                                </button>
+                            @elseif ($doc->status === 'REVIEW' && $canFsmEvent('VERIFY'))
+                                <button type="submit" name="event" value="VERIFY" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI PERSETUJUAN & VERIFIKASI DRAF:\n\nNaskah telah memenuhi evaluasi mutu Tridharma & regulasi. Setujui dan bekukan teks naskah untuk proses penandatanganan fisik oleh Pimpinan?')">
+                                    <i class="bi bi-patch-check-fill fs-6"></i>
+                                    <span>Setujui &amp; Verifikasi Kelayakan Draf</span>
+                                </button>
+                            @elseif ($doc->status === 'VERIFIED' && $canFsmEvent('ACTIVATE'))
+                                <button type="submit" name="event" value="ACTIVATE" class="fsm-btn-primary shadow-sm" onclick="return confirm('KONFIRMASI PENGESAHAN DOKUMEN:\n\nSahkan dan aktifkan naskah {{ $doc->doc_id }} menjadi status ACTIVE (Berlaku Sah)?')">
+                                    <i class="bi bi-check-circle-fill fs-6"></i>
+                                    <span>Sahkan &amp; Aktifkan</span>
+                                </button>
+                            @elseif (($doc->status === 'WARNING' || $doc->status === 'EXPIRED') && $canFsmEvent('RENEW'))
+                                <button type="submit" name="event" value="RENEW" class="fsm-btn-primary shadow-sm">
+                                    <i class="bi bi-arrow-repeat fs-6"></i>
+                                    <span>Inisiasi Perpanjangan</span>
+                                </button>
+                            @elseif ($doc->status === 'ACTIVE')
+                                @if ($canFsmEvent('RENEW'))
+                                    <button type="submit" name="event" value="RENEW" class="fsm-btn-secondary" onclick="return confirm('Inisiasi adendum / perpanjangan dokumen {{ $doc->doc_id }}?\n\nStatus akan kembali ke DRAFT.')">
+                                        <i class="bi bi-arrow-repeat fs-6"></i>
+                                        <span>Inisiasi Adendum</span>
+                                    </button>
+                                @endif
+                                @if (!empty($fullFsmMatrix['ACTIVE']['TRIGGER_WARNING']) && $canFsmEvent('TRIGGER_WARNING'))
+                                    <button type="submit" name="event" value="TRIGGER_WARNING" class="btn btn-warning text-dark fw-bold d-inline-flex align-items-center gap-1 shadow-sm" style="border-radius: 8px; padding: 10px 16px;">
+                                        <i class="bi bi-bell-fill"></i>
+                                        <span>Pemeriksaan Masa Berlaku</span>
+                                    </button>
+                                @endif
+                            @endif
+                        </div>
                     </div>
                 </form>
 

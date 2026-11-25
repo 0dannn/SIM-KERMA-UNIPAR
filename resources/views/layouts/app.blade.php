@@ -435,6 +435,44 @@
         .bg-soft-info    { background-color: rgba(75, 166, 239, 0.1) !important; }
         .bg-soft-secondary { background-color: rgba(116, 120, 141, 0.1) !important; }
 
+        /* Kompatibilitas Bootstrap 5.3 subtle/emphasis & spacing halus pada Bootstrap 5.0.2 */
+        .bg-primary-subtle { background-color: rgba(81, 86, 190, 0.12) !important; }
+        .border-primary-subtle { border-color: rgba(81, 86, 190, 0.28) !important; }
+        .bg-success-subtle { background-color: rgba(42, 181, 125, 0.12) !important; }
+        .border-success-subtle { border-color: rgba(42, 181, 125, 0.28) !important; }
+        .bg-info-subtle { background-color: rgba(75, 166, 239, 0.13) !important; }
+        .border-info-subtle { border-color: rgba(75, 166, 239, 0.30) !important; }
+        .text-info-emphasis { color: #1976b2 !important; }
+        .bg-warning-subtle { background-color: rgba(255, 191, 83, 0.18) !important; }
+        .border-warning-subtle { border-color: rgba(255, 191, 83, 0.42) !important; }
+        .text-warning-emphasis { color: #9a6700 !important; }
+        .bg-danger-subtle { background-color: rgba(253, 98, 94, 0.12) !important; }
+        .border-danger-subtle { border-color: rgba(253, 98, 94, 0.28) !important; }
+        .bg-secondary-subtle { background-color: rgba(116, 120, 141, 0.12) !important; }
+        .border-secondary-subtle { border-color: rgba(116, 120, 141, 0.28) !important; }
+        .bg-light-subtle { background-color: #f8f9fa !important; }
+
+        .p-2\.5 { padding: 0.625rem !important; }
+        .p-3\.5 { padding: 0.875rem !important; }
+        .py-0\.5 { padding-top: 0.125rem !important; padding-bottom: 0.125rem !important; }
+        .py-1\.5 { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
+        .py-2\.5 { padding-top: 0.625rem !important; padding-bottom: 0.625rem !important; }
+        .px-1\.5 { padding-left: 0.375rem !important; padding-right: 0.375rem !important; }
+        .px-2\.5 { padding-left: 0.625rem !important; padding-right: 0.625rem !important; }
+        .mt-0\.5 { margin-top: 0.125rem !important; }
+        .mb-0\.5 { margin-bottom: 0.125rem !important; }
+        .mb-1\.5 { margin-bottom: 0.375rem !important; }
+        .mb-2\.5 { margin-bottom: 0.625rem !important; }
+        .me-0\.5 { margin-right: 0.125rem !important; }
+        .me-1\.5 { margin-right: 0.375rem !important; }
+        .gap-0\.5 { gap: 0.125rem !important; }
+        .gap-1\.5 { gap: 0.375rem !important; }
+        .gap-2\.5 { gap: 0.625rem !important; }
+        .shadow-2xs { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important; }
+        .overflow-x-auto { overflow-x: auto !important; }
+        .overflow-y-auto { overflow-y: auto !important; }
+        .dropdown-toggle-no-caret::after { display: none !important; }
+
         /* Menu 3 Repositori Dokumen — Table Card & Filter Bar Polish */
         .repo-filter-bar {
             background-color: #f8f9fa;
@@ -778,6 +816,385 @@
         .fsm-btn-pdf:hover {
             background-color: rgba(220, 38, 38, 0.12);
             color: #B91C1C;
+        }
+
+        /* =========================================================================
+           DETAIL DOKUMEN KERJA SAMA (ISOLATED SCOPED CSS - HIGH READABILITY)
+           ========================================================================= */
+        .detail-doc-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #1e293b;
+        }
+        .detail-doc-shell .detail-page-bar {
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .detail-doc-shell .detail-page-heading {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #334155;
+            letter-spacing: -0.01em;
+        }
+        .detail-doc-shell .detail-back-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border-color: #cbd5e1;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            transition: all 0.15s ease;
+        }
+        .detail-doc-shell .detail-back-btn:hover {
+            background: #f8fafc;
+            border-color: #5156be;
+            color: #5156be;
+        }
+
+        /* Scoped Card Overrides (Bebas dari global .card-header/.card-body 20px !important) */
+        .detail-doc-shell .detail-card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+            margin-bottom: 16px;
+        }
+        .detail-doc-shell .detail-card > .card-header {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            padding: 12px 18px !important;
+            border-top-left-radius: 10px !important;
+            border-top-right-radius: 10px !important;
+        }
+        .detail-doc-shell .detail-card > .card-body {
+            padding: 16px 18px !important;
+        }
+        .detail-doc-shell .detail-card > .card-body.p-0 {
+            padding: 0 !important;
+        }
+        .detail-doc-shell .detail-card-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Summary Banner */
+        .detail-doc-shell .detail-summary-banner > .card-body {
+            padding: 16px 20px !important;
+        }
+        .detail-doc-shell .detail-doc-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .detail-doc-shell .detail-doc-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.35;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+        .detail-doc-shell .detail-doc-parties {
+            font-size: 0.86rem;
+            color: #475569;
+        }
+
+        /* Underline Modern Nav Tabs */
+        .detail-doc-shell .detail-tabs {
+            border-bottom: 2px solid #e2e8f0;
+            gap: 4px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            margin-bottom: 16px;
+        }
+        .detail-doc-shell .detail-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        .detail-doc-shell .detail-tabs .nav-link {
+            border: none !important;
+            border-bottom: 2px solid transparent !important;
+            margin-bottom: -2px;
+            background: transparent !important;
+            color: #64748b !important;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 10px 14px !important;
+            white-space: nowrap;
+            border-radius: 6px 6px 0 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .detail-doc-shell .detail-tabs .nav-link:hover:not(.active) {
+            color: #5156be !important;
+            background-color: rgba(81, 86, 190, 0.05) !important;
+        }
+        .detail-doc-shell .detail-tabs .nav-link.active {
+            color: #5156be !important;
+            font-weight: 700 !important;
+            border-bottom-color: #5156be !important;
+            background-color: rgba(81, 86, 190, 0.04) !important;
+        }
+
+        /* Symmetrical 7-Node Horizontal Stepper */
+        .detail-doc-shell .detail-stepper-scroll {
+            overflow-x: auto;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .detail-doc-shell .detail-stepper-track {
+            position: relative;
+            min-width: 610px;
+            padding-top: 2px;
+        }
+        .detail-doc-shell .detail-stepper-line {
+            position: absolute;
+            top: 15px;
+            left: calc(100% / 14);
+            right: calc(100% / 14);
+            height: 3px;
+            background-color: #e2e8f0;
+            z-index: 1;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .detail-doc-shell .detail-stepper-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            position: relative;
+            z-index: 2;
+            gap: 4px;
+        }
+        .detail-doc-shell .detail-step-node {
+            text-align: center;
+            padding: 0 2px;
+        }
+        .detail-doc-shell .detail-step-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 0.78rem;
+        }
+        .detail-doc-shell .detail-step-label {
+            font-size: 0.76rem;
+            line-height: 1.25;
+            margin-top: 6px;
+            color: #334155;
+        }
+        .detail-doc-shell .detail-step-date {
+            font-size: 0.71rem;
+            line-height: 1.25;
+            margin-top: 2px;
+            color: #64748b;
+        }
+        .detail-doc-shell .detail-step-warning-text {
+            color: #b45309 !important;
+        }
+
+        /* Clean Key-Value List (Bebas border kotak global .table) */
+        .detail-doc-shell .detail-kv-list {
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-doc-shell .detail-kv-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .detail-doc-shell .detail-kv-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .detail-doc-shell .detail-kv-row:first-child {
+            padding-top: 0;
+        }
+        @media (min-width: 576px) {
+            .detail-doc-shell .detail-kv-row {
+                flex-direction: row;
+                align-items: baseline;
+                gap: 12px;
+            }
+            .detail-doc-shell .detail-kv-label {
+                width: 175px;
+                flex-shrink: 0;
+            }
+        }
+        .detail-doc-shell .detail-kv-label {
+            font-size: 0.81rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+        .detail-doc-shell .detail-kv-value {
+            font-size: 0.86rem;
+            font-weight: 500;
+            color: #0f172a;
+            line-height: 1.5;
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+        }
+
+        /* Scoped Clean Data Tables in Detail Tabs */
+        .detail-doc-shell .detail-data-table {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px;
+            margin-bottom: 0 !important;
+            font-size: 0.82rem !important;
+            line-height: 1.45;
+        }
+        .detail-doc-shell .detail-data-table thead th {
+            background-color: #f8fafc !important;
+            color: #475569 !important;
+            font-size: 0.74rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 10px 12px !important;
+            border-color: #e2e8f0 !important;
+            white-space: nowrap;
+        }
+        .detail-doc-shell .detail-data-table thead.detail-thead-dark th {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+        .detail-doc-shell .detail-data-table tbody td {
+            padding: 10px 12px !important;
+            border-color: #f1f5f9 !important;
+            font-size: 0.82rem !important;
+            color: #1e293b;
+            vertical-align: middle;
+        }
+        .detail-doc-shell .detail-data-table tbody tr:nth-of-type(even) {
+            background-color: #fcfdff;
+        }
+        .detail-doc-shell .detail-data-table tbody tr:hover {
+            background-color: #f4f6fb !important;
+        }
+
+        /* Right Panel File Cards & 2-Line Clamped Timeline */
+        .detail-doc-shell .detail-file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+        .detail-doc-shell .detail-file-item:hover {
+            border-color: #cbd5e1;
+            background-color: #ffffff;
+        }
+        .detail-doc-shell .detail-file-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+        .detail-doc-shell .detail-file-name {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .detail-doc-shell .detail-file-meta {
+            font-size: 0.74rem;
+            color: #64748b;
+        }
+        .detail-doc-shell .detail-timeline {
+            position: relative;
+            padding-left: 20px;
+            margin-left: 8px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .detail-doc-shell .detail-timeline-item {
+            position: relative;
+            padding-left: 6px;
+            margin-bottom: 14px;
+        }
+        .detail-doc-shell .detail-timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .detail-doc-shell .detail-timeline-dot {
+            position: absolute;
+            left: -31px;
+            top: 2px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 0.68rem;
+            box-shadow: 0 0 0 3px #ffffff;
+        }
+        .detail-doc-shell .detail-timeline-note {
+            font-size: 0.81rem;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .detail-doc-shell .detail-timeline-meta {
+            font-size: 0.74rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Tab 2 PDF Preview Frame */
+        .detail-doc-shell .detail-pdf-frame {
+            width: 100%;
+            height: 440px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+        .detail-doc-shell .detail-pdf-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        @media (max-width: 767.98px) {
+            .detail-doc-shell .detail-pdf-frame {
+                height: 320px;
+            }
+            .detail-doc-shell .detail-doc-title {
+                font-size: 1.08rem;
+            }
         }
     </style>
     @stack('styles')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Document;
+use App\Models\DocumentAttachment;
 use App\Models\AuditTrail;
 use App\Models\Activity;
 use App\Models\Partner;
@@ -42,7 +43,7 @@ class SimkermaController extends Controller
         $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'ADMIN');
 
         // Data untuk Menu 4 (Pengajuan dan Persetujuan Kerja Sama)
-        $documents = Document::with(['auditTrails', 'activities'])->orderBy('id', 'desc')->get();
+        $documents = Document::with(['auditTrails', 'activities', 'attachments'])->orderBy('id', 'desc')->get();
         
         $selectedDocId = $request->query('doc');
         if (!$selectedDocId) {
@@ -485,6 +486,21 @@ class SimkermaController extends Controller
                 $document->save();
             }
 
+            // Handle Lampiran Opsional (Proposal, Rencana Kegiatan, & Dokumen Pendukung)
+            if ($request->hasFile('proposal_file')) {
+                $this->saveDocumentAttachment($document, $request->file('proposal_file'), 'PROPOSAL', 'Proposal Pengajuan Kerja Sama', $activeRole);
+            }
+            if ($request->hasFile('rencana_file')) {
+                $this->saveDocumentAttachment($document, $request->file('rencana_file'), 'RENCANA_KEGIATAN', 'Rencana Kegiatan / TOR', $activeRole);
+            }
+            if ($request->hasFile('supporting_files')) {
+                foreach ((array) $request->file('supporting_files') as $supFile) {
+                    if ($supFile && $supFile->isValid()) {
+                        $this->saveDocumentAttachment($document, $supFile, 'DOKUMEN_PENDUKUNG', null, $activeRole);
+                    }
+                }
+            }
+
             AuditTrail::create([
                 'document_id' => $document->id,
                 'actor' => 'Unit Pengusul (' . $document->unit . ')',
@@ -633,6 +649,21 @@ class SimkermaController extends Controller
                     $document->draft_file = 'uploads/documents/' . $filename;
                 }
                 $document->save();
+            }
+
+            // Handle Lampiran Opsional (Proposal, Rencana Kegiatan, & Dokumen Pendukung)
+            if ($request->hasFile('proposal_file')) {
+                $this->saveDocumentAttachment($document, $request->file('proposal_file'), 'PROPOSAL', 'Proposal Pengajuan Kerja Sama', $activeRole);
+            }
+            if ($request->hasFile('rencana_file')) {
+                $this->saveDocumentAttachment($document, $request->file('rencana_file'), 'RENCANA_KEGIATAN', 'Rencana Kegiatan / TOR', $activeRole);
+            }
+            if ($request->hasFile('supporting_files')) {
+                foreach ((array) $request->file('supporting_files') as $supFile) {
+                    if ($supFile && $supFile->isValid()) {
+                        $this->saveDocumentAttachment($document, $supFile, 'DOKUMEN_PENDUKUNG', null, $activeRole);
+                    }
+                }
             }
 
             AuditTrail::create([
@@ -1084,10 +1115,46 @@ class SimkermaController extends Controller
             'document_id' => 'required|exists:documents,id',
             'activity_name' => 'required|string|max:255',
             'execution_status' => 'required|string',
+            'evidence_file_upload' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:15360',
+            'evidence_photos_upload' => 'nullable|file|mimes:jpg,jpeg,png,pdf,zip|max:15360',
         ]);
 
         $document = Document::findOrFail($request->input('document_id'));
         $activeRole = session('active_role', 'MASTER');
+
+        $actDest = public_path('uploads/activities');
+        if (!file_exists($actDest)) {
+            mkdir($actDest, 0777, true);
+        }
+
+        $evidenceFile = $request->input('evidence_file') ?: 'laporan_kegiatan.pdf';
+        if ($request->hasFile('evidence_file_upload')) {
+            $evFile = $request->file('evidence_file_upload');
+            $evExt = strtolower($evFile->getClientOriginalExtension());
+            $evName = 'laporan_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '_' . time() . '_' . Str::random(4) . '.' . $evExt;
+            $evFile->move($actDest, $evName);
+            $evidenceFile = 'uploads/activities/' . $evName;
+
+            // Sinkronkan juga ke lampiran repositori dokumen (Menu 3)
+            DocumentAttachment::create([
+                'document_id' => $document->id,
+                'category' => 'LAPORAN_PELAKSANAAN',
+                'title' => 'Laporan: ' . $request->input('activity_name'),
+                'file_path' => $evidenceFile,
+                'original_name' => $evFile->getClientOriginalName(),
+                'file_size' => @filesize($actDest . '/' . $evName) ?: null,
+                'uploaded_by' => $activeRole,
+            ]);
+        }
+
+        $evidencePhotos = $request->input('evidence_photos');
+        if ($request->hasFile('evidence_photos_upload')) {
+            $phFile = $request->file('evidence_photos_upload');
+            $phExt = strtolower($phFile->getClientOriginalExtension());
+            $phName = 'foto_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '_' . time() . '_' . Str::random(4) . '.' . $phExt;
+            $phFile->move($actDest, $phName);
+            $evidencePhotos = 'uploads/activities/' . $phName;
+        }
 
         $activity = Activity::create([
             'document_id' => $document->id,
@@ -1099,8 +1166,8 @@ class SimkermaController extends Controller
             'parties_involved' => $request->input('parties_involved') ?: 'Mahasiswa & Mitra ' . $document->partner_name,
             'outputs' => $request->input('outputs') ?: 'Laporan Pelaksanaan Kegiatan',
             'budget_info' => $request->input('budget_info') ?: '-',
-            'evidence_file' => $request->input('evidence_file') ?: 'laporan_kegiatan.pdf',
-            'evidence_photos' => $request->input('evidence_photos'),
+            'evidence_file' => $evidenceFile,
+            'evidence_photos' => $evidencePhotos,
             'execution_status' => $request->input('execution_status', 'SEDANG_BERJALAN'),
             'notes' => $request->input('notes'),
         ]);
@@ -1118,7 +1185,7 @@ class SimkermaController extends Controller
         ]);
 
         if ($request->boolean('redirect_to_detail')) {
-            return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id])
+            return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id, 'tab' => 'act'])
                 ->with('flash', [
                     'type' => 'success',
                     'msg' => "Kegiatan '{$activity->activity_name}' berhasil dicatat pada naskah {$document->doc_id} ({$document->partner_name})."
@@ -1393,6 +1460,33 @@ class SimkermaController extends Controller
             $updateData['doc_type'] = $request->input('doc_type');
         }
 
+        $fieldLabels = [
+            'title' => 'Judul',
+            'doc_type' => 'Jenis',
+            'parent_mou' => 'Induk',
+            'doc_number' => 'No. UNIPAR',
+            'partner_doc_number' => 'No. Mitra',
+            'unit' => 'Unit',
+            'partner_name' => 'Mitra',
+            'first_party_signer' => 'Penandatangan UNIPAR',
+            'second_party_signer' => 'Penandatangan Mitra',
+            'validity' => 'Masa Berlaku',
+            'start_date' => 'Tgl Mulai',
+            'end_date' => 'Tgl Akhir',
+        ];
+        $diffItems = [];
+        foreach ($fieldLabels as $key => $label) {
+            if (!array_key_exists($key, $updateData)) {
+                continue;
+            }
+            $oldRaw = $document->{$key};
+            $oldStr = ($oldRaw instanceof \Carbon\CarbonInterface) ? $oldRaw->format('Y-m-d') : trim((string)($oldRaw ?? ''));
+            $newStr = trim((string)($updateData[$key] ?? ''));
+            if ($oldStr !== $newStr) {
+                $diffItems[] = $label . ': "' . ($oldStr ?: '-') . '" → "' . ($newStr ?: '-') . '"';
+            }
+        }
+
         $document->update($updateData);
 
         // Sinkronisasi nama/kategori mitra jika diubah
@@ -1403,6 +1497,10 @@ class SimkermaController extends Controller
             );
         }
 
+        $changeSummary = count($diffItems) > 0
+            ? ' Perubahan: [' . implode('; ', $diffItems) . '].'
+            : ' (Tidak ada perubahan nilai field).';
+
         AuditTrail::create([
             'document_id' => $document->id,
             'actor' => 'Pengguna (' . $activeRole . ')',
@@ -1410,7 +1508,7 @@ class SimkermaController extends Controller
             'event' => 'UPDATE_INFO',
             'from_status' => $document->status,
             'to_status' => $document->status,
-            'notes' => 'Pembaruan informasi umum dokumen kerja sama melalui menu detail.' . ($isFrozen ? ' (Field substansi legal dibekukan)' : ''),
+            'notes' => 'Pembaruan informasi dokumen kerja sama.' . $changeSummary . ($isFrozen ? ' (Field substansi legal dibekukan)' : ''),
             'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
         ]);
 
@@ -1422,44 +1520,61 @@ class SimkermaController extends Controller
     }
 
     /**
-     * Unggah Berkas Dokumen (Draf Revisi atau Naskah Asli) dari Menu Detail
+     * Unggah Berkas Dokumen (Draf, Naskah Asli, Proposal, Rencana Kegiatan, atau Dokumen Pendukung)
      */
     public function uploadDocumentFile(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:pdf,docx|max:15360',
+            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:15360',
+            'file_type' => 'required|in:draft,signed,proposal,rencana_kegiatan,dokumen_pendukung',
         ], [
             'file.required' => 'Silakan pilih berkas yang akan diunggah.',
-            'file.mimes' => 'Format berkas hanya diperbolehkan berupa PDF (.pdf) atau Word (.docx).',
+            'file.mimes' => 'Format berkas diperbolehkan: PDF, Word, Excel, atau JPG/PNG.',
             'file.max' => 'Ukuran berkas maksimal 15 MB.',
         ]);
 
         $docId = $request->input('doc_id');
         $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
         $fileType = $request->input('file_type', 'draft');
+        $activeRole = session('active_role', 'ADMIN');
 
         $dest = public_path('uploads/documents');
         if (!file_exists($dest)) {
             mkdir($dest, 0777, true);
         }
 
-        if ($fileType === 'draft' && $request->hasFile('file')) {
-            $file = $request->file('file');
-            $ext = strtolower($file->getClientOriginalExtension());
+        $uploadedFile = $request->file('file');
+        $typeLabel = 'Berkas';
+
+        if ($fileType === 'draft' && $uploadedFile) {
+            $ext = strtolower($uploadedFile->getClientOriginalExtension());
             $filename = 'draf_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '_' . time() . '.' . $ext;
-            $file->move($dest, $filename);
-            $document->draft_file = 'uploads/documents/' . $filename;
+            $uploadedFile->move($dest, $filename);
+            if ($ext === 'docx' || $ext === 'doc') {
+                $document->docx_path = 'uploads/documents/' . $filename;
+            } else {
+                $document->draft_file = 'uploads/documents/' . $filename;
+            }
             $document->save();
-        } elseif ($fileType === 'signed' && $request->hasFile('file')) {
-            $file = $request->file('file');
-            $ext = strtolower($file->getClientOriginalExtension());
+            $typeLabel = 'Naskah Draf Pengusul';
+        } elseif ($fileType === 'signed' && $uploadedFile) {
+            $ext = strtolower($uploadedFile->getClientOriginalExtension());
             $filename = 'signed_' . strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id)) . '_' . time() . '.' . $ext;
-            $file->move($dest, $filename);
+            $uploadedFile->move($dest, $filename);
             $document->signed_file = 'uploads/documents/' . $filename;
             $document->save();
+            $typeLabel = 'Naskah Asli Bertandatangan';
+        } elseif ($uploadedFile) {
+            $categoryMap = [
+                'proposal' => ['PROPOSAL', 'Proposal Kerja Sama'],
+                'rencana_kegiatan' => ['RENCANA_KEGIATAN', 'Rencana Kegiatan / TOR'],
+                'dokumen_pendukung' => ['DOKUMEN_PENDUKUNG', 'Dokumen Pendukung'],
+            ];
+            [$categoryEnum, $typeLabel] = $categoryMap[$fileType] ?? ['DOKUMEN_PENDUKUNG', 'Dokumen Pendukung'];
+            $customTitle = trim((string)$request->input('attachment_title', ''));
+            $this->saveDocumentAttachment($document, $uploadedFile, $categoryEnum, $customTitle ?: null, $activeRole);
         }
 
-        $activeRole = session('active_role', 'ADMIN');
         AuditTrail::create([
             'document_id' => $document->id,
             'actor' => 'Pengguna (' . $activeRole . ')',
@@ -1467,15 +1582,102 @@ class SimkermaController extends Controller
             'event' => 'UPLOAD_FILE',
             'from_status' => $document->status,
             'to_status' => $document->status,
-            'notes' => 'Pengunggahan berkas ' . ($fileType === 'signed' ? 'Naskah Asli Bertandatangan' : 'Draf Revisi') . ' berhasil.',
+            'notes' => 'Pengunggahan berkas ' . $typeLabel . ' (' . $uploadedFile->getClientOriginalName() . ') berhasil.',
             'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
         ]);
 
-        return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id])
+        if ((int)$request->input('redirect_menu') === 3) {
+            return redirect()->route('simkerma.index', [
+                    'menu' => 3,
+                    'open_attachments' => $document->doc_id,
+                ])
+                ->with('flash', [
+                    'type' => 'success',
+                    'msg' => $typeLabel . ' untuk ' . $document->doc_id . ' berhasil diunggah.'
+                ]);
+        }
+
+        return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document->doc_id, 'tab' => 'docs'])
             ->with('flash', [
                 'type' => 'success',
-                'msg' => 'Berkas ' . ($fileType === 'signed' ? 'naskah asli' : 'draf revisi') . ' berhasil diunggah.'
+                'msg' => $typeLabel . ' berhasil diunggah.'
             ]);
+    }
+
+    /**
+     * Hapus Lampiran Pendukung / Proposal / Rencana Kegiatan dari Repositori
+     */
+    public function deleteDocumentAttachment(Request $request)
+    {
+        $request->validate([
+            'attachment_id' => 'required|exists:document_attachments,id',
+        ]);
+
+        $attachment = DocumentAttachment::with('document')->findOrFail($request->input('attachment_id'));
+        $document = $attachment->document;
+        $activeRole = session('active_role', 'ADMIN');
+
+        if ($attachment->file_path) {
+            $fullPath = public_path($attachment->file_path);
+            if (file_exists($fullPath) && is_file($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+
+        $deletedTitle = $attachment->title ?: $attachment->original_name ?: $attachment->category_label;
+        $attachment->delete();
+
+        if ($document) {
+            AuditTrail::create([
+                'document_id' => $document->id,
+                'actor' => 'Pengguna (' . $activeRole . ')',
+                'role' => $activeRole,
+                'event' => 'DELETE_ATTACHMENT',
+                'from_status' => $document->status,
+                'to_status' => $document->status,
+                'notes' => 'Penghapusan lampiran: ' . $deletedTitle . '.',
+                'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
+            ]);
+        }
+
+        if ((int)$request->input('redirect_menu') === 3) {
+            return redirect()->route('simkerma.index', [
+                    'menu' => 3,
+                    'open_attachments' => $document ? $document->doc_id : null,
+                ])
+                ->with('flash', ['type' => 'warning', 'msg' => "Lampiran '{$deletedTitle}' berhasil dihapus."]);
+        }
+
+        return redirect()->route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $document ? $document->doc_id : null, 'tab' => 'docs'])
+            ->with('flash', ['type' => 'warning', 'msg' => "Lampiran '{$deletedTitle}' berhasil dihapus."]);
+    }
+
+    /**
+     * Helper terpusat untuk menyimpan berkas lampiran multi-kategori (Proposal, Rencana, Pendukung)
+     */
+    private function saveDocumentAttachment(Document $document, \Illuminate\Http\UploadedFile $file, string $category, ?string $title, string $actor): DocumentAttachment
+    {
+        $dest = public_path('uploads/attachments');
+        if (!file_exists($dest)) {
+            mkdir($dest, 0777, true);
+        }
+
+        $ext = strtolower($file->getClientOriginalExtension());
+        $origName = $file->getClientOriginalName();
+        $size = $file->getSize();
+        $safePrefix = strtolower(str_replace([' ', '/', '-'], '_', $document->doc_id . '_' . $category));
+        $filename = $safePrefix . '_' . time() . '_' . Str::random(4) . '.' . $ext;
+        $file->move($dest, $filename);
+
+        return DocumentAttachment::create([
+            'document_id' => $document->id,
+            'category' => $category,
+            'title' => $title ?: pathinfo($origName, PATHINFO_FILENAME),
+            'file_path' => 'uploads/attachments/' . $filename,
+            'original_name' => $origName,
+            'file_size' => $size,
+            'uploaded_by' => $actor,
+        ]);
     }
 
     /**
@@ -1629,6 +1831,21 @@ class SimkermaController extends Controller
                 $uploaded->move($dest, $filename);
                 $document->signed_file = 'uploads/documents/' . $filename;
                 $document->save();
+            }
+
+            // Handle Lampiran Opsional (Proposal, Rencana Kegiatan, & Dokumen Pendukung)
+            if ($request->hasFile('proposal_file')) {
+                $this->saveDocumentAttachment($document, $request->file('proposal_file'), 'PROPOSAL', 'Proposal Pengajuan Kerja Sama', $activeRole);
+            }
+            if ($request->hasFile('rencana_file')) {
+                $this->saveDocumentAttachment($document, $request->file('rencana_file'), 'RENCANA_KEGIATAN', 'Rencana Kegiatan / TOR', $activeRole);
+            }
+            if ($request->hasFile('supporting_files')) {
+                foreach ((array) $request->file('supporting_files') as $supFile) {
+                    if ($supFile && $supFile->isValid()) {
+                        $this->saveDocumentAttachment($document, $supFile, 'DOKUMEN_PENDUKUNG', null, $activeRole);
+                    }
+                }
             }
 
             AuditTrail::create([

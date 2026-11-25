@@ -35,6 +35,7 @@ Route::post('/simkerma/update-partner', [SimkermaController::class, 'updatePartn
 Route::post('/simkerma/delete-partner', [SimkermaController::class, 'deletePartner'])->name('simkerma.delete-partner');
 Route::post('/simkerma/update-document', [SimkermaController::class, 'updateDocument'])->name('simkerma.update-document');
 Route::post('/simkerma/upload-document-file', [SimkermaController::class, 'uploadDocumentFile'])->name('simkerma.upload-document-file');
+Route::post('/simkerma/delete-attachment', [SimkermaController::class, 'deleteDocumentAttachment'])->name('simkerma.delete-attachment');
 
 // Rute Notifikasi Sistem
 Route::post('/simkerma/notifications/mark-read/{id?}', [SimkermaController::class, 'markNotificationAsRead'])->name('simkerma.notifications.mark-read');

@@ -37,6 +37,14 @@ class Document extends Model
     }
 
     /**
+     * Relasi ke Lampiran Multi-Berkas (Proposal, Rencana Kegiatan, Dokumen Pendukung, Laporan)
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(DocumentAttachment::class)->orderBy('id', 'desc');
+    }
+
+    /**
      * Relasi ke Master Data Mitra (BelongsTo)
      */
     public function partner(): BelongsTo
