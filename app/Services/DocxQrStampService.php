@@ -218,7 +218,8 @@ class DocxQrStampService
         $doc->paper_size = $paperSize;
         $doc->qr_code_path = $qrRelativePath;
         $doc->draft_file = $stampedRelativePath;
-        $doc->signed_file = $stampedRelativePath;
+        // Catatan Integritas FSM: signed_file TIDAK boleh diisi di sini karena naskah masih berstatus telaah/draf (REVIEW).
+        // signed_file hanya diisi saat proses pengesahan fisik & pengaktifan naskah (status ACTIVE).
         $doc->save();
 
         return [

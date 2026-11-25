@@ -957,7 +957,21 @@
     {{-- 3. PENGELOLAAN DOKUMEN KERJA SAMA (REPOSITORI ARSIP DINAMIS DARI MYSQL)               --}}
     {{-- ===================================================================================== --}}
     @elseif ($activeMenu === 3)
-        <div class="card card-wireframe shadow-sm border">
+        @php
+            $mouCount = $documents->filter(fn($d) => stripos($d->doc_type, 'MoU') !== false)->count();
+            $moaCount = $documents->filter(fn($d) => stripos($d->doc_type, 'MoA') !== false)->count();
+            $iaCount = $documents->filter(fn($d) => stripos($d->doc_type, 'IA') !== false)->count();
+            $legacyCount = $documents->filter(fn($d) => $d->is_legacy || stripos($d->track, 'Lampau') !== false || stripos($d->track, 'legacy') !== false)->count();
+
+            $repoUnits = $documents->pluck('unit')->filter(fn($v) => trim((string)$v) !== '')->unique()->sort()->values();
+            $repoCategories = $documents->pluck('partner_category')->filter(fn($v) => trim((string)$v) !== '')->unique()->sort()->values();
+            $repoYears = $documents->map(function($d) {
+                $dt = $d->date_signed ?: ($d->date_approved ?: $d->created_at);
+                return $dt ? $dt->format('Y') : null;
+            })->filter()->unique()->sortDesc()->values();
+        @endphp
+
+        <div class="card card-wireframe shadow-sm border mb-4">
             <div class="card-header bg-white py-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
                 <div>
                     <div class="d-flex align-items-center gap-2">
@@ -966,37 +980,121 @@
                         </h6>
                         <span class="badge bg-primary text-white font-monospace" style="font-size: 0.65rem;">{{ $documents->count() }} NASKAH TERDAFTAR</span>
                     </div>
-                    <small class="text-muted">Penyimpanan Terorganisasi Naskah MoU, MoA/PKS, IA, Proposal, Laporan &amp; Riwayat Versi FSM</small>
+                    <small class="text-muted">Penyimpanan Terorganisasi Naskah MoU, MoA/PKS, IA, Dokumen Pendukung &amp; Verifikasi Digital</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-dark btn-sm fw-semibold shadow-sm">
-                        <i class="bi bi-cloud-upload me-1 text-warning"></i> Unggah / Ajukan Naskah Baru
+                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-primary btn-sm fw-semibold shadow-sm">
+                        <i class="bi bi-cloud-upload me-1"></i> Unggah / Ajukan Naskah Baru
                     </a>
                 </div>
             </div>
 
-            <!-- TAB FILTER KATEGORI DOKUMEN SISI KLIEN -->
-            <div class="px-3 pt-2 bg-light border-bottom">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <ul class="nav nav-tabs border-0 small fw-semibold" id="repoTabs">
+            <!-- KONSOL FILTER & TAB KATEGORI DOKUMEN -->
+            <div class="repo-filter-bar">
+                <div class="d-flex flex-wrap align-items-end justify-content-between gap-2">
+                    <!-- Tab Kategori Dokumen (Menempel ke Border Bawah + Scroll Horizontal Mobile) -->
+                    <ul class="nav nav-tabs small fw-semibold flex-nowrap" id="repoTabs" style="white-space: nowrap; max-width: 100%;">
                         <li class="nav-item">
-                            <button class="nav-link active bg-white text-dark py-2 px-3 repo-tab-btn" data-type="ALL">Semua Naskah ({{ $documents->count() }})</button>
+                            <button class="nav-link active repo-tab-btn" data-type="ALL">
+                                Semua ({{ $documents->count() }})
+                            </button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link text-muted py-2 px-3 repo-tab-btn" data-type="MoU">MoU (Nota Kesepahaman)</button>
+                            <button class="nav-link repo-tab-btn" data-type="MoU">
+                                MoU ({{ $mouCount }})
+                            </button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link text-muted py-2 px-3 repo-tab-btn" data-type="MoA">PKS / MoA (Fakultas)</button>
+                            <button class="nav-link repo-tab-btn" data-type="MoA">
+                                PKS / MoA ({{ $moaCount }})
+                            </button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link text-muted py-2 px-3 repo-tab-btn" data-type="IA">IA (Implementasi Prodi)</button>
+                            <button class="nav-link repo-tab-btn" data-type="IA">
+                                IA ({{ $iaCount }})
+                            </button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link text-muted py-2 px-3 repo-tab-btn" data-type="Legacy">Dokumen Lampau (Legacy)</button>
+                            <button class="nav-link repo-tab-btn" data-type="Legacy">
+                                Lampau ({{ $legacyCount }})
+                            </button>
                         </li>
                     </ul>
-                    <div class="pb-2">
-                        <input type="text" id="repoSearchInput" class="form-control form-control-sm" placeholder="Cari no surat, mitra, judul..." style="max-width: 260px;">
+
+                    <!-- Pencarian & Tombol Kontrol Lanjutan (Tinggi Seragam 31px) -->
+                    <div class="repo-controls d-flex align-items-center gap-2 flex-wrap">
+                        <div class="input-group input-group-sm" style="width: 245px;">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="repoSearchInput" class="form-control border-start-0 border-end-0" placeholder="Cari no surat, mitra, judul..." autocomplete="off">
+                            <button class="btn btn-outline-secondary border-start-0 d-none" type="button" id="btnRepoClearSearch" title="Hapus Pencarian">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm btn-repo-xs d-inline-flex align-items-center gap-1 bg-white" id="btnToggleRepoAdvancedFilter" style="height: 31px;" title="Filter Lanjutan (Unit, Kategori, Tahun, File, Status)">
+                            <i class="bi bi-funnel"></i><span>Filter</span>
+                            <span class="badge bg-primary text-white d-none" id="repoActiveFilterBadge" style="font-size: 0.62rem; padding: 2px 5px;">0</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm btn-repo-xs d-inline-flex align-items-center gap-1 bg-white d-none" id="btnRepoResetInline" onclick="resetRepoFilters()" style="height: 31px;" title="Reset Semua Filter">
+                            <i class="bi bi-arrow-counterclockwise"></i><span>Reset</span>
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm btn-repo-xs d-inline-flex align-items-center gap-1 text-white" id="btnRepoExportExcel" onclick="exportFilteredRepoToExcel()" style="height: 31px;" title="Ekspor Data Terfilter ke Excel">
+                            <i class="bi bi-file-earmark-excel"></i><span>Excel</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL FILTER LANJUTAN (COLLAPSIBLE) -->
+            <div class="px-3 py-2 bg-white border-bottom d-none" id="repoAdvancedFilterPanel">
+                <div class="row g-2 align-items-end">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.72rem;">Unit / Fakultas Pengusul</label>
+                        <select id="repoUnitFilter" class="form-select form-select-sm" style="font-size: 0.78rem;">
+                            <option value="ALL">Semua Unit / Fakultas</option>
+                            @foreach ($repoUnits as $uName)
+                                <option value="{{ strtolower(trim($uName)) }}">{{ $uName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.72rem;">Kategori Mitra</label>
+                        <select id="repoCategoryFilter" class="form-select form-select-sm" style="font-size: 0.78rem;">
+                            <option value="ALL">Semua Kategori</option>
+                            @foreach ($repoCategories as $catName)
+                                <option value="{{ strtolower(trim($catName)) }}">{{ $catName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.72rem;">Tahun TTD</label>
+                        <select id="repoYearFilter" class="form-select form-select-sm" style="font-size: 0.78rem;">
+                            <option value="ALL">Semua Tahun</option>
+                            @foreach ($repoYears as $yr)
+                                <option value="{{ $yr }}">{{ $yr }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.72rem;">Kelengkapan PDF</label>
+                        <select id="repoFileFilter" class="form-select form-select-sm" style="font-size: 0.78rem;">
+                            <option value="ALL">Semua Berkas</option>
+                            <option value="HAS_FILE">Sudah Ada PDF</option>
+                            <option value="NO_FILE">Belum Ada File</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label mb-1 text-muted fw-semibold" style="font-size: 0.72rem;">Status Dokumen</label>
+                        <select id="repoStatusFilter" class="form-select form-select-sm" style="font-size: 0.78rem;" title="Filter berdasarkan status dokumen">
+                            <option value="ALL">Semua Status</option>
+                            <option value="ACTIVE">Aktif (ACTIVE)</option>
+                            <option value="WARNING">Peringatan</option>
+                            <option value="EXPIRED">Kedaluwarsa</option>
+                            <option value="VERIFIED">Terverifikasi</option>
+                            <option value="REVIEW">Telaah</option>
+                            <option value="DRAFT">Draf</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -1004,84 +1102,196 @@
             <!-- TABEL REPOSITORI DOKUMEN DINAMIS -->
             <div class="table-responsive">
                 <table class="table table-wireframe table-hover table-sm align-middle mb-0 small" id="repoTable">
+                    <colgroup>
+                        <col style="width: 19%;">
+                        <col style="width: 29%;">
+                        <col style="width: 12%;">
+                        <col style="width: 18%;">
+                        <col style="width: 13%;">
+                        <col style="width: 9%;">
+                    </colgroup>
                     <thead class="bg-light">
                         <tr>
-                            <th style="min-width: 160px;">Nomor Dokumen &amp; Jenis Naskah</th>
-                            <th style="min-width: 170px;">Judul Kerja Sama &amp; Mitra</th>
-                            <th style="min-width: 120px;">Tanggal TTD &amp; Masa Berlaku</th>
-                            <th style="min-width: 120px;">Pihak Penandatangan</th>
-                            <th style="min-width: 120px;">Berkas &amp; Riwayat Audit</th>
-                            <th style="min-width: 95px;" class="text-center">Aksi Dokumen</th>
+                            <th class="repo-sortable" data-sort-key="doc_number" title="Klik untuk mengurutkan berdasarkan Nomor Dokumen">Nomor &amp; Jenis <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
+                            <th class="repo-sortable" data-sort-key="title" title="Klik untuk mengurutkan berdasarkan Judul Kerja Sama (A-Z / Z-A)">Judul Kerja Sama &amp; Mitra <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
+                            <th class="repo-sortable sort-active" data-sort-key="date" data-sort-dir="desc" title="Klik untuk mengurutkan Tanggal TTD (Terbaru / Terlama)">TTD &amp; Durasi <i class="bi bi-sort-down repo-sort-icon"></i></th>
+                            <th>Penandatangan</th>
+                            <th class="repo-sortable" data-sort-key="audit" title="Klik untuk mengurutkan berdasarkan Jumlah Riwayat">Berkas &amp; Audit <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($documents as $doc)
                             @php
-                                $statusBadgeClass = match($doc->status) {
-                                    'DRAFT' => 'bg-secondary text-white',
-                                    'REVIEW' => 'bg-info text-dark',
-                                    'VERIFIED' => 'bg-primary text-white',
-                                    'ACTIVE' => 'bg-success text-white',
-                                    'WARNING' => 'bg-warning text-dark',
-                                    'EXPIRED' => 'bg-danger text-white',
-                                    'CANCELLED' => 'bg-dark text-white',
-                                    default => 'bg-secondary text-white'
+                                $statusMeta = match($doc->status) {
+                                    'DRAFT' => ['Draf', 'badge-soft-secondary'],
+                                    'REVIEW' => ['Telaah', 'badge-soft-info'],
+                                    'VERIFIED' => ['Terverifikasi', 'badge-soft-primary'],
+                                    'ACTIVE' => ['Aktif', 'badge-soft-success'],
+                                    'WARNING' => ['Peringatan', 'badge-soft-warning text-dark'],
+                                    'EXPIRED' => ['Kedaluwarsa', 'badge-soft-danger'],
+                                    'CANCELLED' => ['Dibatalkan', 'bg-dark text-white'],
+                                    default => [$doc->status, 'badge-soft-secondary']
                                 };
+                                $statusLabel = $statusMeta[0];
+                                $statusBadgeClass = $statusMeta[1];
+
+                                // Verifikasi fisik berkas PDF riil di storage/public
+                                $validFilePath = null;
+                                $hasRealFile = false;
+                                $fileLabel = 'Draf PDF';
+                                $fileBadgeClass = 'badge-soft-primary';
+                                $fileSizeText = '-';
+
+                                if (!empty($doc->signed_file)) {
+                                    $p1 = public_path($doc->signed_file);
+                                    $p2 = public_path('uploads/documents/' . $doc->signed_file);
+                                    if (file_exists($p1) && is_file($p1)) {
+                                        $validFilePath = asset($doc->signed_file);
+                                        $hasRealFile = true;
+                                        $fileLabel = 'Naskah PDF';
+                                        $fileBadgeClass = 'badge-soft-success';
+                                        $b = filesize($p1);
+                                        $fileSizeText = $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : round($b / 1024, 0) . ' KB';
+                                    } elseif (file_exists($p2) && is_file($p2)) {
+                                        $validFilePath = asset('uploads/documents/' . $doc->signed_file);
+                                        $hasRealFile = true;
+                                        $fileLabel = 'Naskah PDF';
+                                        $fileBadgeClass = 'badge-soft-success';
+                                        $b = filesize($p2);
+                                        $fileSizeText = $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : round($b / 1024, 0) . ' KB';
+                                    }
+                                }
+
+                                if (!$hasRealFile && !empty($doc->draft_file)) {
+                                    $dp1 = public_path($doc->draft_file);
+                                    $dp2 = public_path('uploads/documents/' . $doc->draft_file);
+                                    if (file_exists($dp1) && is_file($dp1)) {
+                                        $validFilePath = asset($doc->draft_file);
+                                        $hasRealFile = true;
+                                        $fileLabel = 'Draf PDF';
+                                        $fileBadgeClass = 'badge-soft-primary';
+                                        $b = filesize($dp1);
+                                        $fileSizeText = $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : round($b / 1024, 0) . ' KB';
+                                    } elseif (file_exists($dp2) && is_file($dp2)) {
+                                        $validFilePath = asset('uploads/documents/' . $doc->draft_file);
+                                        $hasRealFile = true;
+                                        $fileLabel = 'Draf PDF';
+                                        $fileBadgeClass = 'badge-soft-primary';
+                                        $b = filesize($dp2);
+                                        $fileSizeText = $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : round($b / 1024, 0) . ' KB';
+                                    }
+                                }
+
+                                $displayFileName = basename($doc->signed_file ?: ($doc->draft_file ?: ($doc->doc_id . '.pdf')));
+
+                                // Normalisasi Penandatangan Pihak I (hindari duplikasi jabatan seperti "Rektor Universitas Parna Raya" + "Rektor")
+                                $signer1 = trim((string)($doc->first_party_signer ?: 'Rektor UNIPAR'));
+                                $pos1 = trim((string)($doc->first_party_position ?: ''));
+                                $showPos1 = ($pos1 !== '' && stripos($signer1, $pos1) === false);
+
+                                $signer2 = trim((string)($doc->second_party_signer ?: ('Pimpinan ' . $doc->partner_name)));
+                                $docDateRef = $doc->date_signed ?: ($doc->date_approved ?: $doc->created_at);
+                                $docYearAttr = $docDateRef ? $docDateRef->format('Y') : '';
+                                $docSortTs = $docDateRef ? $docDateRef->timestamp : 0;
+                                $docEndTs = $doc->end_date ? $doc->end_date->timestamp : 9999999999;
                             @endphp
-                            <tr class="repo-row" data-type="{{ $doc->doc_type }}" data-legacy="{{ $doc->is_legacy ? '1' : '0' }}" data-track="{{ $doc->track }}">
+                            <tr class="repo-row" 
+                                data-type="{{ $doc->doc_type }}" 
+                                data-status="{{ $doc->status }}" 
+                                data-legacy="{{ $doc->is_legacy ? '1' : '0' }}" 
+                                data-track="{{ $doc->track }}"
+                                data-unit="{{ strtolower(trim((string)$doc->unit)) }}"
+                                data-category="{{ strtolower(trim((string)$doc->partner_category)) }}"
+                                data-year="{{ $docYearAttr }}"
+                                data-has-file="{{ $hasRealFile ? '1' : '0' }}"
+                                data-sort-date="{{ $docSortTs }}"
+                                data-end-date="{{ $docEndTs }}"
+                                data-doc-number="{{ strtolower(trim((string)$doc->doc_number)) }}"
+                                data-audit-count="{{ $doc->auditTrails->count() }}"
+                                data-title="{{ strtolower(trim((string)($doc->title ?: $doc->scope))) }}">
                                 <td>
-                                    <div class="fw-bold text-dark">
-                                        {{ (!empty($doc->doc_number) && $doc->doc_number !== '-') ? $doc->doc_number : '-' }}
-                                        <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">Pihak I</span>
+                                    <div style="font-size: 0.74rem; line-height: 1.3;">
+                                        <span class="text-muted">I:</span>
+                                        <strong class="text-dark">{{ (!empty($doc->doc_number) && $doc->doc_number !== '-') ? $doc->doc_number : '-' }}</strong>
                                     </div>
-                                    <div class="small {{ (!empty($doc->partner_doc_number) && $doc->partner_doc_number !== '-') ? 'text-secondary' : 'text-muted' }}" style="font-size: 0.72rem;">
-                                        Pihak II: <strong>{{ (!empty($doc->partner_doc_number) && $doc->partner_doc_number !== '-') ? $doc->partner_doc_number : '-' }}</strong>
+                                    <div class="text-muted mt-1" style="font-size: 0.71rem; line-height: 1.3;">
+                                        <span>II:</span>
+                                        <span class="{{ (!empty($doc->partner_doc_number) && $doc->partner_doc_number !== '-') ? 'text-dark fw-medium' : 'text-muted' }}">{{ (!empty($doc->partner_doc_number) && $doc->partner_doc_number !== '-') ? $doc->partner_doc_number : '-' }}</span>
                                     </div>
-                                    <div class="mt-1 d-flex align-items-center gap-1">
-                                        <span class="badge bg-dark" style="font-size: 0.65rem;">{{ $doc->doc_type }}</span>
-                                        <span class="badge {{ $statusBadgeClass }}" style="font-size: 0.65rem;">{{ $doc->status }}</span>
+                                    <div class="mt-1 d-flex align-items-center gap-1 flex-wrap">
+                                        <span class="badge bg-light text-dark border badge-repo-compact">{{ $doc->doc_type }}</span>
+                                        <span class="badge {{ $statusBadgeClass }} badge-repo-compact" title="Status FSM: {{ $doc->status }}">{{ $statusLabel }}</span>
                                     </div>
                                 </td>
                                 <td>
-                                    <strong class="text-dark">{{ Str::limit($doc->scope, 85) }}</strong>
-                                    <div class="text-muted small mt-1">
-                                        <i class="bi bi-building me-1"></i>Mitra: <strong>{{ $doc->partner_name }}</strong>
-                                        <span class="text-secondary">({{ $doc->partner_category }})</span>
+                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="repo-doc-title fw-semibold text-dark text-decoration-none d-block mb-1" style="line-height: 1.35; font-size: 0.80rem;" title="Klik untuk membuka detail dokumen: {{ $doc->title ?: $doc->scope }}">
+                                        {{ Str::limit($doc->title ?: $doc->scope, 110) }}
+                                    </a>
+                                    <div class="text-muted text-truncate" style="font-size: 0.74rem;" title="{{ $doc->partner_name }}">
+                                        <i class="bi bi-building me-1 text-primary"></i><strong class="text-dark">{{ $doc->partner_name }}</strong>
                                     </div>
-                                </td>
-                                <td>
-                                    <div class="text-dark">
-                                        TTD: {{ $doc->date_signed ? $doc->date_signed->format('d M Y') : ($doc->date_approved ? $doc->date_approved->format('d M Y') : 'Draf Formal') }}
+                                    <div class="text-muted text-truncate" style="font-size: 0.70rem;" title="{{ $doc->partner_category }}{{ $doc->unit ? ' • ' . $doc->unit : '' }}">
+                                        <span>{{ $doc->partner_category }}</span>
+                                        @if ($doc->unit)
+                                            <span>&bull; {{ $doc->unit }}</span>
+                                        @endif
                                     </div>
-                                    <div class="text-muted small">Durasi: {{ $doc->validity ?: '1 Tahun' }}</div>
-                                </td>
-                                <td>
-                                    <div class="text-dark fw-semibold">Rektor UNIPAR / Pimpinan</div>
-                                    <div class="text-muted small">&amp; Pimpinan {{ $doc->partner_name }}</div>
-                                </td>
-                                <td>
-                                    @php
-                                        $rawFile = $doc->signed_file ?: ($doc->draft_file ?: 'naskah_kerjasama.pdf');
-                                        $baseFileName = basename($rawFile);
-                                    @endphp
-                                    <div class="mb-1 d-flex align-items-center">
-                                        <i class="bi bi-file-earmark-pdf text-danger me-1 flex-shrink-0"></i>
-                                        <span class="text-truncate d-inline-block text-dark fw-medium" style="max-width: 140px;" title="{{ $baseFileName }}">{{ $baseFileName }}</span>
-                                    </div>
-                                    <small class="badge bg-light text-secondary border">
-                                        <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Jejak Audit
-                                    </small>
                                 </td>
                                 <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
-                                        <button type="button" class="btn btn-outline-dark btn-sm py-0 px-2" style="font-size: 0.68rem;" title="Perbesar QR Code" onclick="showQrModal('{{ $doc->reg_id }}', '{{ $doc->doc_number ?: $doc->doc_id }}', '{{ addslashes(str_replace(["\r", "\n"], ' ', $doc->scope)) }}', '{{ addslashes($doc->partner_name) }}', '{{ $doc->status }}', '{{ $doc->date_signed ? $doc->date_signed->format('d M Y') : date('d M Y') }}', '{{ addslashes($doc->partner_doc_number ?? '') }}')">
-                                            <i class="bi bi-qr-code me-1"></i>QR
-                                        </button>
-                                        <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.68rem;" title="Lembar Verifikasi Publik">
+                                    <div class="text-dark fw-medium" style="font-size: 0.76rem;">
+                                        {{ $doc->date_signed ? $doc->date_signed->translatedFormat('d M Y') : ($doc->date_approved ? $doc->date_approved->translatedFormat('d M Y') : 'Draf Formal') }}
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.71rem;">{{ $doc->validity ?: '1 Tahun' }}</div>
+                                    @if ($doc->end_date)
+                                        <div class="text-muted" style="font-size: 0.67rem;" title="Berakhir pada {{ $doc->end_date->translatedFormat('d F Y') }}">
+                                            s.d. {{ $doc->end_date->translatedFormat('d M Y') }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div style="font-size: 0.74rem; line-height: 1.3;">
+                                        <span class="text-muted">UNIPAR:</span>
+                                        <span class="text-dark fw-semibold">{{ $signer1 }}</span>
+                                    </div>
+                                    @if ($showPos1)
+                                        <div class="text-muted" style="font-size: 0.69rem; line-height: 1.25;">{{ $pos1 }}</div>
+                                    @endif
+                                    <div class="mt-1 pt-1 border-top" style="font-size: 0.73rem; line-height: 1.3;">
+                                        <span class="text-muted">Mitra:</span>
+                                        <span class="text-dark">{{ $signer2 }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if ($hasRealFile)
+                                        <div class="d-inline-flex align-items-center justify-content-center gap-1 mb-1 text-nowrap">
+                                            <a href="{{ $validFilePath }}" target="_blank" class="repo-file-link d-inline-flex align-items-center text-dark fw-semibold text-decoration-none" style="font-size: 0.74rem;" title="Pratinjau: {{ $displayFileName }}">
+                                                <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>
+                                                <span>{{ $fileLabel === 'Naskah PDF' ? 'PDF' : 'Draf' }} ({{ $fileSizeText }})</span>
+                                            </a>
+                                            <a href="{{ $validFilePath }}" download class="text-primary ps-1" style="font-size: 0.78rem;" title="Unduh {{ $displayFileName }}">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.69rem;" title="Jumlah riwayat perubahan status (audit trail)">
+                                            <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Riwayat
+                                        </div>
+                                    @else
+                                        <div class="text-muted fst-italic mb-1" style="font-size: 0.72rem;" title="Berkas naskah belum diunggah secara fisik">
+                                            Belum ada file
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.69rem;">
+                                            <i class="bi bi-clock-history me-1"></i>{{ $doc->auditTrails->count() }} Riwayat
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
+                                        <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-light border btn-repo-xs text-primary" title="Lembar Verifikasi Publik">
                                             <i class="bi bi-shield-check"></i>
                                         </a>
-                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'doc' => $doc->doc_id]) }}" class="btn btn-dark btn-sm py-0 px-2" style="font-size: 0.68rem;" title="Kelola Alur FSM">
-                                            <i class="bi bi-sliders"></i>
+                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="btn btn-primary btn-repo-xs text-white" title="Buka Detail Dokumen &amp; Alur FSM">
+                                            <i class="bi bi-folder2-open"></i>
                                         </a>
                                     </div>
                                 </td>
@@ -1091,8 +1301,43 @@
                                 <td colspan="6" class="text-center py-4 text-muted">Belum ada dokumen kemitraan terdaftar.</td>
                             </tr>
                         @endforelse
+
+                        <!-- Baris Fallback Saat Hasil Filter / Pencarian Kosong -->
+                        <tr id="noRepoMatchRow" class="d-none">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <div class="py-3">
+                                    <i class="bi bi-search text-secondary display-6 mb-2 d-block"></i>
+                                    <h6 class="fw-bold text-dark mb-1">Tidak Ada Dokumen yang Cocok</h6>
+                                    <p class="small text-muted mb-3">Tidak ditemukan naskah kerja sama dengan kata kunci atau filter status yang dipilih.</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="resetRepoFilters()">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Semua Filter
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- CARD FOOTER DENGAN KONTROL PAGINATION -->
+            <div class="card-footer bg-white py-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 small text-muted">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span>Menampilkan <strong id="repoVisibleCount" class="text-dark">{{ $documents->count() }}</strong> naskah</span>
+                    <span class="text-secondary">&bull;</span>
+                    <div class="d-flex align-items-center gap-1">
+                        <span>Tampilkan:</span>
+                        <select id="repoPerPage" class="form-select form-select-sm py-0 px-2" style="width: auto; height: 26px; font-size: 0.75rem;">
+                            <option value="15">15</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="ALL">Semua</option>
+                        </select>
+                        <span>baris</span>
+                    </div>
+                </div>
+                <div id="repoPaginationWrapper" class="d-flex align-items-center gap-1">
+                    <!-- Tombol Pagination di-populate via JavaScript -->
+                </div>
             </div>
         </div>
 
@@ -1100,17 +1345,71 @@
         <script>
         document.addEventListener('DOMContentLoaded', function() {
             const tabs = document.querySelectorAll('.repo-tab-btn');
-            const rows = document.querySelectorAll('.repo-row');
+            const tbody = document.querySelector('#repoTable tbody');
+            const rows = Array.from(document.querySelectorAll('.repo-row'));
             const search = document.getElementById('repoSearchInput');
+            const clearSearchBtn = document.getElementById('btnRepoClearSearch');
+            const statusFilter = document.getElementById('repoStatusFilter');
+            const unitFilter = document.getElementById('repoUnitFilter');
+            const categoryFilter = document.getElementById('repoCategoryFilter');
+            const yearFilter = document.getElementById('repoYearFilter');
+            const fileFilter = document.getElementById('repoFileFilter');
+            const sortableHeaders = document.querySelectorAll('#repoTable thead th.repo-sortable');
+            const advPanel = document.getElementById('repoAdvancedFilterPanel');
+            const toggleAdvBtn = document.getElementById('btnToggleRepoAdvancedFilter');
+            const activeBadge = document.getElementById('repoActiveFilterBadge');
+            const resetInlineBtn = document.getElementById('btnRepoResetInline');
+            const noMatchRow = document.getElementById('noRepoMatchRow');
+            const visibleCountEl = document.getElementById('repoVisibleCount');
+            const perPageSelect = document.getElementById('repoPerPage');
+            const paginationWrapper = document.getElementById('repoPaginationWrapper');
 
-            function filterRepo() {
+            let currentPage = 1;
+            let currentSortKey = 'date';
+            let currentSortDir = 'desc';
+
+            // Simpan urutan awal server untuk fallback stabil
+            rows.forEach((r, idx) => r.dataset.origIdx = String(idx));
+
+            function updateSortHeadersUI() {
+                sortableHeaders.forEach(function(th) {
+                    const key = th.getAttribute('data-sort-key');
+                    const icon = th.querySelector('.repo-sort-icon');
+                    th.classList.remove('sort-active');
+                    if (icon) {
+                        icon.className = 'bi repo-sort-icon bi-arrow-down-up';
+                    }
+                    if (key === currentSortKey) {
+                        th.classList.add('sort-active');
+                        th.setAttribute('data-sort-dir', currentSortDir);
+                        if (icon) {
+                            icon.className = 'bi repo-sort-icon ' + (currentSortDir === 'desc' ? 'bi-sort-down' : 'bi-sort-up');
+                        }
+                    } else {
+                        th.removeAttribute('data-sort-dir');
+                    }
+                });
+            }
+
+            function getFilteredAndSortedRows() {
                 const activeTab = document.querySelector('.repo-tab-btn.active');
                 const t = activeTab ? activeTab.getAttribute('data-type') : 'ALL';
+                const s = statusFilter ? statusFilter.value : 'ALL';
+                const u = unitFilter ? unitFilter.value : 'ALL';
+                const c = categoryFilter ? categoryFilter.value : 'ALL';
+                const y = yearFilter ? yearFilter.value : 'ALL';
+                const f = fileFilter ? fileFilter.value : 'ALL';
                 const q = search ? search.value.toLowerCase().trim() : '';
 
-                rows.forEach(function(row) {
+                const matched = rows.filter(function(row) {
                     const rowType = row.getAttribute('data-type') || '';
+                    const rowStatus = row.getAttribute('data-status') || '';
+                    const rowUnit = row.getAttribute('data-unit') || '';
+                    const rowCat = row.getAttribute('data-category') || '';
+                    const rowYear = row.getAttribute('data-year') || '';
+                    const rowHasFile = row.getAttribute('data-has-file') === '1';
                     const isLegacy = row.getAttribute('data-legacy') === '1' || (row.getAttribute('data-track') || '').toLowerCase().includes('lampau') || (row.getAttribute('data-track') || '').toLowerCase().includes('legacy');
+                    
                     let matchType = false;
                     if (t === 'ALL') {
                         matchType = true;
@@ -1119,27 +1418,287 @@
                     } else {
                         matchType = rowType.includes(t);
                     }
+
+                    const matchStatus = (s === 'ALL') || (rowStatus === s);
+                    const matchUnit = (u === 'ALL') || (rowUnit === u);
+                    const matchCategory = (c === 'ALL') || (rowCat === c);
+                    const matchYear = (y === 'ALL') || (rowYear === y);
+                    const matchFile = (f === 'ALL') || (f === 'HAS_FILE' && rowHasFile) || (f === 'NO_FILE' && !rowHasFile);
                     const matchSearch = (!q || row.innerText.toLowerCase().includes(q));
 
-                    row.style.display = (matchType && matchSearch) ? '' : 'none';
+                    return matchType && matchStatus && matchUnit && matchCategory && matchYear && matchFile && matchSearch;
+                });
+
+                matched.sort(function(a, b) {
+                    let cmp = 0;
+                    if (currentSortKey === 'date') {
+                        const va = parseInt(a.dataset.sortDate || '0', 10);
+                        const vb = parseInt(b.dataset.sortDate || '0', 10);
+                        cmp = currentSortDir === 'desc' ? (vb - va) : (va - vb);
+                    } else if (currentSortKey === 'title') {
+                        const ta = a.dataset.title || '';
+                        const tb = b.dataset.title || '';
+                        cmp = currentSortDir === 'desc' ? tb.localeCompare(ta, 'id') : ta.localeCompare(tb, 'id');
+                    } else if (currentSortKey === 'doc_number') {
+                        const na = a.dataset.docNumber || '';
+                        const nb = b.dataset.docNumber || '';
+                        cmp = currentSortDir === 'desc' ? nb.localeCompare(na, 'id') : na.localeCompare(nb, 'id');
+                    } else if (currentSortKey === 'audit') {
+                        const aa = parseInt(a.dataset.auditCount || '0', 10);
+                        const ab = parseInt(b.dataset.auditCount || '0', 10);
+                        cmp = currentSortDir === 'desc' ? (ab - aa) : (aa - ab);
+                    }
+                    return cmp !== 0 ? cmp : parseInt(a.dataset.origIdx, 10) - parseInt(b.dataset.origIdx, 10);
+                });
+
+                return matched;
+            }
+
+            function updateFilterIndicators() {
+                const activeTab = document.querySelector('.repo-tab-btn.active');
+                const t = activeTab ? activeTab.getAttribute('data-type') : 'ALL';
+                const s = statusFilter ? statusFilter.value : 'ALL';
+                const u = unitFilter ? unitFilter.value : 'ALL';
+                const c = categoryFilter ? categoryFilter.value : 'ALL';
+                const y = yearFilter ? yearFilter.value : 'ALL';
+                const f = fileFilter ? fileFilter.value : 'ALL';
+                const q = search ? search.value.trim() : '';
+
+                let advCount = 0;
+                if (u !== 'ALL') advCount++;
+                if (c !== 'ALL') advCount++;
+                if (y !== 'ALL') advCount++;
+                if (f !== 'ALL') advCount++;
+                if (s !== 'ALL') advCount++;
+
+                if (activeBadge && toggleAdvBtn) {
+                    if (advCount > 0) {
+                        activeBadge.innerText = advCount;
+                        activeBadge.classList.remove('d-none');
+                        toggleAdvBtn.classList.add('border-primary', 'text-primary');
+                    } else {
+                        activeBadge.classList.add('d-none');
+                        toggleAdvBtn.classList.remove('border-primary', 'text-primary');
+                    }
+                }
+
+                const hasAnyFilter = (t !== 'ALL' || q.length > 0 || advCount > 0);
+                if (resetInlineBtn) {
+                    if (hasAnyFilter) {
+                        resetInlineBtn.classList.remove('d-none');
+                    } else {
+                        resetInlineBtn.classList.add('d-none');
+                    }
+                }
+            }
+
+            function renderRepo() {
+                updateFilterIndicators();
+                const matched = getFilteredAndSortedRows();
+                const totalMatched = matched.length;
+
+                // Tampilkan atau sembunyikan tombol clear search
+                if (clearSearchBtn) {
+                    if (search && search.value.trim().length > 0) {
+                        clearSearchBtn.classList.remove('d-none');
+                    } else {
+                        clearSearchBtn.classList.add('d-none');
+                    }
+                }
+
+                if (visibleCountEl) {
+                    visibleCountEl.innerText = totalMatched;
+                }
+
+                if (totalMatched === 0) {
+                    rows.forEach(r => r.style.display = 'none');
+                    if (noMatchRow) noMatchRow.classList.remove('d-none');
+                    if (paginationWrapper) paginationWrapper.innerHTML = '';
+                    return;
+                }
+
+                if (noMatchRow) noMatchRow.classList.add('d-none');
+
+                // Terapkan urutan DOM baru ke tbody
+                if (tbody) {
+                    matched.forEach(r => tbody.appendChild(r));
+                    if (noMatchRow) tbody.appendChild(noMatchRow);
+                }
+
+                const perPageVal = perPageSelect ? perPageSelect.value : '25';
+                const perPage = (perPageVal === 'ALL') ? totalMatched : parseInt(perPageVal, 10);
+                const totalPages = Math.ceil(totalMatched / perPage) || 1;
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+                const startIndex = (currentPage - 1) * perPage;
+                const endIndex = startIndex + perPage;
+
+                rows.forEach(r => r.style.display = 'none');
+
+                matched.forEach(function(row, idx) {
+                    if (idx >= startIndex && idx < endIndex) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                renderPagination(totalPages);
+            }
+
+            function renderPagination(totalPages) {
+                if (!paginationWrapper) return;
+                if (totalPages <= 1) {
+                    paginationWrapper.innerHTML = '';
+                    return;
+                }
+
+                let html = '';
+                html += `<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 ${currentPage === 1 ? 'disabled opacity-50' : ''}" data-page="${currentPage - 1}"><i class="bi bi-chevron-left"></i></button>`;
+
+                for (let p = 1; p <= totalPages; p++) {
+                    if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
+                        html += `<button type="button" class="btn btn-sm ${p === currentPage ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 fw-semibold" data-page="${p}">${p}</button>`;
+                    } else if (p === currentPage - 2 || p === currentPage + 2) {
+                        html += `<span class="px-1 text-muted">&hellip;</span>`;
+                    }
+                }
+
+                html += `<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 ${currentPage === totalPages ? 'disabled opacity-50' : ''}" data-page="${currentPage + 1}"><i class="bi bi-chevron-right"></i></button>`;
+
+                paginationWrapper.innerHTML = html;
+
+                paginationWrapper.querySelectorAll('button[data-page]').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const targetPage = parseInt(this.getAttribute('data-page'), 10);
+                        if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages) {
+                            currentPage = targetPage;
+                            renderRepo();
+                        }
+                    });
                 });
             }
 
+            // Toggle Filter Lanjutan
+            if (toggleAdvBtn && advPanel) {
+                toggleAdvBtn.addEventListener('click', function() {
+                    advPanel.classList.toggle('d-none');
+                    this.classList.toggle('active');
+                });
+            }
+
+            // Tab click
             tabs.forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    tabs.forEach(b => {
-                        b.classList.remove('active', 'bg-white', 'text-dark');
-                        b.classList.add('text-muted');
-                    });
-                    this.classList.remove('text-muted');
-                    this.classList.add('active', 'bg-white', 'text-dark');
-                    filterRepo();
+                    tabs.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentPage = 1;
+                    renderRepo();
                 });
             });
 
+            // Search input
             if (search) {
-                search.addEventListener('input', filterRepo);
+                search.addEventListener('input', function() {
+                    currentPage = 1;
+                    renderRepo();
+                });
             }
+
+            // Clear search
+            if (clearSearchBtn && search) {
+                clearSearchBtn.addEventListener('click', function() {
+                    search.value = '';
+                    currentPage = 1;
+                    renderRepo();
+                    search.focus();
+                });
+            }
+
+            // Click header tabel untuk mengurutkan (Terlama / Terbaru atau A-Z / Z-A)
+            sortableHeaders.forEach(function(th) {
+                th.addEventListener('click', function() {
+                    const key = this.getAttribute('data-sort-key');
+                    if (currentSortKey === key) {
+                        currentSortDir = (currentSortDir === 'desc') ? 'asc' : 'desc';
+                    } else {
+                        currentSortKey = key;
+                        currentSortDir = (key === 'date' || key === 'audit') ? 'desc' : 'asc';
+                    }
+                    updateSortHeadersUI();
+                    currentPage = 1;
+                    renderRepo();
+                });
+            });
+
+            // Bind change events for all select filters
+            [statusFilter, unitFilter, categoryFilter, yearFilter, fileFilter, perPageSelect].forEach(function(el) {
+                if (el) {
+                    el.addEventListener('change', function() {
+                        currentPage = 1;
+                        renderRepo();
+                    });
+                }
+            });
+
+            // Global reset function
+            window.resetRepoFilters = function() {
+                if (search) search.value = '';
+                if (statusFilter) statusFilter.value = 'ALL';
+                if (unitFilter) unitFilter.value = 'ALL';
+                if (categoryFilter) categoryFilter.value = 'ALL';
+                if (yearFilter) yearFilter.value = 'ALL';
+                if (fileFilter) fileFilter.value = 'ALL';
+                currentSortKey = 'date';
+                currentSortDir = 'desc';
+                updateSortHeadersUI();
+                tabs.forEach(b => b.classList.remove('active'));
+                const allTab = document.querySelector('.repo-tab-btn[data-type="ALL"]');
+                if (allTab) allTab.classList.add('active');
+                currentPage = 1;
+                renderRepo();
+            };
+
+            // Ekspor baris hasil filter saat ini ke Excel (menghilangkan kolom Aksi)
+            window.exportFilteredRepoToExcel = function() {
+                const matched = getFilteredAndSortedRows();
+                const theadRow = document.querySelector('#repoTable thead tr');
+                if (!theadRow) return;
+
+                let html = '<table border="1"><thead><tr>';
+                const thCells = Array.from(theadRow.cells);
+                for (let i = 0; i < thCells.length - 1; i++) {
+                    html += '<th>' + thCells[i].innerText.trim() + '</th>';
+                }
+                html += '</tr></thead><tbody>';
+
+                matched.forEach(function(row) {
+                    html += '<tr>';
+                    const tdCells = Array.from(row.cells);
+                    for (let i = 0; i < tdCells.length - 1; i++) {
+                        html += '<td>' + tdCells[i].innerText.replace(/\s+/g, ' ').trim() + '</td>';
+                    }
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+
+                const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const today = new Date().toISOString().slice(0, 10);
+                a.href = url;
+                a.download = `Repositori_Dokumen_Kerja_Sama_${today}.xls`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            // Inisialisasi awal
+            renderRepo();
         });
         </script>
         @endpush
@@ -1446,11 +2005,74 @@
                         </div>
 
                         <!-- =================================================================== -->
-                        <!-- SECTION 4: PERIODE MASA BERLAKU & BERKAS NASKAH                     -->
+                        <!-- SECTION 4: RUANG LINGKUP TRIDHARMA & NILAI KERJA SAMA                -->
                         <!-- =================================================================== -->
                         <div class="card border mb-4 shadow-sm" style="border-radius: 8px;">
                             <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center gap-2">
-                                <span class="badge bg-primary text-white rounded-pill px-2 py-1"><i class="bi bi-clock-history"></i> Bagian 4</span>
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1"><i class="bi bi-diagram-3"></i> Bagian 4</span>
+                                <h6 class="mb-0 fw-bold text-dark fs-6">Ruang Lingkup Kegiatan &amp; Nilai Kerja Sama</h6>
+                            </div>
+                            <div class="card-body p-3 p-md-4">
+                                <!-- RUANG LINGKUP TRIDHARMA / MBKM -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Ruang Lingkup Kemitraan : <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="d-flex flex-wrap gap-3 p-2.5 bg-light rounded border">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="scope[]" value="Pendidikan" id="new_scope1" checked>
+                                                <label class="form-check-label fw-medium text-dark" for="new_scope1">Pendidikan / Pengajaran</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="scope[]" value="Penelitian" id="new_scope2" checked>
+                                                <label class="form-check-label fw-medium text-dark" for="new_scope2">Penelitian &amp; Publikasi</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="scope[]" value="Pengabdian kepada Masyarakat" id="new_scope3" checked>
+                                                <label class="form-check-label fw-medium text-dark" for="new_scope3">Pengabdian kepada Masyarakat (PkM)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="scope[]" value="Pengembangan SDM" id="new_scope4" checked>
+                                                <label class="form-check-label fw-medium text-dark" for="new_scope4">Pengembangan SDM &amp; MBKM</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- NILAI REALISASI KERJA SAMA (OPSIONAL) -->
+                                <div class="row mb-3 align-items-center">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Perkiraan Nilai Kerja Sama :
+                                        <span class="badge bg-light text-secondary border fw-normal ms-1">Opsional</span>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light text-muted">Rp</span>
+                                            <input type="text" name="nominal_value" class="form-control" placeholder="Contoh: 50.000.000 (Kosongkan jika non-finansial)">
+                                        </div>
+                                        <div class="form-text text-muted">Diisi jika naskah kerja sama memiliki komitmen pendanaan kegiatan atau hibah.</div>
+                                    </div>
+                                </div>
+
+                                <!-- DESKRIPSI RINGKASAN -->
+                                <div class="row mb-0">
+                                    <label class="col-md-3 col-form-label fw-bold text-dark">
+                                        Ringkasan / Catatan Naskah :
+                                    </label>
+                                    <div class="col-md-9">
+                                        <textarea name="description" class="form-control" rows="2" placeholder="Tuliskan pokok-pokok kesepakatan atau latar belakang inisiasi kerja sama ini..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- =================================================================== -->
+                        <!-- SECTION 5: PERIODE MASA BERLAKU & BERKAS NASKAH                     -->
+                        <!-- =================================================================== -->
+                        <div class="card border mb-4 shadow-sm" style="border-radius: 8px;">
+                            <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center gap-2">
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1"><i class="bi bi-clock-history"></i> Bagian 5</span>
                                 <h6 class="mb-0 fw-bold text-dark fs-6">Periode Masa Berlaku &amp; Berkas Naskah</h6>
                             </div>
                             <div class="card-body p-3 p-md-4">
@@ -2946,72 +3568,166 @@
                             <!-- KOLOM KANAN (4-5 COLS) -->
                             <div class="col-lg-4">
 
-                                <!-- KARTU 1: DOKUMEN & LAMPIRAN -->
+                                <!-- KARTU 1: DOKUMEN & LAMPIRAN (BERKAS FISIK RIIL & TERVERIFIKASI) -->
+                                @php
+                                    $draftExists = false;
+                                    $draftSizeText = '-';
+                                    $draftPath = null;
+                                    if (!empty($currentDoc->draft_file)) {
+                                        $p1 = public_path($currentDoc->draft_file);
+                                        $p2 = public_path('uploads/documents/' . $currentDoc->draft_file);
+                                        if (file_exists($p1) && is_file($p1)) {
+                                            $draftExists = true;
+                                            $draftPath = asset($currentDoc->draft_file);
+                                            $b = filesize($p1);
+                                            $draftSizeText = $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : round($b / 1024, 0) . ' KB';
+                                        } elseif (file_exists($p2) && is_file($p2)) {
+                                            $draftExists = true;
+                                            $draftPath = asset('uploads/documents/' . $currentDoc->draft_file);
+                                            $b = filesize($p2);
+                                            $draftSizeText = $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : round($b / 1024, 0) . ' KB';
+                                        }
+                                    }
+
+                                    $signedExists = false;
+                                    $signedSizeText = '-';
+                                    $signedPath = null;
+                                    if (!empty($currentDoc->signed_file)) {
+                                        $sp1 = public_path($currentDoc->signed_file);
+                                        $sp2 = public_path('uploads/documents/' . $currentDoc->signed_file);
+                                        if (file_exists($sp1) && is_file($sp1)) {
+                                            $signedExists = true;
+                                            $signedPath = asset($currentDoc->signed_file);
+                                            $sb = filesize($sp1);
+                                            $signedSizeText = $sb >= 1048576 ? round($sb / 1048576, 1) . ' MB' : round($sb / 1024, 0) . ' KB';
+                                        } elseif (file_exists($sp2) && is_file($sp2)) {
+                                            $signedExists = true;
+                                            $signedPath = asset('uploads/documents/' . $currentDoc->signed_file);
+                                            $sb = filesize($sp2);
+                                            $signedSizeText = $sb >= 1048576 ? round($sb / 1048576, 1) . ' MB' : round($sb / 1024, 0) . ' KB';
+                                        }
+                                    }
+
+                                    $docxExists = false;
+                                    $docxSizeText = '-';
+                                    $docxPath = null;
+                                    if (!empty($currentDoc->docx_path)) {
+                                        $dp1 = public_path($currentDoc->docx_path);
+                                        $dp2 = public_path('uploads/documents/' . $currentDoc->docx_path);
+                                        if (file_exists($dp1) && is_file($dp1)) {
+                                            $docxExists = true;
+                                            $docxPath = asset($currentDoc->docx_path);
+                                            $db = filesize($dp1);
+                                            $docxSizeText = $db >= 1048576 ? round($db / 1048576, 1) . ' MB' : round($db / 1024, 0) . ' KB';
+                                        } elseif (file_exists($dp2) && is_file($dp2)) {
+                                            $docxExists = true;
+                                            $docxPath = asset('uploads/documents/' . $currentDoc->docx_path);
+                                            $db = filesize($dp2);
+                                            $docxSizeText = $db >= 1048576 ? round($db / 1048576, 1) . ' MB' : round($db / 1024, 0) . ' KB';
+                                        }
+                                    }
+                                @endphp
+
                                 <div class="card border rounded-3 bg-white mb-2 shadow-2xs">
                                     <div class="card-header bg-white py-1.5 px-3 border-bottom d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center gap-2 fw-bold text-dark" style="font-size: 0.85rem;">
                                             <i class="bi bi-paperclip text-primary"></i> Dokumen &amp; Lampiran
                                         </div>
+                                        @if(in_array($currentDoc->status, ['DRAFT', 'REVIEW', 'VERIFIED']))
+                                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 fw-bold" style="font-size: 0.72rem;" data-bs-toggle="modal" data-bs-target="#uploadDocModal_{{ $currentDoc->id }}" title="Unggah Berkas Baru">
+                                                <i class="bi bi-cloud-arrow-up me-1"></i>Unggah
+                                            </button>
+                                        @endif
                                     </div>
                                     <div class="card-body py-2 px-3">
                                         <!-- 1. Draf Naskah PDF -->
                                         <div class="d-flex align-items-center justify-content-between py-1 px-2 border rounded-2 mb-1.5 bg-light" style="font-size: 0.76rem;">
                                             <div class="d-flex align-items-center gap-2 text-truncate me-2">
-                                                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background-color: #fee2e2; color: #dc2626;">
+                                                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background-color: {{ $draftExists ? '#fee2e2' : '#f1f5f9' }}; color: {{ $draftExists ? '#dc2626' : '#94a3b8' }};">
                                                     <i class="bi bi-file-earmark-pdf-fill"></i>
                                                 </div>
                                                 <div class="text-truncate">
                                                     <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">Draf {{ $currentDoc->doc_type }} &ndash; {{ $currentDoc->partner_name }}.pdf</div>
-                                                    <div class="text-muted" style="font-size: 0.68rem;">1,2 MB &bull; Diunggah {{ \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') }}</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">
+                                                        @if ($draftExists)
+                                                            {{ $draftSizeText }} &bull; Diunggah {{ \Carbon\Carbon::parse($currentDoc->created_at)->format('d M Y') }}
+                                                        @else
+                                                            <span class="badge bg-secondary-subtle text-secondary border py-0 px-1">Belum ada berkas fisik</span>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                                <a href="{{ asset($currentDoc->draft_file ?: 'templates/Template_MoU_UNIPAR.docx') }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ asset($currentDoc->draft_file ?: 'templates/Template_MoU_UNIPAR.docx') }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh">
-                                                    <i class="bi bi-download"></i>
-                                                </a>
+                                                @if ($draftExists)
+                                                    <a href="{{ $draftPath }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat Draf Naskah">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    <a href="{{ $draftPath }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh Draf Naskah">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+                                                @else
+                                                    <button type="button" class="btn btn-light border btn-sm py-0.5 px-1.5 disabled text-muted opacity-50" title="Berkas draf belum diunggah">
+                                                        <i class="bi bi-dash"></i>
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
 
                                         <!-- 2. Naskah Final Bertandatangan -->
                                         <div class="d-flex align-items-center justify-content-between py-1 px-2 border rounded-2 mb-1.5 bg-light" style="font-size: 0.76rem;">
                                             <div class="d-flex align-items-center gap-2 text-truncate me-2">
-                                                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background-color: #fee2e2; color: #dc2626;">
-                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background-color: {{ $signedExists ? '#dcfce7' : '#f1f5f9' }}; color: {{ $signedExists ? '#16a34a' : '#94a3b8' }};">
+                                                    <i class="bi bi-patch-check-fill"></i>
                                                 </div>
                                                 <div class="text-truncate">
-                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">{{ $currentDoc->doc_type }} Final (Bertandatangan).pdf</div>
-                                                    <div class="text-muted" style="font-size: 0.68rem;">2,4 MB &bull; Diunggah {{ $currentDoc->date_signed ? \Carbon\Carbon::parse($currentDoc->date_signed)->format('d M Y') : '03 Nov 2026' }}</div>
+                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">{{ $currentDoc->doc_type }} Sah (Bertandatangan).pdf</div>
+                                                    <div class="text-muted" style="font-size: 0.68rem;">
+                                                        @if ($signedExists)
+                                                            <span class="text-success fw-semibold"><i class="bi bi-check2-circle me-1"></i>Sah &amp; Berlaku</span> &bull; {{ $signedSizeText }}
+                                                        @else
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border py-0 px-1"><i class="bi bi-clock me-1"></i>Belum disahkan (Tahap {{ $currentDoc->status }})</span>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                                <a href="{{ asset($currentDoc->signed_file ?: ($currentDoc->draft_file ?: 'templates/Template_MoU_UNIPAR.docx')) }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ asset($currentDoc->signed_file ?: ($currentDoc->draft_file ?: 'templates/Template_MoU_UNIPAR.docx')) }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh">
-                                                    <i class="bi bi-download"></i>
-                                                </a>
+                                                @if ($signedExists)
+                                                    <a href="{{ $signedPath }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat Naskah Sah">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    <a href="{{ $signedPath }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh Naskah Sah">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+                                                @else
+                                                    <button type="button" class="btn btn-light border btn-sm py-0.5 px-1.5 disabled text-muted opacity-50" title="Naskah sah belum diunggah">
+                                                        <i class="bi bi-dash"></i>
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
 
-                                        <!-- 3. Notula Pembahasan (Word) -->
+                                        <!-- 3. Berkas Naskah DOCX / Template Baku -->
                                         <div class="d-flex align-items-center justify-content-between py-1 px-2 border rounded-2 mb-0 bg-light" style="font-size: 0.76rem;">
                                             <div class="d-flex align-items-center gap-2 text-truncate me-2">
                                                 <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background-color: #e0f2fe; color: #0284c7;">
                                                     <i class="bi bi-file-earmark-word-fill"></i>
                                                 </div>
                                                 <div class="text-truncate">
-                                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">Notula Pembahasan.docx</div>
-                                                    <div class="text-muted" style="font-size: 0.68rem;">412 KB &bull; Diunggah 02 Nov 2026</div>
+                                                    @if ($docxExists)
+                                                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">Naskah Word Pengusul.docx</div>
+                                                        <div class="text-muted" style="font-size: 0.68rem;">{{ $docxSizeText }} &bull; Format Pengeditan Word</div>
+                                                    @else
+                                                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.76rem;">Template Baku {{ $currentDoc->doc_type }}_UNIPAR.docx</div>
+                                                        <div class="text-muted" style="font-size: 0.68rem;">Template Resmi LPPM / Bagian Kerja Sama</div>
+                                                    @endif
                                                 </div>
                                             </div>
                                             <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                                <a href="{{ asset('templates/Template_MoU_UNIPAR.docx') }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Lihat">
+                                                @php $wordFile = $docxExists ? $docxPath : asset('templates/Template_MoU_UNIPAR.docx'); @endphp
+                                                <a href="{{ $wordFile }}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Buka">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="{{ asset('templates/Template_MoU_UNIPAR.docx') }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh">
+                                                <a href="{{ $wordFile }}" download class="btn btn-light border btn-sm py-0.5 px-1.5 shadow-2xs" title="Unduh Berkas Word">
                                                     <i class="bi bi-download"></i>
                                                 </a>
                                             </div>
@@ -4126,6 +4842,20 @@
                                     </td>
                                 </tr>
                             @endforelse
+
+                            <!-- Empty State saat Filter / Pencarian tidak menghasilkan kecocokan -->
+                            <tr id="noDocMatchRow" class="d-none">
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <div class="py-3">
+                                        <i class="bi bi-search text-secondary display-6 mb-2 d-block"></i>
+                                        <h6 class="fw-bold text-dark mb-1">Tidak Ada Dokumen yang Cocok</h6>
+                                        <p class="small text-muted mb-3">Tidak ditemukan pengajuan dokumen kerja sama dengan kriteria filter atau kata kunci pencarian yang dipilih.</p>
+                                        <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="resetFilters()">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Semua Filter
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -4182,6 +4912,15 @@
             const countEl = document.getElementById('visibleDocCount');
             if (countEl) {
                 countEl.innerText = visibleCount;
+            }
+
+            const noMatchRow = document.getElementById('noDocMatchRow');
+            if (noMatchRow) {
+                if (visibleCount === 0 && rows.length > 0) {
+                    noMatchRow.classList.remove('d-none');
+                } else {
+                    noMatchRow.classList.add('d-none');
+                }
             }
         }
 

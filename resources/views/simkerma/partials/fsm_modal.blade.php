@@ -553,13 +553,13 @@
                                 <span>Sahkan &amp; Aktifkan</span>
                             </button>
                         @elseif ($doc->status === 'WARNING' || $doc->status === 'EXPIRED')
-                            <button type="submit" name="event" value="RETURN_TO_DRAFT" class="fsm-btn-primary shadow-sm">
+                            <button type="submit" name="event" value="RENEW" class="fsm-btn-primary shadow-sm">
                                 <i class="bi bi-arrow-repeat fs-6"></i>
                                 <span>Inisiasi Perpanjangan</span>
                             </button>
                         @elseif ($doc->status === 'ACTIVE')
-                            @if (!empty($fullFsmMatrix['ACTIVE']['TRIGGER_WARN_EXPIRY']))
-                                <button type="submit" name="event" value="TRIGGER_WARN_EXPIRY" class="btn btn-warning text-dark fw-bold d-inline-flex align-items-center gap-1 shadow-sm" style="border-radius: 8px; padding: 10px 16px;">
+                            @if (!empty($fullFsmMatrix['ACTIVE']['TRIGGER_WARNING']))
+                                <button type="submit" name="event" value="TRIGGER_WARNING" class="btn btn-warning text-dark fw-bold d-inline-flex align-items-center gap-1 shadow-sm" style="border-radius: 8px; padding: 10px 16px;">
                                     <i class="bi bi-bell-fill"></i>
                                     <span>Pemeriksaan Masa Berlaku</span>
                                 </button>

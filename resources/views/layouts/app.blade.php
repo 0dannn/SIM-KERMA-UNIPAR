@@ -293,6 +293,22 @@
             background-color: #ffffff;
             margin-bottom: 1rem;
         }
+        /* Hilangkan double-border & margin bawah saat table-responsive berada langsung di dalam card */
+        .card > .table-responsive,
+        .card-wireframe > .table-responsive {
+            border: none !important;
+            border-radius: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        .card > .table-responsive > .table,
+        .card-wireframe > .table-responsive > .table {
+            border-left: none !important;
+            border-right: none !important;
+        }
+        .card-footer {
+            border-bottom-left-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+        }
         .table, .table-wireframe, .table-bordered {
             margin-bottom: 0 !important;
             color: #495057;
@@ -418,6 +434,135 @@
         .bg-soft-danger  { background-color: rgba(253, 98, 94, 0.1) !important; }
         .bg-soft-info    { background-color: rgba(75, 166, 239, 0.1) !important; }
         .bg-soft-secondary { background-color: rgba(116, 120, 141, 0.1) !important; }
+
+        /* Menu 3 Repositori Dokumen — Table Card & Filter Bar Polish */
+        .repo-filter-bar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9e9ef;
+            padding: 10px 16px 0 16px;
+        }
+        #repoTabs {
+            border-bottom: none;
+            gap: 4px;
+            margin-bottom: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+        }
+        #repoTabs::-webkit-scrollbar {
+            display: none;
+        }
+        @media (min-width: 992px) {
+            #repoTabs {
+                overflow: visible !important;
+            }
+        }
+        #repoTabs .repo-tab-btn {
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            color: #6c757d;
+            background: transparent;
+            transition: color 0.15s ease, background-color 0.15s ease;
+        }
+        #repoTabs .repo-tab-btn:hover:not(.active) {
+            color: #5156be;
+            background-color: rgba(81, 86, 190, 0.05);
+        }
+        #repoTabs .repo-tab-btn.active {
+            background-color: #ffffff !important;
+            color: #5156be !important;
+            border-color: #e9e9ef !important;
+            border-bottom: 1px solid #ffffff !important;
+            margin-bottom: -1px;
+            font-weight: 600;
+        }
+        .repo-controls {
+            padding-bottom: 8px;
+        }
+        .repo-controls .form-select-sm,
+        #repoAdvancedFilterPanel .form-select-sm {
+            padding-right: 1.85rem !important;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .repo-controls .form-select-sm,
+        .repo-controls .input-group-sm .form-control,
+        .repo-controls .input-group-sm .input-group-text,
+        .repo-controls .input-group-sm .btn {
+            height: 31px !important;
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.3 !important;
+        }
+        .repo-controls .input-group-sm .input-group-text {
+            padding-left: 10px !important;
+            padding-right: 8px !important;
+        }
+        #repoTable {
+            table-layout: fixed;
+            width: 100%;
+            min-width: 920px;
+        }
+        #repoTable thead th {
+            padding: 9px 10px !important;
+            font-size: 0.74rem !important;
+            line-height: 1.25;
+            white-space: nowrap;
+            text-align: center !important;
+        }
+        #repoTable thead th.repo-sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        #repoTable thead th.repo-sortable:hover {
+            background-color: #eef0f7 !important;
+            color: #5156be !important;
+        }
+        #repoTable thead th.repo-sortable.sort-active {
+            color: #5156be !important;
+            background-color: #f3f4fb !important;
+        }
+        .repo-sort-icon {
+            font-size: 0.72rem;
+            margin-left: 4px;
+            opacity: 0.45;
+            vertical-align: middle;
+        }
+        #repoTable thead th.sort-active .repo-sort-icon {
+            opacity: 1;
+            color: #5156be;
+        }
+        #repoTable tbody td {
+            padding: 10px 10px !important;
+            font-size: 0.79rem !important;
+            line-height: 1.35;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
+        }
+        .repo-doc-title:hover,
+        .repo-file-link:hover {
+            color: #5156be !important;
+            text-decoration: underline !important;
+        }
+        .btn-repo-xs {
+            padding: 3px 7px !important;
+            font-size: 0.72rem !important;
+            line-height: 1.25 !important;
+            border-radius: 4px !important;
+        }
+        .badge-repo-compact {
+            padding: 2px 6px !important;
+            font-size: 0.65rem !important;
+            font-weight: 600;
+            border-radius: 4px;
+            display: inline-block;
+        }
 
         .tag-wireframe {
             font-size: 0.72rem;
@@ -933,7 +1078,10 @@
                         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                             <h4 class="mb-sm-0 font-size-18 text-uppercase">{{ $current['title'] }}</h4>
 
-                            <div class="page-title-right">
+                            <div class="page-title-right d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 d-none" id="btnToggleSpecAlert" onclick="toggleSpecAlert('{{ $activeMenu ?? '' }}')" title="Tampilkan Poin Spesifikasi">
+                                    <i class="mdi mdi-information-outline me-1"></i> Spesifikasi
+                                </button>
                                 <ol class="breadcrumb m-0">
                                     <li class="breadcrumb-item"><a href="{{ route('simkerma.index') }}">SIM-KERMA</a></li>
                                     <li class="breadcrumb-item active">{{ $current['title'] }}</li>
@@ -945,7 +1093,7 @@
                 <!-- end page title -->
 
                 <!-- Kotak Informasi Spesifikasi Dokumen Resmi -->
-                <div class="alert alert-secondary alert-dismissible fade show border-0 bg-soft-secondary mb-4" role="alert">
+                <div class="alert alert-secondary alert-dismissible fade show border-0 bg-soft-secondary mb-4" id="specDocAlert" role="alert">
                     <div class="d-flex align-items-start gap-2">
                         <i class="mdi mdi-information-outline font-size-18 text-secondary mt-1"></i>
                         <div class="small">
@@ -957,7 +1105,7 @@
                             </ul>
                         </div>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissSpecAlert('{{ $activeMenu ?? '' }}')"></button>
                 </div>
 
                 <!-- Dynamic Content Blade -->
@@ -1235,6 +1383,51 @@ function openPrintableVerification() {
         window.open(link.href, '_blank');
     }
 }
+
+// Pengelolaan Banner Poin Spesifikasi Dokumen Resmi (Penyimpanan Status di localStorage)
+function dismissSpecAlert(curMenu) {
+    if (!curMenu) return;
+    try {
+        localStorage.setItem('hide_spec_alert_' + curMenu, 'true');
+        const toggleBtn = document.getElementById('btnToggleSpecAlert');
+        if (toggleBtn) toggleBtn.classList.remove('d-none');
+    } catch(e) {}
+}
+
+function toggleSpecAlert(curMenu) {
+    const alertEl = document.getElementById('specDocAlert');
+    const toggleBtn = document.getElementById('btnToggleSpecAlert');
+    if (!alertEl) return;
+    
+    if (alertEl.classList.contains('d-none')) {
+        alertEl.classList.remove('d-none');
+        alertEl.classList.add('show');
+        if (curMenu) {
+            try { localStorage.removeItem('hide_spec_alert_' + curMenu); } catch(e) {}
+        }
+        if (toggleBtn) toggleBtn.classList.add('d-none');
+    } else {
+        alertEl.classList.add('d-none');
+        if (curMenu) {
+            try { localStorage.setItem('hide_spec_alert_' + curMenu, 'true'); } catch(e) {}
+        }
+        if (toggleBtn) toggleBtn.classList.remove('d-none');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const curMenu = '{{ $activeMenu ?? "" }}';
+    const alertEl = document.getElementById('specDocAlert');
+    const toggleBtn = document.getElementById('btnToggleSpecAlert');
+    if (curMenu && alertEl && toggleBtn) {
+        try {
+            if (localStorage.getItem('hide_spec_alert_' + curMenu) === 'true') {
+                alertEl.classList.add('d-none');
+                toggleBtn.classList.remove('d-none');
+            }
+        } catch(e) {}
+    }
+});
 
 // Kunci Sistem Hanya Menerapkan Tema Terang (Light Mode Only)
 (function() {

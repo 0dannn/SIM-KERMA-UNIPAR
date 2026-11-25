@@ -89,13 +89,14 @@ class SimkermaController extends Controller
         }
 
         // Autocomplete list untuk Dokumen Induk (MoU / MoA / Naskah Payung Sah)
+        // Hanya menyertakan dokumen yang berstatus sah (ACTIVE / VERIFIED)
         $registeredMous = Document::where(function ($q) {
                 $q->where('doc_type', 'like', '%MoU%')
                   ->orWhere('doc_type', 'like', '%MoA%')
                   ->orWhere('doc_number', 'like', '%MoU%')
                   ->orWhere('doc_number', 'like', '%MoA%');
             })
-            ->whereNotIn('status', ['CANCELLED'])
+            ->whereIn('status', ['ACTIVE', 'VERIFIED'])
             ->orderBy('id', 'desc')
             ->get();
 
@@ -109,12 +110,14 @@ class SimkermaController extends Controller
                     ->first();
             }
 
-            $curNum = $currentDoc->doc_number;
-            $curId = $currentDoc->doc_id;
+            $curNum = trim((string)$currentDoc->doc_number);
+            $curId = trim((string)$currentDoc->doc_id);
             $childDocs = Document::where('id', '!=', $currentDoc->id)
                 ->where(function ($q) use ($curNum, $curId) {
-                    $q->where('parent_mou', $curNum)
-                      ->orWhere('parent_mou', $curId);
+                    $q->where('parent_mou', $curId);
+                    if (!empty($curNum) && $curNum !== '-') {
+                        $q->orWhere('parent_mou', $curNum);
+                    }
                 })->get();
         }
 
@@ -335,6 +338,16 @@ class SimkermaController extends Controller
      */
     public function storeJalur1(Request $request)
     {
+        $request->validate([
+            'partner_name' => 'required|string|max:255',
+            'doc_type' => 'required|string|max:50',
+            'draft_file' => 'nullable|file|mimes:pdf,docx|max:15360',
+        ], [
+            'partner_name.required' => 'Nama mitra kerja sama wajib diisi.',
+            'draft_file.mimes' => 'Format berkas draf harus berupa PDF (.pdf) atau Word (.docx).',
+            'draft_file.max' => 'Ukuran berkas draf maksimal 15 MB.',
+        ]);
+
         $docType = $request->input('doc_type', 'MoU');
         $rawParentMou = trim((string)$request->input('parent_mou', ''));
 
@@ -526,6 +539,18 @@ class SimkermaController extends Controller
      */
     public function storeJalur2(Request $request)
     {
+        $request->validate([
+            'partner_name' => 'required|string|max:255',
+            'signed_file' => 'nullable|file|mimes:pdf|max:15360',
+            'draft_file' => 'nullable|file|mimes:pdf,docx|max:15360',
+        ], [
+            'partner_name.required' => 'Nama mitra kerja sama lampau wajib diisi.',
+            'signed_file.mimes' => 'Format berkas scan naskah asli harus berupa PDF (.pdf).',
+            'signed_file.max' => 'Ukuran berkas scan naskah asli maksimal 15 MB.',
+            'draft_file.mimes' => 'Format berkas draf harus berupa PDF (.pdf) atau Word (.docx).',
+            'draft_file.max' => 'Ukuran berkas draf maksimal 15 MB.',
+        ]);
+
         [$newId, $regId] = $this->generateUniqueDocId();
         $partnerName = $request->input('partner_name', 'Mitra Kerja Sama Lampau');
         $rawPartnerDocNumber = trim((string)$request->input('partner_doc_number', ''));
@@ -656,6 +681,19 @@ class SimkermaController extends Controller
      */
     public function transition(Request $request)
     {
+        $request->validate([
+            'signed_scan_file' => 'nullable|file|mimes:pdf|max:15360',
+            'draft_file' => 'nullable|file|mimes:pdf,docx|max:15360',
+            'draft_docx_file' => 'nullable|file|mimes:docx|max:15360',
+        ], [
+            'signed_scan_file.mimes' => 'Format naskah fisik hasil scan harus berupa PDF (.pdf).',
+            'signed_scan_file.max' => 'Ukuran berkas scan fisik maksimal 15 MB.',
+            'draft_file.mimes' => 'Format berkas draf harus berupa PDF (.pdf) atau Word (.docx).',
+            'draft_file.max' => 'Ukuran berkas draf maksimal 15 MB.',
+            'draft_docx_file.mimes' => 'Format draf naskah harus berupa DOCX (.docx).',
+            'draft_docx_file.max' => 'Ukuran berkas DOCX maksimal 15 MB.',
+        ]);
+
         $docId = $request->input('doc_id');
         $event = $request->input('event');
         $notes = $request->input('notes', 'Disposisi keputusan FSM dieksekusi oleh pejabat berwenang');
@@ -863,12 +901,20 @@ class SimkermaController extends Controller
     }
 
     /**
-     * Reset Status Dokumen ke DRAFT (Khusus Role Master)
+     * Reset Status Dokumen ke DRAFT (Khusus Role Master & Administrator)
      */
     public function resetDraft(Request $request)
     {
+        $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'GUEST');
+        if (!in_array($activeRole, ['MASTER', 'ADMIN'])) {
+            return redirect()->route('simkerma.index', ['menu' => 4])
+                ->with('flash', [
+                    'type' => 'danger',
+                    'msg' => 'Akses Ditolak! Fitur reset dokumen ke DRAFT hanya dapat dilakukan oleh Role MASTER atau Administrator.'
+                ]);
+        }
+
         $docId = $request->input('doc_id');
-        $activeRole = session('active_role', 'MASTER');
         $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
 
         $prevStatus = $document->status;
@@ -964,10 +1010,19 @@ class SimkermaController extends Controller
     }
 
     /**
-     * Hapus Semua Pengajuan dan Persetujuan Dokumen Kerja Sama (Fitur Mode Pengembangan)
+     * Hapus Semua Pengajuan dan Persetujuan Dokumen Kerja Sama (Fitur Mode Pengembangan - Khusus MASTER)
      */
     public function resetAllDocuments(Request $request)
     {
+        $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'GUEST');
+        if (!in_array($activeRole, ['MASTER', 'ADMIN'])) {
+            return redirect()->route('simkerma.index', ['menu' => 4])
+                ->with('flash', [
+                    'type' => 'danger',
+                    'msg' => 'Akses Ditolak! Fitur reset semua dokumen hanya dapat diakses oleh Role MASTER / Administrator.'
+                ]);
+        }
+
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         Activity::truncate();
         AuditTrail::truncate();
@@ -1281,6 +1336,11 @@ class SimkermaController extends Controller
     {
         $docId = $request->input('doc_id');
         $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
+        $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'ADMIN');
+
+        // Freeze Text Protection: Dokumen berstatus VERIFIED atau ACTIVE tidak diperkenankan
+        // mengubah identitas legal (Nomor Dokumen, Mitra, Jenis Dokumen) kecuali oleh Role MASTER / ADMIN.
+        $isFrozen = in_array($document->status, ['VERIFIED', 'ACTIVE']) && !in_array($activeRole, ['MASTER', 'ADMIN']);
 
         $startDate = $request->input('start_date') ?: $document->start_date;
         $endDate = $request->input('end_date') ?: $document->end_date;
@@ -1303,7 +1363,7 @@ class SimkermaController extends Controller
             'unit' => $request->input('unit', $document->unit),
             'first_party_signer' => $request->input('first_party_signer', $document->first_party_signer),
             'first_party_position' => $request->input('first_party_position', $document->first_party_position),
-            'partner_name' => $request->input('partner_name', $document->partner_name),
+            'partner_name' => $isFrozen ? $document->partner_name : $request->input('partner_name', $document->partner_name),
             'partner_category' => $category,
             'second_party_signer' => $request->input('second_party_signer', $document->second_party_signer),
             'second_party_position' => $request->input('second_party_position', $document->second_party_position),
@@ -1317,11 +1377,11 @@ class SimkermaController extends Controller
             'warning_threshold' => $request->input('warning_threshold', $document->warning_threshold),
         ];
 
-        if ($request->has('doc_number')) {
+        if (!$isFrozen && $request->has('doc_number')) {
             $val = trim((string)$request->input('doc_number', ''));
             $updateData['doc_number'] = ($val !== '') ? $val : '-';
         }
-        if ($request->has('partner_doc_number')) {
+        if (!$isFrozen && $request->has('partner_doc_number')) {
             $val = trim((string)$request->input('partner_doc_number', ''));
             $updateData['partner_doc_number'] = ($val !== '') ? $val : '-';
         }
@@ -1329,21 +1389,20 @@ class SimkermaController extends Controller
             $pVal = trim((string)$request->input('parent_mou', ''));
             $updateData['parent_mou'] = ($pVal !== '') ? $pVal : '-';
         }
-        if ($request->has('doc_type')) {
+        if (!$isFrozen && $request->has('doc_type')) {
             $updateData['doc_type'] = $request->input('doc_type');
         }
 
         $document->update($updateData);
 
         // Sinkronisasi nama/kategori mitra jika diubah
-        if ($request->filled('partner_name')) {
+        if (!$isFrozen && $request->filled('partner_name')) {
             Partner::updateOrCreate(
                 ['name' => $request->input('partner_name')],
                 ['category' => $category]
             );
         }
 
-        $activeRole = session('active_role', 'ADMIN');
         AuditTrail::create([
             'document_id' => $document->id,
             'actor' => 'Pengguna (' . $activeRole . ')',
@@ -1351,7 +1410,7 @@ class SimkermaController extends Controller
             'event' => 'UPDATE_INFO',
             'from_status' => $document->status,
             'to_status' => $document->status,
-            'notes' => 'Pembaruan informasi umum dokumen kerja sama melalui menu detail.',
+            'notes' => 'Pembaruan informasi umum dokumen kerja sama melalui menu detail.' . ($isFrozen ? ' (Field substansi legal dibekukan)' : ''),
             'timestamp_wita' => now()->format('Y-m-d H:i:s') . ' WITA',
         ]);
 
@@ -1367,6 +1426,14 @@ class SimkermaController extends Controller
      */
     public function uploadDocumentFile(Request $request)
     {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,docx|max:15360',
+        ], [
+            'file.required' => 'Silakan pilih berkas yang akan diunggah.',
+            'file.mimes' => 'Format berkas hanya diperbolehkan berupa PDF (.pdf) atau Word (.docx).',
+            'file.max' => 'Ukuran berkas maksimal 15 MB.',
+        ]);
+
         $docId = $request->input('doc_id');
         $document = Document::where('doc_id', $docId)->orWhere('id', $docId)->firstOrFail();
         $fileType = $request->input('file_type', 'draft');
