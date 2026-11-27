@@ -385,13 +385,23 @@
             border-color: #4549a2 !important;
             color: #ffffff !important;
         }
+        .btn-outline-primary {
+            color: #4549a2 !important;
+            border-color: #5156be !important;
+        }
+        .btn-outline-primary:hover, .btn-outline-primary:focus {
+            background-color: #5156be !important;
+            border-color: #5156be !important;
+            color: #ffffff !important;
+        }
         .btn-success {
-            background-color: #2ab57d !important;
-            border-color: #2ab57d !important;
+            background-color: #157347 !important;
+            border-color: #157347 !important;
+            color: #ffffff !important;
         }
         .btn-info {
-            background-color: #4ba6ef !important;
-            border-color: #4ba6ef !important;
+            background-color: #0c63a7 !important;
+            border-color: #0c63a7 !important;
             color: #ffffff !important;
         }
         .btn-warning {
@@ -413,20 +423,27 @@
             letter-spacing: 0.02em;
         }
         .badge.bg-primary { background-color: #5156be !important; }
-        .badge.bg-success { background-color: #2ab57d !important; }
-        .badge.bg-info    { background-color: #4ba6ef !important; }
+        .badge.bg-success { background-color: #147a50 !important; color: #ffffff !important; }
+        .badge.bg-info    { background-color: #0c63a7 !important; color: #ffffff !important; }
         .badge.bg-warning { background-color: #ffbf53 !important; color: #212529 !important; }
-        .badge.bg-danger  { background-color: #fd625e !important; }
+        .badge.bg-danger  { background-color: #c0322f !important; color: #ffffff !important; }
         .badge.bg-secondary { background-color: #74788d !important; }
-        .badge-soft-primary { background-color: rgba(81, 86, 190, 0.12) !important; color: #5156be !important; }
-        .badge-soft-success { background-color: rgba(42, 181, 125, 0.12) !important; color: #2ab57d !important; }
-        .badge-soft-info    { background-color: rgba(75, 166, 239, 0.12) !important; color: #4ba6ef !important; }
-        .badge-soft-warning { background-color: rgba(255, 191, 83, 0.15) !important; color: #ffbf53 !important; }
-        .badge-soft-danger  { background-color: rgba(253, 98, 94, 0.12)  !important; color: #fd625e !important; }
-        .badge-soft-secondary { background-color: rgba(116, 120, 141, 0.12) !important; color: #74788d !important; }
+        .badge-soft-primary { background-color: rgba(81, 86, 190, 0.12) !important; color: #3c409c !important; }
+        .badge-soft-success { background-color: rgba(42, 181, 125, 0.13) !important; color: #116944 !important; }
+        .badge-soft-info    { background-color: rgba(75, 166, 239, 0.14) !important; color: #0c63a7 !important; }
+        .badge-soft-warning { background-color: rgba(255, 191, 83, 0.20) !important; color: #805300 !important; }
+        .badge-soft-danger  { background-color: rgba(253, 98, 94, 0.13)  !important; color: #c0322f !important; }
+        .badge-soft-secondary { background-color: rgba(116, 120, 141, 0.14) !important; color: #545869 !important; }
 
-        /* Subtle helpers */
+        /* Subtle helpers & WCAG AA Muted/Secondary Contrast */
         .text-primary { color: #5156be !important; }
+        .text-success { color: #116944 !important; }
+        .kpi-val-warning { color: #9a5b00 !important; }
+        .text-muted, .text-secondary { color: #595e70 !important; }
+        .breadcrumb-item.active { color: #525768 !important; }
+        .btn-outline-secondary { color: #525768 !important; border-color: #94a3b8 !important; }
+        .btn-outline-secondary:hover { background-color: #525768 !important; border-color: #525768 !important; color: #ffffff !important; }
+        .modal-header.bg-dark .text-white-50 { color: rgba(255, 255, 255, 0.80) !important; }
         .border-primary { border-color: #5156be !important; }
         .bg-soft-primary { background-color: rgba(81, 86, 190, 0.1) !important; }
         .bg-soft-success { background-color: rgba(42, 181, 125, 0.1) !important; }
@@ -473,6 +490,45 @@
         .overflow-y-auto { overflow-y: auto !important; }
         .dropdown-toggle-no-caret::after { display: none !important; }
 
+        /* Menu 1 Dashboard — Interactive Cards, Icon Boxes & Distribution Bars */
+        .dash-kpi-card {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            cursor: pointer;
+            text-decoration: none !important;
+            display: block;
+        }
+        .dash-kpi-card:hover,
+        .dash-kpi-card:focus-visible {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+            outline: 2px solid rgba(81, 86, 190, 0.35);
+        }
+        .dash-kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .dash-dist-link {
+            color: inherit;
+            text-decoration: none !important;
+            transition: background-color 0.15s ease;
+        }
+        .dash-dist-link:hover,
+        .dash-dist-link:focus-visible {
+            background-color: #f8f9ff !important;
+        }
+        .dash-dist-bar {
+            height: 5px;
+            border-radius: 999px;
+            background-color: #eef0f7;
+            overflow: hidden;
+        }
+
         /* Menu 3 Repositori Dokumen — Table Card & Filter Bar Polish */
         .repo-filter-bar {
             background-color: #f8f9fa;
@@ -501,9 +557,14 @@
             border-radius: 6px 6px 0 0;
             padding: 8px 12px;
             font-size: 0.78rem;
-            color: #6c757d;
+            color: #525768;
             background: transparent;
             transition: color 0.15s ease, background-color 0.15s ease;
+        }
+        #repoTabs .repo-tab-btn:focus-visible,
+        #repoTable thead th.repo-sortable:focus-visible {
+            outline: 2px solid #5156be !important;
+            outline-offset: -2px;
         }
         #repoTabs .repo-tab-btn:hover:not(.active) {
             color: #5156be;
@@ -519,6 +580,17 @@
         }
         .repo-controls {
             padding-bottom: 8px;
+        }
+        .repo-controls .repo-search-group {
+            width: 255px;
+        }
+        @media (max-width: 575.98px) {
+            .repo-controls {
+                width: 100%;
+            }
+            .repo-controls .repo-search-group {
+                width: 100% !important;
+            }
         }
         .repo-controls .form-select-sm,
         #repoAdvancedFilterPanel .form-select-sm {
@@ -544,44 +616,73 @@
         #repoTable {
             table-layout: fixed;
             width: 100%;
-            min-width: 920px;
+            min-width: 880px;
+            border-color: #e2e6ee !important;
+        }
+        #repoTable th,
+        #repoTable td {
+            border-color: #e2e6ee !important;
         }
         #repoTable thead th {
-            padding: 9px 10px !important;
+            padding: 10px 8px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.25;
+            white-space: nowrap;
+            text-align: center !important;
+        }
+        #partnerTable thead th {
+            padding: 10px 8px !important;
             font-size: 0.74rem !important;
             line-height: 1.25;
             white-space: nowrap;
             text-align: center !important;
         }
-        #repoTable thead th.repo-sortable {
+        #repoTable thead th.repo-sortable,
+        #partnerTable thead th.partner-sortable {
             cursor: pointer;
             user-select: none;
             transition: background-color 0.15s ease, color 0.15s ease;
         }
-        #repoTable thead th.repo-sortable:hover {
+        #repoTable thead th.repo-sortable:hover,
+        #partnerTable thead th.partner-sortable:hover {
             background-color: #eef0f7 !important;
             color: #5156be !important;
         }
-        #repoTable thead th.repo-sortable.sort-active {
+        #repoTable thead th.repo-sortable.sort-active,
+        #partnerTable thead th.partner-sortable.sort-active {
             color: #5156be !important;
             background-color: #f3f4fb !important;
         }
-        .repo-sort-icon {
-            font-size: 0.72rem;
+        .repo-sort-icon,
+        .partner-sort-icon {
+            font-size: 0.75rem;
             margin-left: 4px;
-            opacity: 0.45;
+            opacity: 0.72;
             vertical-align: middle;
         }
-        #repoTable thead th.sort-active .repo-sort-icon {
+        #repoTable thead th.sort-active .repo-sort-icon,
+        #partnerTable thead th.sort-active .partner-sort-icon {
             opacity: 1;
             color: #5156be;
         }
+        #repoTable tbody tr:nth-of-type(odd) {
+            background-color: #ffffff;
+        }
+        #repoTable tbody tr:nth-of-type(even) {
+            background-color: #f8f9fc !important;
+        }
+        #repoTable tbody tr:hover {
+            background-color: #eef1fb !important;
+        }
         #repoTable tbody td {
-            padding: 10px 10px !important;
-            font-size: 0.79rem !important;
-            line-height: 1.35;
+            padding: 11px 8px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.4;
             word-wrap: break-word;
             overflow-wrap: anywhere;
+        }
+        #repoTable.hide-legacy-badges .repo-legacy-badge {
+            display: none !important;
         }
         .repo-doc-title:hover,
         .repo-file-link:hover {
@@ -589,18 +690,211 @@
             text-decoration: underline !important;
         }
         .btn-repo-xs {
-            padding: 3px 7px !important;
-            font-size: 0.72rem !important;
+            padding: 4px 10px !important;
+            font-size: 0.75rem !important;
             line-height: 1.25 !important;
+            border-radius: 5px !important;
+            min-height: 30px;
+        }
+        #repoTable .repo-action-btn {
+            min-width: 31px;
+            min-height: 31px;
+            height: 31px;
             border-radius: 4px !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 10px !important;
+            font-size: 0.75rem !important;
+        }
+        #repoTable .repo-action-icon {
+            width: 31px;
+            padding: 0 !important;
+        }
+        .repo-inline-pill {
+            min-height: 24px !important;
+            padding: 3px 8px !important;
+            font-size: 0.72rem !important;
+            display: inline-flex !important;
+            align-items: center;
+            gap: 4px;
+        }
+        #repoPaginationWrapper .btn,
+        #repoPerPage {
+            min-height: 30px !important;
+            min-width: 30px !important;
+            font-size: 0.76rem !important;
+        }
+        .repo-cta-primary {
+            min-height: 32px !important;
+            display: inline-flex !important;
+            align-items: center;
+        }
+        .repo-kpi-chip {
+            background-color: #ffffff !important;
+            border-color: #d8dce6 !important;
+            color: #334155 !important;
+            font-weight: 500;
+            min-height: 30px !important;
+            font-size: 0.75rem !important;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+        .repo-kpi-chip:hover {
+            background-color: #f8f9ff !important;
+            border-color: #5156be !important;
+            color: #373ca1 !important;
+        }
+        .repo-kpi-chip.active {
+            background-color: #eef0fb !important;
+            border-color: #5156be !important;
+            color: #373ca1 !important;
+            font-weight: 600;
+        }
+        .repo-legacy-badge {
+            background-color: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        .repo-partner-wrap {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
+        }
+        .table-audit-modal thead th {
+            background-color: #343a40 !important;
+            color: #ffffff !important;
+            border-color: #454d55 !important;
         }
         .badge-repo-compact {
-            padding: 2px 6px !important;
-            font-size: 0.65rem !important;
+            padding: 3px 7px !important;
+            font-size: 0.72rem !important;
             font-weight: 600;
             border-radius: 4px;
             display: inline-block;
+            line-height: 1.2;
         }
+        /* Pembeda Visual Jenis Dokumen Menu 3 (MoU = Level 1 Indigo, MoA/PKS = Level 2 Teal, IA = Level 3 Plum) */
+        .badge-doc-mou {
+            background-color: #5156be !important;
+            color: #ffffff !important;
+            border: 1px solid #4549a2 !important;
+        }
+        .badge-doc-moa {
+            background-color: rgba(13, 148, 136, 0.12) !important;
+            color: #0d6860 !important;
+            border: 1px solid rgba(13, 148, 136, 0.35) !important;
+        }
+        .badge-doc-ia {
+            background-color: rgba(147, 51, 234, 0.10) !important;
+            color: #6b21a8 !important;
+            border: 1px solid rgba(147, 51, 234, 0.32) !important;
+        }
+        .repo-type-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        /* Menu 2 Data Mitra — Proporsi Tabel Tetap, Ergonomis & Bebas Garis Kisi Vertikal */
+        #partnerTable {
+            table-layout: fixed;
+            width: 100%;
+            min-width: 900px;
+            border-left: none !important;
+            border-right: none !important;
+        }
+        #partnerTable th,
+        #partnerTable td {
+            border-left: none !important;
+            border-right: none !important;
+        }
+        #partnerTable thead th {
+            padding: 10px 8px !important;
+        }
+        #partnerTable thead th.partner-sortable:focus-visible {
+            outline: 2px solid #5156be !important;
+            outline-offset: -2px;
+        }
+        #partnerTable tbody tr:nth-of-type(odd) {
+            background-color: #ffffff;
+        }
+        #partnerTable tbody tr:nth-of-type(even) {
+            background-color: #f8f9fc !important;
+        }
+        #partnerTable tbody tr:hover {
+            background-color: #eef1fb !important;
+        }
+        #partnerTable tbody td {
+            padding: 11px 8px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
+        }
+        #partnerTable .partner-action-btn {
+            height: 32px !important;
+            min-width: 32px !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap !important;
+            line-height: 1 !important;
+        }
+        .btn-partner-profile {
+            background-color: #f3f4fb !important;
+            color: #3c409c !important;
+            border: 1px solid #c7cbf2 !important;
+            transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .btn-partner-profile:hover,
+        .btn-partner-profile:focus-visible {
+            background-color: #5156be !important;
+            color: #ffffff !important;
+            border-color: #5156be !important;
+        }
+        .partner-filter-bar {
+            background-color: #f8f9fa !important;
+            border-bottom: 1px solid #e9e9ef !important;
+        }
+        .partner-filter-bar .form-select-sm,
+        .partner-filter-bar .form-control,
+        .partner-filter-bar .btn {
+            min-height: 32px !important;
+            font-size: 0.80rem !important;
+        }
+        .partner-toolbar .btn {
+            min-height: 32px !important;
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.78rem !important;
+        }
+        #partnerPaginationWrapper .btn,
+        #partnerPerPage {
+            min-height: 30px !important;
+            min-width: 30px !important;
+            font-size: 0.76rem !important;
+        }
+        .badge-partner-cat {
+            background-color: #f8fafc !important;
+            color: #334155 !important;
+            border: 1px solid #94a3b8 !important;
+        }
+        /* Color-Coding 5 Sektor Resmi Mitra Menu 2 */
+        .badge-cat-pt { background-color: #eef0fb !important; color: #373ca1 !important; border: 1px solid #c7cbf2 !important; }
+        .badge-cat-gov { background-color: #e0f2fe !important; color: #0369a1 !important; border: 1px solid #7dd3fc !important; }
+        .badge-cat-ind { background-color: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d !important; }
+        .badge-cat-eduhealth { background-color: #ccfbf1 !important; color: #0f766e !important; border: 1px solid #5eead4 !important; }
+        .badge-cat-org { background-color: #f3e8ff !important; color: #6b21a8 !important; border: 1px solid #d8b4fe !important; }
+
+        .badge-scope-intl { background-color: #e0f2fe !important; color: #0369a1 !important; border: 1px solid #7dd3fc !important; }
+        .badge-scope-local { background-color: #f8fafc !important; color: #475569 !important; border: 1px solid #cbd5e1 !important; }
+        .badge-naskah-soft { background-color: #eef0f7 !important; color: #373ca1 !important; border: 1px solid #c7cbf2 !important; }
+        .badge-comp-neutral { background-color: #f8fafc !important; color: #334155 !important; border: 1px solid #cbd5e1 !important; }
 
         .tag-wireframe {
             font-size: 0.72rem;
@@ -1496,7 +1790,7 @@
                             <h4 class="mb-sm-0 font-size-18 text-uppercase">{{ $current['title'] }}</h4>
 
                             <div class="page-title-right d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 d-none" id="btnToggleSpecAlert" onclick="toggleSpecAlert('{{ $activeMenu ?? '' }}')" title="Tampilkan Poin Spesifikasi">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 {{ in_array($activeMenu ?? 0, [1, 2, 3], true) ? '' : 'd-none' }}" id="btnToggleSpecAlert" onclick="toggleSpecAlert('{{ $activeMenu ?? '' }}')" title="Tampilkan Poin Spesifikasi">
                                     <i class="mdi mdi-information-outline me-1"></i> Spesifikasi
                                 </button>
                                 <ol class="breadcrumb m-0">
@@ -1510,7 +1804,7 @@
                 <!-- end page title -->
 
                 <!-- Kotak Informasi Spesifikasi Dokumen Resmi -->
-                <div class="alert alert-secondary alert-dismissible fade show border-0 bg-soft-secondary mb-4" id="specDocAlert" role="alert">
+                <div class="alert alert-secondary alert-dismissible fade {{ in_array($activeMenu ?? 0, [1, 2, 3], true) ? 'd-none' : 'show' }} border-0 bg-soft-secondary mb-4" id="specDocAlert" role="alert">
                     <div class="d-flex align-items-start gap-2">
                         <i class="mdi mdi-information-outline font-size-18 text-secondary mt-1"></i>
                         <div class="small">
@@ -1820,7 +2114,10 @@ function toggleSpecAlert(curMenu) {
         alertEl.classList.remove('d-none');
         alertEl.classList.add('show');
         if (curMenu) {
-            try { localStorage.removeItem('hide_spec_alert_' + curMenu); } catch(e) {}
+            try {
+                if (['1', '2', '3'].includes(curMenu)) localStorage.setItem('hide_spec_alert_' + curMenu, 'false');
+                else localStorage.removeItem('hide_spec_alert_' + curMenu);
+            } catch(e) {}
         }
         if (toggleBtn) toggleBtn.classList.add('d-none');
     } else {
@@ -1838,7 +2135,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('btnToggleSpecAlert');
     if (curMenu && alertEl && toggleBtn) {
         try {
-            if (localStorage.getItem('hide_spec_alert_' + curMenu) === 'true') {
+            if (['1', '2', '3'].includes(curMenu)) {
+                if (localStorage.getItem('hide_spec_alert_' + curMenu) === 'false') {
+                    alertEl.classList.remove('d-none');
+                    alertEl.classList.add('show');
+                    toggleBtn.classList.add('d-none');
+                }
+            } else if (localStorage.getItem('hide_spec_alert_' + curMenu) === 'true') {
                 alertEl.classList.add('d-none');
                 toggleBtn.classList.remove('d-none');
             }

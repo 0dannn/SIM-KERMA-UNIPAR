@@ -42,96 +42,126 @@
         @php
             $totalDocs = $documents->count();
             $activeDocs = $documents->where('status', 'ACTIVE')->count();
-            $processDocs = $documents->whereIn('status', ['REVIEW', 'VERIFIED'])->count();
+            $processDocs = $documents->whereIn('status', ['DRAFT', 'REVIEW', 'VERIFIED'])->count();
             $expiredDocs = $documents->where('status', 'EXPIRED')->count();
             $warningDocs = $documents->where('status', 'WARNING')->count();
+            $attentionCount = $warningDocs + $expiredDocs;
 
-            // Distribusi Kategori Mitra
-            $categoriesGroup = $documents->groupBy('partner_category');
+            $mouDashCount = $documents->filter(fn($d) => stripos((string)$d->doc_type, 'MoU') !== false)->count();
+            $moaDashCount = $documents->filter(fn($d) => stripos((string)$d->doc_type, 'MoA') !== false || stripos((string)$d->doc_type, 'PKS') !== false)->count();
+            $iaDashCount = $documents->filter(fn($d) => stripos((string)$d->doc_type, 'IA') !== false)->count();
 
-            // Distribusi Unit Pengusul
-            $unitsGroup = $documents->groupBy('unit');
+            // Distribusi Kategori Mitra (diurutkan terbanyak & memuat jumlah mitra unik + dokumen)
+            $categoriesGroup = $documents
+                ->groupBy(fn($d) => trim((string)$d->partner_category) !== '' ? trim((string)$d->partner_category) : 'Kategori Umum')
+                ->sortByDesc(fn($g) => $g->count());
 
-            // Kerja Sama yang Segera Berakhir (WARNING_EXPIRY atau dokumen aktif yang perlu atensi)
-            $warningList = $documents->where('status', 'WARNING')->take(5);
+            // Distribusi Unit Pengusul (diurutkan terbanyak + fallback jika kosong)
+            $unitsGroup = $documents
+                ->groupBy(fn($d) => trim((string)$d->unit) !== '' ? trim((string)$d->unit) : 'Unit Belum Ditentukan')
+                ->sortByDesc(fn($g) => $g->count());
+
+            // Kerja Sama Peringatan Dini (WARNING) & Kedaluwarsa (EXPIRED) yang butuh atensi
+            $attentionList = $documents->whereIn('status', ['WARNING', 'EXPIRED'])
+                ->sortBy(fn($d) => [
+                    $d->status === 'WARNING' ? 0 : 1,
+                    $d->end_date ? $d->end_date->timestamp : 9999999999,
+                ])
+                ->take(5);
 
             // Realisasi IKU 6 dari activities
             $totalActs = $activities->count();
             $completedActs = $activities->where('execution_status', 'SELESAI')->count();
             $runningActs = $activities->where('execution_status', 'SEDANG_BERJALAN')->count();
+            $evidenceActsCount = $activities->filter(fn($a) => !empty($a->evidence_file))->count();
             $actProgressPercent = $totalActs > 0 ? round((($completedActs + ($runningActs * 0.7)) / $totalActs) * 100) : 0;
+
+            $attentionTargetStatus = $warningDocs > 0 ? 'WARNING' : ($expiredDocs > 0 ? 'EXPIRED' : 'ALL');
         @endphp
 
-        <!-- 4 KARTU RINGKASAN STATUS KERJA SAMA (REAL-TIME DARI MYSQL) -->
+        <!-- 4 KARTU RINGKASAN STATUS KERJA SAMA (REAL-TIME & KLIK UNTUK DRILL-DOWN) -->
         <div class="row g-3 mb-4">
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-wireframe h-100 p-3 border-top border-3 border-dark shadow-sm">
-                    <span class="text-muted small text-uppercase fw-semibold">Total Kerja Sama</span>
+                <a href="{{ route('simkerma.index', ['menu' => 3, 'reset_filters' => 1]) }}" class="card card-wireframe dash-kpi-card h-100 p-3 border-top border-3 border-dark shadow-sm mb-0" title="Buka semua dokumen di Repositori Menu 03">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Total Kerja Sama</span>
                     <div class="d-flex align-items-center justify-content-between mt-2">
                         <h2 class="fw-bold mb-0 text-dark">{{ $totalDocs }}</h2>
-                        <span class="bg-light p-2 rounded text-dark fs-5"><i class="bi bi-folder2"></i></span>
+                        <span class="dash-kpi-icon bg-soft-secondary text-dark"><i class="bi bi-folder2-open"></i></span>
                     </div>
-                    <small class="text-muted mt-2">Seluruh Dokumen Kemitraan Terdaftar</small>
-                </div>
+                    <small class="text-muted d-block mt-2">MoU: {{ $mouDashCount }} &bull; MoA: {{ $moaDashCount }} &bull; IA: {{ $iaDashCount }}</small>
+                </a>
             </div>
 
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-wireframe h-100 p-3 border-top border-3 border-success shadow-sm">
-                    <span class="text-muted small text-uppercase fw-semibold">Kerja Sama Aktif</span>
+                <a href="{{ route('simkerma.index', ['menu' => 3, 'filter_status' => 'ACTIVE']) }}" class="card card-wireframe dash-kpi-card h-100 p-3 border-top border-3 border-success shadow-sm mb-0" title="Saring dokumen Aktif di Repositori Menu 03">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Kerja Sama Aktif</span>
                     <div class="d-flex align-items-center justify-content-between mt-2">
                         <h2 class="fw-bold mb-0 text-success">{{ $activeDocs }}</h2>
-                        <span class="badge bg-success fs-6 py-2 px-3">Sah Berlaku</span>
+                        <span class="dash-kpi-icon bg-soft-success text-success"><i class="bi bi-patch-check-fill"></i></span>
                     </div>
-                    <small class="text-muted mt-2">Bertanda Tangan &amp; Bermeterai</small>
-                </div>
+                    <small class="text-muted d-block mt-2">Sah Berlaku &amp; Bertanda Tangan</small>
+                </a>
             </div>
 
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-wireframe h-100 p-3 border-top border-3 border-primary shadow-sm">
-                    <span class="text-muted small text-uppercase fw-semibold">Dalam Proses (Pipeline)</span>
+                <a href="{{ route('simkerma.index', ['menu' => 4]) }}" class="card card-wireframe dash-kpi-card h-100 p-3 border-top border-3 border-primary shadow-sm mb-0" title="Kelola pengajuan &amp; persetujuan di Menu 04">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Dalam Proses (Pipeline)</span>
                     <div class="d-flex align-items-center justify-content-between mt-2">
                         <h2 class="fw-bold mb-0 text-primary">{{ $processDocs }}</h2>
-                        <span class="badge bg-primary fs-6 py-2 px-3">Siklus FSM</span>
+                        <span class="dash-kpi-icon bg-soft-primary text-primary"><i class="bi bi-hourglass-split"></i></span>
                     </div>
-                    <small class="text-muted mt-2">Draf, Telaah Legal &amp; Disetujui</small>
-                </div>
+                    <small class="text-muted d-block mt-2">Draf, Telaah Legal &amp; Terverifikasi</small>
+                </a>
             </div>
 
             <div class="col-sm-6 col-xl-3">
-                <div class="card card-wireframe h-100 p-3 border-top border-3 border-warning shadow-sm">
-                    <span class="text-muted small text-uppercase fw-semibold">Peringatan &amp; Kedaluwarsa</span>
+                <a href="{{ route('simkerma.index', ['menu' => 3, 'filter_status' => $attentionTargetStatus]) }}" class="card card-wireframe dash-kpi-card h-100 p-3 border-top border-3 border-warning shadow-sm mb-0" title="Lihat naskah yang perlu perpanjangan/evaluasi di Menu 03">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Peringatan &amp; Kedaluwarsa</span>
                     <div class="d-flex align-items-center justify-content-between mt-2">
-                        <h2 class="fw-bold mb-0 text-warning text-dark">{{ $warningDocs + $expiredDocs }}</h2>
-                        <span class="badge bg-warning text-dark fs-6 py-2 px-3">Perlu Atensi</span>
+                        <h2 class="fw-bold mb-0 kpi-val-warning">{{ $attentionCount }}</h2>
+                        <span class="dash-kpi-icon bg-soft-warning" style="color: #805300;"><i class="bi bi-exclamation-triangle-fill"></i></span>
                     </div>
-                    <small class="text-muted mt-2">{{ $warningDocs }} Peringatan &bull; {{ $expiredDocs }} Kedaluwarsa</small>
-                </div>
+                    <small class="text-muted d-block mt-2">{{ $warningDocs }} Peringatan &bull; {{ $expiredDocs }} Kedaluwarsa</small>
+                </a>
             </div>
         </div>
 
         <!-- 2 KOLOM: MITRA KATEGORI & DISTRIBUSI UNIT -->
         <div class="row g-4 mb-4">
-            <!-- Jumlah Mitra Berdasarkan Kategori -->
+            <!-- Jumlah Mitra & Dokumen Berdasarkan Kategori -->
             <div class="col-lg-6">
                 <div class="card card-wireframe h-100 shadow-sm">
-                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0 fw-bold text-uppercase">Jumlah Dokumen Berdasarkan Kategori Mitra</h6>
-                        <span class="tag-wireframe">KATEGORI MITRA</span>
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center gap-2">
+                        <h6 class="card-title mb-0 fw-bold text-uppercase">Kategori Mitra &amp; Dokumen</h6>
+                        <a href="{{ route('simkerma.index', ['menu' => 2]) }}" class="badge badge-naskah-soft text-decoration-none">
+                            {{ $categoriesGroup->count() }} Kategori &bull; {{ $partners->count() }} Mitra
+                        </a>
                     </div>
                     <div class="card-body p-0">
-                        <ul class="list-group list-group-flush small">
+                        <div class="list-group list-group-flush small">
                             @forelse ($categoriesGroup as $catName => $catDocs)
-                                <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
-                                    <span>
-                                        <i class="bi bi-briefcase me-2 text-primary"></i>
-                                        <strong>{{ $catName ?: 'Kategori Umum' }}</strong>
-                                    </span>
-                                    <span class="badge bg-dark rounded-pill">{{ $catDocs->count() }} Dokumen</span>
-                                </li>
+                                @php
+                                    $catPct = $totalDocs > 0 ? round(($catDocs->count() / $totalDocs) * 100) : 0;
+                                    $catPartnerCount = $catDocs->pluck('partner_name')->filter()->unique()->count();
+                                @endphp
+                                <a href="{{ route('simkerma.index', ['menu' => 3, 'filter_category' => strtolower($catName)]) }}" class="list-group-item list-group-item-action dash-dist-link py-2 px-3" title="Saring dokumen kategori {{ $catName }} di Repositori">
+                                    <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                                        <span class="text-dark">
+                                            <i class="bi bi-briefcase me-2 text-primary"></i>
+                                            <strong>{{ $catName }}</strong>
+                                        </span>
+                                        <span class="badge badge-naskah-soft rounded-pill flex-shrink-0">
+                                            {{ $catPartnerCount }} Mitra &bull; {{ $catDocs->count() }} Dokumen
+                                        </span>
+                                    </div>
+                                    <div class="dash-dist-bar">
+                                        <div class="bg-primary h-100" style="width: {{ max($catPct, 2) }}%;"></div>
+                                    </div>
+                                </a>
                             @empty
-                                <li class="list-group-item text-muted py-2 px-3">Belum ada kategori mitra tercatat.</li>
+                                <div class="list-group-item text-muted py-3 px-3 text-center">Belum ada kategori mitra tercatat.</div>
                             @endforelse
-                        </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -139,39 +169,54 @@
             <!-- Kerja Sama Berdasarkan Fakultas, UPPS, Program Studi, & Unit Pengusul -->
             <div class="col-lg-6">
                 <div class="card card-wireframe h-100 shadow-sm">
-                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center gap-2">
                         <h6 class="card-title mb-0 fw-bold text-uppercase">Distribusi Fakultas &amp; Unit Pengusul Kampus</h6>
-                        <span class="tag-wireframe">UNIT PENGUSUL</span>
+                        <span class="badge badge-naskah-soft">{{ $unitsGroup->count() }} Unit/Prodi</span>
                     </div>
                     <div class="card-body p-0">
-                        <ul class="list-group list-group-flush small">
+                        <div class="list-group list-group-flush small">
                             @forelse ($unitsGroup as $unitName => $uDocs)
-                                <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
-                                    <span>
-                                        <i class="bi bi-mortarboard me-2 text-secondary"></i>
-                                        <strong>{{ $unitName }}</strong>
-                                    </span>
-                                    <span class="fw-bold text-primary">{{ $uDocs->count() }} Dokumen</span>
-                                </li>
+                                @php
+                                    $unitPct = $totalDocs > 0 ? round(($uDocs->count() / $totalDocs) * 100) : 0;
+                                    $unitUrl = $unitName !== 'Unit Belum Ditentukan'
+                                        ? route('simkerma.index', ['menu' => 3, 'filter_unit' => strtolower($unitName)])
+                                        : route('simkerma.index', ['menu' => 3, 'reset_filters' => 1]);
+                                @endphp
+                                <a href="{{ $unitUrl }}" class="list-group-item list-group-item-action dash-dist-link py-2 px-3" title="Saring dokumen dari {{ $unitName }} di Repositori">
+                                    <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                                        <span class="text-dark">
+                                            <i class="bi bi-mortarboard me-2 text-primary"></i>
+                                            <strong>{{ $unitName }}</strong>
+                                        </span>
+                                        <span class="badge badge-naskah-soft rounded-pill flex-shrink-0">
+                                            {{ $uDocs->count() }} Dokumen ({{ $unitPct }}%)
+                                        </span>
+                                    </div>
+                                    <div class="dash-dist-bar">
+                                        <div class="bg-primary h-100" style="width: {{ max($unitPct, 2) }}%;"></div>
+                                    </div>
+                                </a>
                             @empty
-                                <li class="list-group-item text-muted py-2 px-3">Belum ada unit pengusul tercatat.</li>
+                                <div class="list-group-item text-muted py-3 px-3 text-center">Belum ada unit pengusul tercatat.</div>
                             @endforelse
-                        </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2 KOLOM: SEGERA BERAKHIR & REALISASI KEGIATAN -->
+        <!-- 2 KOLOM: SEGERA BERAKHIR / KEDALUWARSA & REALISASI KEGIATAN -->
         <div class="row g-4">
-            <!-- Kerja Sama yang Segera Berakhir -->
+            <!-- Kerja Sama Perlu Atensi (Segera Berakhir & Kedaluwarsa) -->
             <div class="col-lg-6">
                 <div class="card card-wireframe h-100 shadow-sm">
-                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center gap-2">
                         <h6 class="card-title mb-0 fw-bold text-uppercase text-dark">
-                            <i class="bi bi-exclamation-triangle text-warning me-1"></i> Perjanjian Dalam Ambang Batas Peringatan Dini
+                            <i class="bi bi-exclamation-triangle me-1" style="color: #9a5b00;"></i> Perjanjian Perlu Atensi (Peringatan &amp; Kedaluwarsa)
                         </h6>
-                        <span class="badge bg-warning text-dark">H-90 / H-60 HARI</span>
+                        <a href="{{ route('simkerma.index', ['menu' => 6]) }}" class="badge bg-warning text-dark text-decoration-none" title="Buka Menu 06 (Masa Berlaku &amp; Evaluasi)">
+                            {{ $attentionCount }} Naskah
+                        </a>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-wireframe table-hover align-middle mb-0 small">
@@ -179,36 +224,49 @@
                                 <tr>
                                     <th>Mitra Kerja Sama</th>
                                     <th>Jenis</th>
-                                    <th>Masa Berlaku</th>
+                                    <th>Berakhir</th>
                                     <th>Status &amp; Tindak Lanjut</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($warningList as $wDoc)
+                                @forelse ($attentionList as $wDoc)
                                     <tr>
                                         <td>
                                             <div class="fw-bold text-dark">{{ $wDoc->partner_name }}</div>
                                             <div class="small text-muted font-monospace" style="font-size: 0.68rem;">{{ $wDoc->doc_number ?: $wDoc->doc_id }}</div>
                                         </td>
                                         <td><span class="badge bg-light text-dark border">{{ $wDoc->doc_type }}</span></td>
-                                        <td>{{ $wDoc->validity ?: '1 Tahun' }}</td>
+                                        <td>
+                                            <div class="text-dark fw-medium">{{ $wDoc->end_date ? $wDoc->end_date->translatedFormat('d M Y') : '-' }}</div>
+                                            <div class="text-muted" style="font-size: 0.68rem;">{{ $wDoc->validity ?: '1 Tahun' }}</div>
+                                        </td>
                                         <td>
                                             @if ($wDoc->status === 'WARNING')
-                                                <span class="badge bg-warning text-dark">{{ $wDoc->warning_threshold ?: 'H-90 Hari' }}</span>
+                                                <span class="badge badge-soft-warning border border-warning-subtle">{{ $wDoc->warning_threshold ?: 'Segera Berakhir' }}</span>
                                             @else
-                                                <span class="badge bg-primary text-white">Approved</span>
+                                                <span class="badge badge-soft-danger border border-danger-subtle">Kedaluwarsa</span>
                                             @endif
-                                            <a href="{{ route('simkerma.index', ['menu' => 4, 'doc' => $wDoc->doc_id]) }}" class="btn btn-outline-dark btn-sm py-0 px-2 ms-1" style="font-size: 0.68rem;" title="Buka di Menu 04"><i class="bi bi-box-arrow-up-right me-1"></i>Kelola</a>
+                                            <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $wDoc->doc_id]) }}" class="btn btn-outline-primary btn-sm py-0 px-2 ms-1" style="font-size: 0.68rem;" title="Buka Detail Naskah di Menu 04" aria-label="Kelola naskah {{ $wDoc->doc_number ?: $wDoc->doc_id }}">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>Kelola
+                                            </a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted py-3">Tidak ada dokumen dalam status peringatan dini.</td>
+                                        <td colspan="4" class="text-center text-muted py-3">Seluruh perjanjian masih berlaku aman (tidak ada peringatan dini atau kedaluwarsa).</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
+                    @if ($attentionCount > 5)
+                        <div class="card-footer bg-white py-2 px-3 border-top d-flex justify-content-between align-items-center small text-muted">
+                            <span>Menampilkan 5 dari {{ $attentionCount }} perjanjian perlu atensi</span>
+                            <a href="{{ route('simkerma.index', ['menu' => 6]) }}" class="text-primary fw-semibold text-decoration-none">
+                                Lihat Semua di Menu 06 <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -217,32 +275,39 @@
                 <div class="card card-wireframe h-100 shadow-sm">
                     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                         <h6 class="card-title mb-0 fw-bold text-uppercase">Realisasi, Luaran &amp; Capaian (IKU 6)</h6>
-                        <span class="tag-wireframe">CAPAIAN KINERJA</span>
+                        <span class="badge badge-naskah-soft">{{ $totalActs }} Agenda</span>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span class="fw-semibold">Tingkat Penyelesaian Program Kemitraan (Menu 05)</span>
-                                <span class="fw-bold text-primary">{{ $actProgressPercent }}% Tercapai</span>
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span class="fw-semibold">Tingkat Penyelesaian Program Kemitraan (Menu 05)</span>
+                                    <span class="fw-bold text-primary">{{ $actProgressPercent }}% Tercapai</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ $actProgressPercent }}%"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    {{ $completedActs }} program selesai, {{ $runningActs }} sedang berjalan dari {{ $totalActs }} total agenda.
+                                    @if ($runningActs > 0)
+                                        <span class="ms-1" title="Program berstatus berjalan dihitung bobot 70% menuju penyelesaian">(bobot berjalan 70%)</span>
+                                    @endif
+                                </small>
                             </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar bg-primary" style="width: {{ $actProgressPercent }}%"></div>
-                            </div>
-                            <small class="text-muted">{{ $completedActs }} program selesai, {{ $runningActs }} sedang berjalan dari {{ $totalActs }} total agenda.</small>
-                        </div>
 
-                        <div class="p-3 bg-light rounded border mb-2 small">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Total Kegiatan Pelaksanaan:</span>
-                                <strong class="text-dark">{{ $totalActs }} Agenda Tridharma &amp; PKM</strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Kegiatan Aktif Lapangan:</span>
-                                <strong class="text-success">{{ $runningActs }} Program Berjalan</strong>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">Bukti Laporan Terverifikasi:</span>
-                                <strong class="text-dark">{{ $activities->whereNotNull('evidence_file')->count() }} Berkas Laporan</strong>
+                            <div class="p-3 bg-light rounded border mb-3 small">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Total Kegiatan Pelaksanaan:</span>
+                                    <strong class="text-dark">{{ $totalActs }} Agenda Tridharma &amp; PKM</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Kegiatan Aktif Lapangan:</span>
+                                    <strong class="text-success">{{ $runningActs }} Program Berjalan</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Bukti Laporan Terverifikasi:</span>
+                                    <strong class="text-dark">{{ $evidenceActsCount }} Berkas Laporan</strong>
+                                </div>
                             </div>
                         </div>
 
@@ -260,36 +325,47 @@
     {{-- 2. PENGELOLAAN DATA MITRA (MASTER DATA & DIREKTORI RESMI SINKRON PENUH DENGAN MYSQL)   --}}
     {{-- ===================================================================================== --}}
     @elseif ($activeMenu === 2)
+        @php
+            $canVerifyPartner = in_array($activeRole, ['MASTER', 'ADMIN', 'LEGAL'], true);
+            $canDeletePartner = in_array($activeRole, ['MASTER', 'ADMIN'], true);
+            $partnerPayloads = [];
+        @endphp
         <div class="card card-wireframe shadow-sm border mb-4">
-            <!-- 1. KONSOL FILTER BERLABEL DI CARD-HEADER (PERSIS MENU 4) -->
-            <div class="card-header bg-white py-3 border-bottom">
+            <!-- 1. KONSOL FILTER BERLABEL DI CARD-HEADER (SESUAI SPESIFIKASI WF-02) -->
+            <div class="card-header partner-filter-bar py-3">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold mb-1 text-secondary small">Kategori Mitra</label>
+                        <label class="form-label fw-semibold mb-1 text-secondary small">Jenis / Kategori Mitra (Resmi)</label>
                         <select id="partnerCategoryFilter" class="form-select form-select-sm" onchange="filterPartnersTable()">
-                            <option value="">Semua Kategori Mitra</option>
-                            <option value="DUDI / Swasta">DUDI / Swasta (Industri)</option>
-                            <option value="Instansi Pemerintah">Instansi Pemerintah</option>
-                            <option value="BUMN">BUMN / BUMD</option>
-                            <option value="Perguruan Tinggi">Perguruan Tinggi</option>
-                            <option value="Organisasi">Organisasi / Komunitas</option>
+                            <option value="">Semua Jenis Mitra</option>
+                            @foreach (\App\Models\Partner::FILTER_CATEGORY_GROUPS as $grp)
+                                <option value="{{ $grp }}">{{ $grp }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold mb-1 text-secondary small">Status Kemitraan</label>
+                        <label class="form-label fw-semibold mb-1 text-secondary small">Status Kemitraan &amp; Verifikasi</label>
                         <select id="partnerStatusFilter" class="form-select form-select-sm" onchange="filterPartnersTable()">
                             <option value="">Semua Status</option>
-                            <option value="Terverifikasi Sah">Terverifikasi Sah</option>
-                            <option value="Tahap FSM">Tahap FSM</option>
-                            <option value="Peringatan Masa">Peringatan Masa</option>
-                            <option value="Mitra Terdaftar">Mitra Terdaftar</option>
+                            <optgroup label="Status Naskah Kemitraan">
+                                <option value="Aktif Sah">Aktif / Sah (Naskah Berlaku)</option>
+                                <option value="Tahap FSM">Tahap FSM (Dalam Proses)</option>
+                                <option value="Peringatan Masa">Peringatan Masa</option>
+                                <option value="Mitra Terdaftar">Terdaftar (Belum Ada Naskah)</option>
+                            </optgroup>
+                            <optgroup label="Status Verifikasi &amp; Kelengkapan Data">
+                                <option value="VER_Terverifikasi Sah">Terverifikasi Sah</option>
+                                <option value="VER_Belum Diverifikasi">Belum Diverifikasi</option>
+                                <option value="VER_Perlu Pembaruan">Perlu Pembaruan</option>
+                                <option value="COMP_INCOMPLETE">Profil Perlu Dilengkapi (&lt; 85%)</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold mb-1 text-secondary small">Pencarian Mitra &amp; PIC</label>
+                        <label class="form-label fw-semibold mb-1 text-secondary small">Pencarian Mitra, PIC &amp; Kota</label>
                         <div class="input-group input-group-sm">
-                            <input type="text" id="partnerSearchInput" class="form-control" placeholder="Cari nama mitra, PIC, kota, bidang..." onkeyup="filterPartnersTable()">
-                            <button type="button" class="btn btn-outline-secondary" onclick="resetPartnerFilters()" title="Bersihkan Pencarian">
+                            <input type="text" id="partnerSearchInput" class="form-control" placeholder="Cari mitra, PIC, kota... (Tekan /)" oninput="filterPartnersTable()">
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetPartnerFilters()" title="Bersihkan Pencarian" aria-label="Bersihkan Pencarian">
                                 <i class="bi bi-x-circle"></i>
                             </button>
                         </div>
@@ -297,45 +373,55 @@
                 </div>
             </div>
 
-            <!-- 2. TOOLBAR AKSI & TABEL DATA MITRA (PERSIS MENU 4) -->
-            <div class="card-body p-3">
-                <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <button type="button" class="btn btn-primary btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#createPartnerModal">
-                            <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
-                        </button>
-                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm">
-                            <i class="bi bi-file-earmark-plus me-1"></i> Ajukan Naskah Baru
-                        </a>
-                        <button type="button" class="btn btn-success btn-sm fw-semibold shadow-sm text-white" onclick="exportTableToExcel('partnerTable', 'Data_Master_Mitra')">
-                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
-                        </button>
-                        <button type="button" class="btn btn-info btn-sm fw-semibold shadow-sm text-white" onclick="resetPartnerFilters()">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Reload
-                        </button>
-                    </div>
-                    <div>
-                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
-                            Total: <span id="partnerVisibleCount" class="fw-bold text-primary">{{ $partners->count() }}</span> Mitra Terdaftar
-                        </span>
-                    </div>
+            <!-- 2. TOOLBAR AKSI RINGKAS (FLUSH) -->
+            <div class="partner-toolbar px-3 py-2 bg-white border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button type="button" class="btn btn-primary btn-sm fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#createPartnerModal">
+                        <i class="bi bi-plus-lg me-1"></i> Tambah Mitra
+                    </button>
+                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm">
+                        <i class="bi bi-file-earmark-plus me-1"></i> Ajukan Naskah Baru
+                    </a>
+                    <button type="button" id="btnPartnerExportExcel" class="btn btn-success btn-sm fw-semibold shadow-sm text-white" onclick="exportFilteredPartnersToExcel()" title="Ekspor Data Mitra Terfilter ke Excel">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold shadow-2xs gap-1" onclick="resetPartnerFilters()" title="Reset seluruh filter, pencarian &amp; pengurutan">
+                        <i class="bi bi-arrow-counterclockwise"></i><span>Reset Filter</span>
+                        <span class="badge bg-primary text-white d-none" id="partnerActiveFilterBadge" style="font-size: 0.72rem; padding: 2px 5px;">0</span>
+                    </button>
                 </div>
+                <div>
+                    <span class="badge bg-light text-dark border px-3 py-1.5 fw-semibold" style="font-size: 0.75rem;">
+                        Total: <span id="partnerVisibleCount" class="fw-bold text-primary">{{ $partners->count() }}</span> Mitra Terdaftar
+                    </span>
+                </div>
+            </div>
 
-                <!-- TABEL PENGELOLAAN DATA MITRA PROPORSI RAPI (SESUAI STANDAR MENU 4) -->
-                <div class="table-responsive" style="border: 0">
-                    <table class="w-100 table table-bordered table-striped table-hover align-middle mb-0" id="partnerTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center py-1 px-2" style="width: 45px; font-size: 0.82rem; line-height: 1.2;">No.</th>
-                                <th class="text-start py-1 px-2" style="min-width: 160px; font-size: 0.82rem; line-height: 1.2;">Mitra / Instansi</th>
-                                <th class="text-center py-1 px-2" style="width: 125px; font-size: 0.82rem; line-height: 1.2;">Kategori</th>
-                                <th class="text-start py-1 px-2" style="min-width: 135px; font-size: 0.82rem; line-height: 1.2;">Unit Terkait</th>
-                                <th class="text-start py-1 px-2" style="min-width: 145px; font-size: 0.82rem; line-height: 1.2;">Lingkup Kerma</th>
-                                <th class="text-center py-1 px-2" style="width: 105px; font-size: 0.82rem; line-height: 1.2;">Naskah</th>
-                                <th class="text-center py-1 px-2" style="width: 115px; font-size: 0.82rem; line-height: 1.2;">Status</th>
-                                <th class="text-center py-1 px-2" style="width: 105px; font-size: 0.82rem; line-height: 1.2;">Aksi</th>
-                            </tr>
-                        </thead>
+            <!-- 3. TABEL PENGELOLAAN DATA MITRA (FLUSH LANGSUNG DI CARD + ERGONOMIS TANPA GARIS KISI VERTIKAL) -->
+            <div class="table-responsive">
+                <table class="w-100 table table-striped table-hover align-middle mb-0" id="partnerTable">
+                    <colgroup>
+                        <col style="width: 4%;">
+                        <col style="width: 22%;">
+                        <col style="width: 16%;">
+                        <col style="width: 14%;">
+                        <col style="width: 14%;">
+                        <col style="width: 9%;">
+                        <col style="width: 10%;">
+                        <col style="width: 11%;">
+                    </colgroup>
+                    <thead class="table-light">
+                        <tr>
+                            <th>No.</th>
+                            <th class="partner-sortable sort-active" data-sort-key="name" data-sort-dir="asc" tabindex="0" role="button" title="Klik untuk mengurutkan Nama Mitra (A-Z / Z-A)">Mitra, Domisili &amp; PIC <i class="bi bi-sort-up partner-sort-icon"></i></th>
+                            <th class="partner-sortable" data-sort-key="completeness" tabindex="0" role="button" title="Klik untuk mengurutkan Kelengkapan Profil">Jenis &amp; Data <i class="bi bi-arrow-down-up partner-sort-icon"></i></th>
+                            <th>Unit Terkait</th>
+                            <th>Lingkup Kerma</th>
+                            <th class="partner-sortable" data-sort-key="docs" tabindex="0" role="button" title="Klik untuk mengurutkan Jumlah Naskah">Naskah <i class="bi bi-arrow-down-up partner-sort-icon"></i></th>
+                            <th class="partner-sortable" data-sort-key="status" tabindex="0" role="button" title="Klik untuk mengurutkan Status Kemitraan">Status <i class="bi bi-arrow-down-up partner-sort-icon"></i></th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @forelse ($partners as $partner)
                             @php
@@ -343,105 +429,225 @@
                                 $firstDoc = $pDocs->first();
                                 $hasActive = $pDocs->where('status', 'ACTIVE')->isNotEmpty();
                                 $hasWarning = $pDocs->where('status', 'WARNING')->isNotEmpty();
-                                $types = $pDocs->pluck('doc_type')->unique();
-                                $units = $pDocs->pluck('unit')->unique();
+                                $types = $pDocs->pluck('doc_type')->filter()->unique()->values();
+                                $units = $pDocs->pluck('unit')->filter()->unique()->values();
+                                $docScopes = $pDocs->pluck('scope')->filter(fn($s) => trim((string)$s) !== '')->unique()->values();
+                                $scopeSummary = $docScopes->isNotEmpty()
+                                    ? $docScopes->join(', ')
+                                    : ($partner->profile_desc ?: 'Belum ada rincian lingkup kerja sama');
 
-                                $stLabel = $hasActive ? 'Terverifikasi Sah' : ($hasWarning ? 'Peringatan Masa' : ($pDocs->isNotEmpty() ? 'Tahap FSM' : 'Mitra Terdaftar'));
+                                $stLabel = $hasActive ? 'Aktif Sah' : ($hasWarning ? 'Peringatan Masa' : ($pDocs->isNotEmpty() ? 'Tahap FSM' : 'Mitra Terdaftar'));
+                                $catGroup = \App\Models\Partner::normalizeCategoryGroup($partner->category);
+                                $catMeta = $partner->category_badge_meta;
+                                $comp = $partner->completeness_info;
+                                $compBadgeClass = $comp['percent'] >= 85 ? 'badge-comp-neutral' : $comp['badge_class'];
+                                $verStatus = $partner->status_verification ?: 'Belum Diverifikasi';
+                                $verBadgeClass = match($verStatus) {
+                                    'Terverifikasi Sah' => 'badge-soft-success border-success-subtle',
+                                    'Perlu Pembaruan' => 'badge-soft-warning border-warning-subtle',
+                                    default => 'badge-soft-secondary border-secondary-subtle',
+                                };
+
+                                $partnerSearchIndex = strtolower(trim(implode(' ', [
+                                    $partner->name,
+                                    $partner->category,
+                                    $catGroup,
+                                    $partner->city,
+                                    $partner->address,
+                                    $partner->phone,
+                                    $partner->email,
+                                    $partner->pic_name,
+                                    $partner->pic_title,
+                                    $partner->pic_contact,
+                                    $scopeSummary,
+                                    $units->join(' '),
+                                    $pDocs->pluck('doc_number')->join(' '),
+                                ])));
+
+                                $partnerPayloads[$partner->id] = [
+                                    'id' => $partner->id,
+                                    'name' => $partner->name,
+                                    'category' => $partner->category,
+                                    'scope_coverage' => $partner->scope_coverage ?: 'Dalam Negeri (Nasional/Lokal)',
+                                    'city' => $partner->city,
+                                    'address' => $partner->address,
+                                    'phone' => $partner->phone,
+                                    'email' => $partner->email,
+                                    'pic_name' => $partner->pic_name,
+                                    'pic_title' => $partner->pic_title,
+                                    'pic_contact' => $partner->pic_contact,
+                                    'profile_desc' => $partner->profile_desc,
+                                    'status_verification' => $verStatus,
+                                    'completeness' => $comp,
+                                    'units' => $units->all(),
+                                    'types' => $types->all(),
+                                    'st_label' => $stLabel,
+                                    'has_active' => $hasActive,
+                                    'has_warning' => $hasWarning,
+                                    'new_doc_url' => route('simkerma.index', ['menu' => 4, 'view' => 'new', 'partner_name' => $partner->name]),
+                                    'docs' => $pDocs->map(function($d) {
+                                        return [
+                                            'doc_id' => $d->doc_id,
+                                            'doc_number' => $d->doc_number,
+                                            'reg_id' => $d->reg_id,
+                                            'doc_type' => $d->doc_type,
+                                            'scope' => $d->scope,
+                                            'unit' => $d->unit,
+                                            'validity' => $d->validity,
+                                            'date_signed' => $d->date_signed ? \Carbon\Carbon::parse($d->date_signed)->format('d M Y') : null,
+                                            'status' => $d->status,
+                                            'url' => route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $d->doc_id]),
+                                        ];
+                                    })->values()->all(),
+                                ];
                             @endphp
-                            <tr class="partner-row" data-category="{{ $partner->category }}" data-status="{{ $stLabel }}">
+                            @php
+                                $statusRank = $hasActive ? 4 : ($hasWarning ? 3 : ($pDocs->isNotEmpty() ? 2 : 1));
+                            @endphp
+                            <tr class="partner-row"
+                                data-category="{{ $partner->category }}"
+                                data-category-group="{{ $catGroup }}"
+                                data-status="{{ $stLabel }}"
+                                data-verification="{{ $verStatus }}"
+                                data-complete="{{ $comp['percent'] >= 85 ? '1' : '0' }}"
+                                data-sort-name="{{ strtolower(trim((string)$partner->name)) }}"
+                                data-sort-completeness="{{ $comp['percent'] }}"
+                                data-sort-docs="{{ $pDocs->count() }}"
+                                data-sort-status="{{ $statusRank }}"
+                                data-search="{{ $partnerSearchIndex }}"
+                                data-export-name="{{ $partner->name }}"
+                                data-export-city="{{ $partner->city ?: '-' }}"
+                                data-export-scope-coverage="{{ $partner->scope_coverage === 'Internasional' ? 'Internasional' : 'Nasional/Lokal' }}"
+                                data-export-pic-name="{{ $partner->pic_name ?: '-' }}"
+                                data-export-pic-contact="{{ $partner->pic_contact ?: '-' }}"
+                                data-export-category="{{ $partner->category ?: 'Belum Ditentukan' }}"
+                                data-export-verification="{{ $verStatus }}"
+                                data-export-completeness="{{ $comp['percent'] }}%"
+                                data-export-units="{{ $units->isNotEmpty() ? $units->join(', ') : '-' }}"
+                                data-export-doc-scope="{{ $scopeSummary }}"
+                                data-export-doc-count="{{ $pDocs->count() }}"
+                                data-export-doc-types="{{ $types->isNotEmpty() ? $types->join(', ') : '-' }}"
+                                data-export-status="{{ $stLabel }}">
                                 <!-- 1. No. -->
-                                <td class="text-center text-muted fw-semibold" style="font-size: 0.82rem;">{{ $loop->iteration }}</td>
+                                <td class="text-center text-muted fw-semibold partner-row-num" style="font-size: 0.78rem;">{{ $loop->iteration }}</td>
 
-                                <!-- 2. Mitra / Instansi -->
+                                <!-- 2. Mitra, Domisili & PIC -->
                                 <td>
-                                    <div class="fw-bold text-dark fs-6">{{ $partner->name }}</div>
-                                    <div class="text-muted small mt-1" style="font-size: 0.72rem;">
-                                        <i class="bi bi-geo-alt text-danger me-1"></i>{{ $partner->city ?: 'Kota Manado' }}
-                                        <span class="badge bg-light text-primary border ms-1" style="font-size: 0.65rem;">{{ $partner->scope_coverage }}</span>
+                                    <div class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.35;">{{ $partner->name }}</div>
+                                    <div class="text-muted mt-1" style="font-size: 0.75rem; line-height: 1.35;">
+                                        <i class="bi bi-geo-alt text-secondary me-1"></i>{{ $partner->city ?: 'Kota belum diisi' }}
+                                        @if ($partner->scope_coverage === 'Internasional')
+                                            <span class="badge badge-scope-intl ms-1" style="font-size: 0.72rem;"><i class="bi bi-globe2 me-1"></i>Internasional</span>
+                                        @else
+                                            <span class="text-muted">&bull; Nasional/Lokal</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-muted mt-0.5" style="font-size: 0.75rem; line-height: 1.35; overflow-wrap: anywhere;" title="PIC: {{ $partner->pic_name ?: '-' }} {{ $partner->pic_contact ? '(' . $partner->pic_contact . ')' : '' }}">
+                                        <i class="bi bi-person-badge text-primary me-1"></i>
+                                        @if ($partner->pic_name)
+                                            <span class="text-dark fw-medium">{{ $partner->pic_name }}</span>
+                                            @if ($partner->pic_contact)
+                                                <span>&bull; {{ $partner->pic_contact }}</span>
+                                            @endif
+                                        @else
+                                            <span class="fst-italic">PIC belum dilengkapi</span>
+                                        @endif
                                     </div>
                                 </td>
 
-                                <!-- 3. Kategori & Verifikasi -->
+                                <!-- 3. Jenis & Kelengkapan Data -->
                                 <td class="text-center">
-                                    <span class="badge bg-light text-dark border text-wrap d-inline-block" style="font-size: 0.68rem; max-width: 120px; line-height: 1.25;">{{ $partner->category ?: 'Kemitraan Strategis' }}</span>
-                                    <div class="mt-1">
-                                        <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.62rem;">
-                                            <i class="bi bi-patch-check-fill me-1"></i>{{ $partner->status_verification ?: 'Profil Terverifikasi' }}
+                                    <span class="badge {{ $catMeta['class'] }} text-wrap d-inline-block" style="font-size: 0.72rem; max-width: 100%; line-height: 1.3;">
+                                        <i class="bi {{ $catMeta['icon'] }} me-1"></i>{{ $partner->category ?: 'Belum Ditentukan' }}
+                                    </span>
+                                    <div class="mt-1 d-flex justify-content-center align-items-center gap-1 flex-wrap">
+                                        <span class="badge border {{ $verBadgeClass }}" style="font-size: 0.72rem;" title="Status Verifikasi Profil: {{ $verStatus }}">
+                                            <i class="bi bi-{{ $verStatus === 'Terverifikasi Sah' ? 'patch-check-fill' : ($verStatus === 'Perlu Pembaruan' ? 'exclamation-circle' : 'clock') }} me-0.5"></i>{{ $verStatus === 'Terverifikasi Sah' ? 'Terverifikasi' : $verStatus }}
                                         </span>
+                                        @if ($comp['percent'] < 85)
+                                            <span class="badge border {{ $compBadgeClass }}" style="font-size: 0.72rem;" title="Kelengkapan Data ({{ $comp['filled'] }}/{{ $comp['total'] }}) — Kurang: {{ implode(', ', $comp['missing']) }}">
+                                                Data {{ $comp['percent'] }}%
+                                            </span>
+                                        @endif
                                     </div>
+                                    @if ($comp['percent'] >= 85)
+                                        <div class="text-muted mt-1" style="font-size: 0.72rem;" title="Kelengkapan Data ({{ $comp['filled'] }}/{{ $comp['total'] }})">
+                                            Data {{ $comp['percent'] }}%
+                                        </div>
+                                    @endif
                                 </td>
 
                                 <!-- 4. Unit Terkait -->
                                 <td>
                                     @if ($units->isNotEmpty())
                                         @if ($units->count() > 2)
-                                            <div class="text-dark fw-semibold" style="max-width: 140px;" title="{{ $units->join(', ') }}">
+                                            <div class="text-dark fw-semibold" style="font-size: 0.75rem; line-height: 1.35;" title="{{ $units->join(', ') }}">
                                                 {{ $units->take(2)->join(', ') }}
-                                                <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.62rem;">+{{ $units->count() - 2 }}</span>
+                                                <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.72rem;">+{{ $units->count() - 2 }}</span>
                                             </div>
                                         @else
-                                            <div class="text-dark fw-semibold" style="max-width: 140px;">{{ $units->join(', ') }}</div>
+                                            <div class="text-dark fw-semibold" style="font-size: 0.75rem; line-height: 1.35;">{{ $units->join(', ') }}</div>
                                         @endif
-                                        <div class="text-muted small" style="font-size: 0.72rem;">
-                                            Dokumen: <span class="font-monospace text-primary">{{ $firstDoc->doc_number ?: $firstDoc->doc_id }}</span>
+                                        <div class="text-muted mt-0.5" style="font-size: 0.72rem; line-height: 1.3; overflow-wrap: anywhere;" title="{{ $firstDoc->doc_number ?: $firstDoc->doc_id }}">
+                                            Dok: <span class="font-monospace text-primary">{{ $firstDoc->doc_number ?: $firstDoc->doc_id }}</span>
                                         </div>
                                     @else
-                                        <div class="text-muted fst-italic" style="font-size: 0.75rem;">Belum ada naskah terkait</div>
-                                        <div class="text-muted small" style="font-size: 0.70rem;">Siap diajukan di Menu 04</div>
+                                        <div class="text-muted fst-italic" style="font-size: 0.75rem;">Belum ada naskah</div>
+                                        <div class="text-muted" style="font-size: 0.72rem;">Siap diajukan di Menu 04</div>
                                     @endif
                                 </td>
 
                                 <!-- 5. Lingkup Kerma -->
                                 <td>
-                                    <div class="text-secondary" style="font-size: 0.75rem; max-width: 150px; line-height: 1.35;">
-                                        {{ Str::limit($partner->profile_desc ?: ($firstDoc ? $firstDoc->scope : 'Kerja sama kemitraan institusional Tridharma'), 75) }}
+                                    <div class="text-secondary" style="font-size: 0.75rem; line-height: 1.4;" title="{{ $scopeSummary }}">
+                                        {{ Str::limit($scopeSummary, 72) }}
                                     </div>
                                 </td>
 
                                 <!-- 6. Naskah Kerma -->
                                 <td class="text-center">
                                     @if ($pDocs->isNotEmpty())
-                                        <span class="badge bg-dark rounded-pill">{{ $pDocs->count() }} Dokumen</span>
-                                        <div class="small text-muted mt-1" style="font-size: 0.7rem;">
+                                        <span class="badge badge-naskah-soft rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-file-earmark-text me-1"></i>{{ $pDocs->count() }} Naskah</span>
+                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">
                                             {{ $types->join(', ') }}
                                         </div>
                                     @else
-                                        <span class="badge bg-light text-muted border">0 Dokumen</span>
+                                        <span class="badge bg-light text-muted border" style="font-size: 0.72rem;">0 Naskah</span>
                                     @endif
                                 </td>
 
-                                <!-- 7. Status -->
+                                <!-- 7. Status Kemitraan -->
                                 <td class="text-center">
                                     @if ($hasActive)
-                                        <span class="badge bg-success py-1 px-2 shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-check-circle-fill me-1"></i>Aktif / Sah</span>
+                                        <span class="badge badge-soft-success border border-success-subtle py-1 px-1.5 d-inline-block text-nowrap fw-semibold" style="font-size: 0.72rem;"><i class="bi bi-check-circle-fill me-1"></i>Aktif / Sah</span>
                                     @elseif ($hasWarning)
-                                        <span class="badge bg-warning text-dark py-1 px-2 border shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Peringatan</span>
+                                        <span class="badge badge-soft-warning border border-warning-subtle py-1 px-1.5 d-inline-block text-nowrap fw-semibold" style="font-size: 0.72rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Peringatan</span>
                                     @elseif ($pDocs->isNotEmpty())
-                                        <span class="badge bg-primary py-1 px-2 shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-hourglass-split me-1"></i>Tahap FSM</span>
+                                        <span class="badge badge-soft-primary border border-primary-subtle py-1 px-1.5 d-inline-block text-nowrap fw-semibold" style="font-size: 0.72rem;"><i class="bi bi-hourglass-split me-1"></i>Tahap FSM</span>
                                     @else
-                                        <span class="badge bg-secondary py-1 px-2 shadow-2xs d-inline-block text-nowrap fw-semibold" style="font-size: 0.68rem;"><i class="bi bi-journal-check me-1"></i>Terdaftar</span>
+                                        <span class="badge badge-soft-secondary border border-secondary-subtle py-1 px-1.5 d-inline-block text-nowrap fw-semibold" style="font-size: 0.72rem;"><i class="bi bi-journal-check me-1"></i>Terdaftar</span>
                                     @endif
                                 </td>
 
                                 <!-- 8. Aksi -->
                                 <td class="text-center">
-                                    <div class="d-inline-flex justify-content-center align-items-center gap-1">
-                                        <button type="button" class="btn btn-dark btn-sm py-1 px-2 fw-semibold shadow-2xs d-inline-flex align-items-center gap-1" style="font-size: 0.72rem;" data-bs-toggle="modal" data-bs-target="#partnerModal_{{ $partner->id }}" title="Lihat Profil &amp; Riwayat Dokumen">
-                                            <i class="bi bi-eye-fill text-warning"></i><span>Profil</span>
+                                    <div class="d-inline-flex justify-content-center align-items-center gap-1 flex-nowrap">
+                                        <button type="button" class="btn btn-partner-profile btn-sm px-2 fw-semibold partner-action-btn gap-1 js-open-partner-profile" data-partner-id="{{ $partner->id }}" style="font-size: 0.75rem;" title="Lihat Profil &amp; Riwayat Dokumen">
+                                            <i class="bi bi-eye"></i><span>Profil</span>
                                         </button>
                                         <div class="dropdown">
-                                            <button class="btn btn-outline-secondary btn-sm py-1 px-2 shadow-2xs" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.72rem;" title="Opsi Tindakan Lainnya">
+                                            <button class="btn btn-outline-secondary btn-sm px-1.5 shadow-2xs partner-action-btn" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" style="font-size: 0.75rem;" title="Opsi Tindakan Lainnya" aria-label="Opsi tindakan untuk {{ $partner->name }}">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 small py-1" style="font-size: 0.78rem; min-width: 175px;">
                                                 <li>
-                                                    <button type="button" class="dropdown-item py-1.5 px-3 text-dark d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#editPartnerModal_{{ $partner->id }}">
+                                                    <button type="button" class="dropdown-item py-1.5 px-3 text-dark d-flex align-items-center gap-2 js-open-partner-edit" data-partner-id="{{ $partner->id }}">
                                                         <i class="bi bi-pencil-square text-warning"></i> Edit Data Mitra
                                                     </button>
                                                 </li>
                                                 @if ($firstDoc)
                                                     <li>
-                                                        <a class="dropdown-item py-1.5 px-3 text-primary d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'doc' => $firstDoc->doc_id]) }}">
+                                                        <a class="dropdown-item py-1.5 px-3 text-primary d-flex align-items-center gap-2" href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $firstDoc->doc_id]) }}">
                                                             <i class="bi bi-box-arrow-up-right"></i> Dokumen Menu 04
                                                         </a>
                                                     </li>
@@ -452,16 +658,18 @@
                                                         </a>
                                                     </li>
                                                 @endif
-                                                <li><hr class="dropdown-divider my-1"></li>
-                                                <li>
-                                                    <form method="POST" action="{{ route('simkerma.delete-partner') }}" class="m-0" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data mitra \'{{ addslashes($partner->name) }}\' dari master data?');">
-                                                        @csrf
-                                                        <input type="hidden" name="id" value="{{ $partner->id }}">
-                                                        <button type="submit" class="dropdown-item py-1.5 px-3 text-danger d-flex align-items-center gap-2">
-                                                            <i class="bi bi-trash"></i> Hapus Mitra
-                                                        </button>
-                                                    </form>
-                                                </li>
+                                                @if ($canDeletePartner)
+                                                    <li><hr class="dropdown-divider my-1"></li>
+                                                    <li>
+                                                        <form method="POST" action="{{ route('simkerma.delete-partner') }}" class="m-0" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data mitra \'{{ addslashes($partner->name) }}\' dari master data?');">
+                                                            @csrf
+                                                            <input type="hidden" name="id" value="{{ $partner->id }}">
+                                                            <button type="submit" class="dropdown-item py-1.5 px-3 text-danger d-flex align-items-center gap-2">
+                                                                <i class="bi bi-trash"></i> Hapus Mitra
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                @endif
                                             </ul>
                                         </div>
                                     </div>
@@ -487,8 +695,26 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- 4. CARD FOOTER DENGAN KONTROL PAGINATION (KONSISTEN MENU 3) -->
+            <div class="card-footer bg-white py-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 small text-muted">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span>Menampilkan <strong id="partnerFooterVisibleCount" class="text-dark">{{ $partners->count() }}</strong> mitra</span>
+                    <span class="text-secondary">&bull;</span>
+                    <div class="d-flex align-items-center gap-1">
+                        <span>Tampilkan:</span>
+                        <select id="partnerPerPage" class="form-select form-select-sm py-0 px-2" style="width: auto; height: 30px; font-size: 0.76rem;">
+                            <option value="15" selected>15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="ALL">Semua</option>
+                        </select>
+                        <span>baris</span>
+                    </div>
+                </div>
+                <div id="partnerPaginationWrapper" class="d-flex align-items-center gap-1"></div>
+            </div>
         </div>
-    </div>
 
         {{-- MODAL INPUT MANDIRI DATA MITRA BARU --}}
         <div class="modal fade" id="createPartnerModal" tabindex="-1" aria-labelledby="createPartnerModalLabel" aria-hidden="true">
@@ -517,11 +743,9 @@
                                 <div class="col-md-5">
                                     <label class="form-label fw-bold text-dark">Kategori Mitra <span class="text-danger">*</span></label>
                                     <select name="category" id="modal_partner_category" class="form-select form-select-sm" required>
-                                        <option value="Perguruan Tinggi" selected>Perguruan Tinggi</option>
-                                        <option value="DUDI / Swasta">DUDI / Swasta (Industri)</option>
-                                        <option value="Instansi Pemerintah">Instansi Pemerintah</option>
-                                        <option value="BUMN / BUMD">BUMN / BUMD</option>
-                                        <option value="Organisasi / Komunitas / Lainnya">Organisasi / Komunitas / Lainnya</option>
+                                        @foreach (\App\Models\Partner::OFFICIAL_CATEGORIES as $catVal => $catLabel)
+                                            <option value="{{ $catVal }}" {{ $catVal === 'Perguruan Tinggi Dalam Negeri' ? 'selected' : '' }}>{{ $catLabel }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-7">
@@ -595,6 +819,16 @@
                                     <label class="form-label fw-bold text-dark">Deskripsi Profil Lembaga Mitra</label>
                                     <textarea name="profile_desc" class="form-control form-control-sm" rows="2" placeholder="Contoh: Perusahaan pengembang perangkat lunak dan talenta industri digital..."></textarea>
                                 </div>
+                                @if ($canVerifyPartner)
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-dark">Status Verifikasi Data Mitra</label>
+                                        <select name="status_verification" class="form-select form-select-sm">
+                                            @foreach (\App\Models\Partner::VERIFICATION_STATUSES as $vStat)
+                                                <option value="{{ $vStat }}" {{ $vStat === 'Belum Diverifikasi' ? 'selected' : '' }}>{{ $vStat }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
@@ -609,351 +843,730 @@
             </div>
         </div>
 
-        {{-- MODAL EDIT DATA MITRA & MODAL PROFIL RIWAYAT (DITEMPATKAN DI LUAR TABEL) --}}
-        @foreach ($partners as $partner)
-            @php
-                $pDocs = $partner->documents;
-                $firstDoc = $pDocs->first();
-                $types = $pDocs->pluck('doc_type')->unique();
-                $units = $pDocs->pluck('unit')->unique();
-                $hasActive = $pDocs->where('status', 'ACTIVE')->isNotEmpty();
-                $hasWarning = $pDocs->where('status', 'WARNING')->isNotEmpty();
-            @endphp
+        {{-- MODAL DINAMIS TUNGGAL MENU 2 (EDIT & PROFIL RIWAYAT MITRA) --}}
+        <script id="partnerModalPayloads" type="application/json">@json($partnerPayloads)</script>
 
-            <!-- MODAL EDIT DATA MITRA -->
-            <div class="modal fade" id="editPartnerModal_{{ $partner->id }}" tabindex="-1" aria-labelledby="editPartnerModalLabel_{{ $partner->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content border-0 shadow-lg">
-                        <form method="POST" action="{{ route('simkerma.update-partner') }}" class="d-flex flex-column overflow-hidden h-100">
-                            @csrf
-                            <input type="hidden" name="id" value="{{ $partner->id }}">
-                            <div class="modal-header bg-warning py-3 text-dark">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="p-2 bg-dark rounded text-warning"><i class="bi bi-pencil-square fs-4"></i></div>
-                                    <div>
-                                        <h6 class="modal-title fw-bold mb-0" id="editPartnerModalLabel_{{ $partner->id }}">Edit Data Mitra: {{ $partner->name }}</h6>
-                                        <small class="text-dark-50">Sinkronisasi Master Data Mitra ke Seluruh Naskah di SIMKERMA</small>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-
-                            <div class="modal-body p-4 small">
-                                <div class="alert alert-warning py-2 px-3 mb-3 d-flex align-items-center gap-2" style="font-size: 0.78rem;">
-                                    <i class="bi bi-exclamation-triangle-fill fs-5 text-dark"></i>
-                                    <div>
-                                        <strong>Integritas Sinkronisasi Otomatis:</strong> Pembaruan nama atau kategori mitra di formulir ini akan secara langsung disinkronkan ke seluruh naskah dokumen terkait di Menu 1 (Dashboard), Menu 3 (Repositori), Menu 4 (FSM), Menu 5 (Kegiatan), dan Menu 7 (Audit Trail).
-                                    </div>
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-md-7">
-                                        <label class="form-label fw-bold text-dark">Nama Lembaga / Instansi Mitra <span class="text-danger">*</span></label>
-                                        <input type="text" name="name" class="form-control form-control-sm" value="{{ $partner->name }}" required>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-bold text-dark">Kategori Mitra <span class="text-danger">*</span></label>
-                                        <select name="category" class="form-select form-select-sm" required>
-                                            <option value="DUDI / Swasta" {{ $partner->category === 'DUDI / Swasta' ? 'selected' : '' }}>DUDI / Swasta (Industri)</option>
-                                            <option value="Instansi Pemerintah" {{ $partner->category === 'Instansi Pemerintah' ? 'selected' : '' }}>Instansi Pemerintah</option>
-                                            <option value="BUMN / BUMD" {{ $partner->category === 'BUMN / BUMD' || $partner->category === 'BUMN' ? 'selected' : '' }}>BUMN / BUMD</option>
-                                            <option value="Perguruan Tinggi" {{ $partner->category === 'Perguruan Tinggi' ? 'selected' : '' }}>Perguruan Tinggi</option>
-                                            <option value="Organisasi / Komunitas / Lainnya" {{ $partner->category === 'Organisasi / Komunitas / Lainnya' ? 'selected' : '' }}>Organisasi / Komunitas / Lainnya</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold text-dark">Cakupan Wilayah</label>
-                                        <select name="scope_coverage" class="form-select form-select-sm">
-                                            <option value="Dalam Negeri (Nasional/Lokal)" {{ $partner->scope_coverage === 'Dalam Negeri (Nasional/Lokal)' ? 'selected' : '' }}>Dalam Negeri (Nasional/Lokal)</option>
-                                            <option value="Internasional" {{ $partner->scope_coverage === 'Internasional' ? 'selected' : '' }}>Internasional</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold text-dark">Kota / Domisili Kantor</label>
-                                        <input type="text" name="city" class="form-control form-control-sm" value="{{ $partner->city }}">
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label fw-bold text-dark">Alamat Lengkap Kantor</label>
-                                        <textarea name="address" class="form-control form-control-sm" rows="2">{{ $partner->address }}</textarea>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold text-dark">Nomor Telepon Kantor Resmi</label>
-                                        <input type="text" name="phone" class="form-control form-control-sm" value="{{ $partner->phone }}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold text-dark">Email Resmi Kemitraan</label>
-                                        <input type="email" name="email" class="form-control form-control-sm" value="{{ $partner->email }}">
-                                    </div>
-
-                                    <div class="col-12 pt-2 border-top">
-                                        <h6 class="fw-bold text-primary mb-2" style="font-size: 0.85rem;"><i class="bi bi-person-lines-fill me-1"></i> Data Penanggung Jawab (PIC Mitra)</h6>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <label class="form-label fw-bold text-dark">Nama PIC Mitra</label>
-                                        <input type="text" name="pic_name" class="form-control form-control-sm" value="{{ $partner->pic_name }}">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label fw-bold text-dark">Jabatan PIC</label>
-                                        <input type="text" name="pic_title" class="form-control form-control-sm" value="{{ $partner->pic_title }}">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label fw-bold text-dark">No. WhatsApp / HP PIC</label>
-                                        <input type="text" name="pic_contact" class="form-control form-control-sm" value="{{ $partner->pic_contact }}">
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label fw-bold text-dark">Deskripsi Profil Lembaga Mitra</label>
-                                        <textarea name="profile_desc" class="form-control form-control-sm" rows="2">{{ $partner->profile_desc }}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                                <button type="submit" class="btn btn-warning btn-sm fw-semibold shadow-sm text-dark">
-                                    <i class="bi bi-save-fill me-1"></i> Perbarui &amp; Sinkronkan Data Mitra
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MODAL DETAIL PROFIL & RIWAYAT MITRA -->
-            <div class="modal fade" id="partnerModal_{{ $partner->id }}" tabindex="-1" aria-labelledby="partnerModalLabel_{{ $partner->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content border-0 shadow-lg">
-                        <div class="modal-header bg-dark text-white py-3">
+        <!-- SHARED MODAL EDIT DATA MITRA -->
+        <div class="modal fade" id="sharedPartnerEditModal" tabindex="-1" aria-labelledby="sharedPartnerEditLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg">
+                    <form method="POST" action="{{ route('simkerma.update-partner') }}" class="d-flex flex-column overflow-hidden h-100">
+                        @csrf
+                        <input type="hidden" name="id" id="spe_id" value="">
+                        <div class="modal-header bg-warning py-3 text-dark">
                             <div class="d-flex align-items-center gap-2">
-                                <div class="p-2 bg-light rounded text-dark"><i class="bi bi-building fs-4"></i></div>
+                                <div class="p-2 bg-dark rounded text-warning"><i class="bi bi-pencil-square fs-4"></i></div>
                                 <div>
-                                    <h6 class="modal-title fw-bold mb-0" id="partnerModalLabel_{{ $partner->id }}">{{ $partner->name }}</h6>
-                                    <small class="text-white-50">{{ $partner->category }} &bull; {{ $partner->scope_coverage }}</small>
+                                    <h6 class="modal-title fw-bold mb-0" id="sharedPartnerEditLabel">Edit Data Mitra</h6>
+                                    <small style="color: #343a40;">Sinkronisasi Master Data Mitra ke Seluruh Naskah di SIMKERMA</small>
                                 </div>
                             </div>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
-                        <div class="modal-body p-4">
-                            <!-- KARTU 1: PROFIL & IDENTITAS LEMBAGA MITRA -->
-                            <div class="card bg-light border mb-3">
-                                <div class="card-header bg-white py-2 px-3 fw-bold small text-primary d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi-info-circle-fill me-1"></i> Identitas &amp; Profil Lembaga Mitra</span>
-                                    <span class="badge bg-success-subtle text-success border border-success" style="font-size: 0.65rem;">{{ $partner->status_verification }}</span>
-                                </div>
-                                <div class="card-body p-3 small">
-                                    <div class="row g-3">
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-bold" style="font-size: 0.72rem;">NAMA INSTANSI RESMI:</div>
-                                            <div class="fw-bold text-dark fs-6">{{ $partner->name }}</div>
-                                            <div class="mt-2 text-muted fw-bold" style="font-size: 0.72rem;">JENIS &amp; KATEGORI MITRA:</div>
-                                            <div><span class="badge bg-light text-dark border">{{ $partner->category }}</span> &bull; {{ $partner->scope_coverage }}</div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="text-muted fw-bold" style="font-size: 0.72rem;">ALAMAT LENGKAP KANTOR:</div>
-                                            <div class="text-dark">{{ $partner->address ?: 'Kawasan Bisnis & Industri, ' . ($partner->city ?: 'Kota Manado') }}</div>
-                                            <div class="mt-2 text-muted fw-bold" style="font-size: 0.72rem;">KONTAK RESMI PERUSAHAAN / INSTANSI:</div>
-                                            <div>
-                                                <i class="bi bi-telephone-fill text-primary me-1"></i> {{ $partner->phone ?: '(0431) 880-1234' }}<br>
-                                                <i class="bi bi-envelope-fill text-danger me-1"></i> <a href="mailto:{{ $partner->email }}" class="text-decoration-none">{{ $partner->email }}</a>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 pt-1 border-top">
-                                            <div class="text-muted fw-bold" style="font-size: 0.72rem;">PROFIL &amp; BIDANG OPERASIONAL MITRA:</div>
-                                            <div class="text-secondary mt-1">{{ $partner->profile_desc ?: 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR.' }}</div>
-                                        </div>
-                                    </div>
+                        <div class="modal-body p-4 small">
+                            <div class="alert alert-warning py-2 px-3 mb-3 d-flex align-items-center gap-2" style="font-size: 0.78rem;">
+                                <i class="bi bi-exclamation-triangle-fill fs-5 text-dark"></i>
+                                <div>
+                                    <strong>Integritas Sinkronisasi Otomatis:</strong> Pembaruan nama atau kategori mitra akan disinkronkan ke seluruh dokumen di Menu 1, Menu 3, Menu 4, Menu 5, dan Audit Trail.
                                 </div>
                             </div>
 
-                            <!-- KARTU 2: PENANGGUNG JAWAB (PIC MITRA) & UNIT PENGUSUL UNIPAR -->
-                            <div class="card bg-light border mb-3">
-                                <div class="card-header bg-white py-2 px-3 fw-bold small text-dark d-flex justify-content-between align-items-center">
-                                    <span><i class="bi bi-person-badge-fill text-primary me-1"></i> Penanggung Jawab (PIC Mitra) &amp; Relasi Kampus</span>
-                                    <span class="badge bg-primary text-white" style="font-size: 0.65rem;">PIC AKTIF</span>
+                            <div class="row g-3">
+                                <div class="col-md-7">
+                                    <label class="form-label fw-bold text-dark">Nama Lembaga / Instansi Mitra <span class="text-danger">*</span></label>
+                                    <input type="text" name="name" id="spe_name" class="form-control form-control-sm" required>
                                 </div>
-                                <div class="card-body p-3 small">
-                                    <div class="row g-2">
-                                        <div class="col-sm-6">
-                                            <div class="p-2 bg-white rounded border">
-                                                <div class="text-muted fw-bold" style="font-size: 0.7rem;">PENANGGUNG JAWAB DARI PIHAK MITRA:</div>
-                                                <div class="fw-bold text-dark fs-6 mt-1">{{ $partner->pic_name ?: 'Bpk/Ibu Narahubung Kemitraan' }}</div>
-                                                <div class="text-muted">{{ $partner->pic_title ?: 'Divisi Kerja Sama & Hubungan Eksternal' }}</div>
-                                                <div class="mt-2">
-                                                    <span class="badge bg-success-subtle text-success border border-success">
-                                                        <i class="bi bi-whatsapp me-1"></i> WhatsApp: {{ $partner->pic_contact ?: '0812-4400-5500' }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="p-2 bg-white rounded border">
-                                                <div class="text-muted fw-bold" style="font-size: 0.7rem;">UNIT PENGUSUL DI UNIPAR:</div>
-                                                <div class="fw-bold text-primary mt-1">{{ $units->isNotEmpty() ? $units->join(', ') : 'Belum Ada Naskah Diajukan' }}</div>
-                                                <div class="text-muted mt-2" style="font-size: 0.7rem;">Status Kemitraan:</div>
-                                                <div>
-                                                    @if ($hasActive)
-                                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Terverifikasi Sah &amp; Berjalan</span>
-                                                    @elseif ($hasWarning)
-                                                        <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>Masa Berlaku Mendekati Ambang Batas</span>
-                                                    @elseif ($pDocs->isNotEmpty())
-                                                        <span class="badge bg-info text-dark"><i class="bi bi-hourglass-split me-1"></i>Dalam Proses Alur FSM</span>
-                                                    @else
-                                                        <span class="badge bg-secondary"><i class="bi bi-journal-check me-1"></i>Mitra Terdaftar di Sistem</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold text-dark">Kategori Mitra <span class="text-danger">*</span></label>
+                                    <select name="category" id="spe_category" class="form-select form-select-sm" required>
+                                        @foreach (\App\Models\Partner::OFFICIAL_CATEGORIES as $catVal => $catLabel)
+                                            <option value="{{ $catVal }}">{{ $catLabel }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
-                            </div>
 
-                            <!-- KARTU 3: TABEL RIWAYAT LENGKAP SELURUH NASKAH KERJA SAMA (MOU, MOA, IA) -->
-                            <div class="card border">
-                                <div class="card-header bg-white py-2 px-3 fw-bold small text-dark d-flex justify-content-between align-items-center">
-                                    <span>
-                                        <i class="bi bi-clock-history text-primary me-1"></i> 
-                                        Riwayat Kerja Sama dengan {{ $partner->name }} ({{ $pDocs->count() }} Naskah)
-                                    </span>
-                                    <span class="badge bg-dark rounded-pill">{{ $types->isNotEmpty() ? $types->join(', ') : '0 Dokumen' }}</span>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-dark">Cakupan Wilayah</label>
+                                    <select name="scope_coverage" id="spe_scope_coverage" class="form-select form-select-sm">
+                                        <option value="Dalam Negeri (Nasional/Lokal)">Dalam Negeri (Nasional/Lokal)</option>
+                                        <option value="Internasional">Internasional</option>
+                                    </select>
                                 </div>
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover align-middle mb-0 small" style="font-size: 0.75rem;">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>No. Registrasi &amp; Surat</th>
-                                                <th>Jenis</th>
-                                                <th>Ruang Lingkup Kegiatan</th>
-                                                <th>Masa Berlaku</th>
-                                                <th class="text-center">Status FSM</th>
-                                                <th class="text-end">Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($pDocs as $doc)
-                                                @php
-                                                    $docBadge = match($doc->status) {
-                                                        'DRAFT' => 'bg-secondary text-white',
-                                                        'REVIEW' => 'bg-info text-dark',
-                                                        'VERIFIED' => 'bg-primary text-white',
-                                                        'ACTIVE' => 'bg-success text-white',
-                                                        'WARNING' => 'bg-warning text-dark',
-                                                        'EXPIRED' => 'bg-danger text-white',
-                                                        'CANCELLED' => 'bg-dark text-white',
-                                                        default => 'bg-secondary text-white'
-                                                    };
-                                                @endphp
-                                                <tr>
-                                                    <td>
-                                                        <div class="fw-bold text-dark">{{ $doc->doc_number ?: 'Dalam Proses' }}</div>
-                                                        <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.65rem;">{{ $doc->reg_id }}</span>
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge bg-dark" style="font-size: 0.68rem;">{{ $doc->doc_type }}</span>
-                                                    </td>
-                                                    <td>
-                                                        <div class="text-secondary" style="max-width: 220px;">{{ Str::limit($doc->scope, 65) }}</div>
-                                                        <div class="text-muted" style="font-size: 0.68rem;">Unit: {{ $doc->unit }}</div>
-                                                    </td>
-                                                    <td>
-                                                        <div>{{ $doc->validity ?: 'Belum Ditetapkan' }}</div>
-                                                        @if ($doc->date_signed)
-                                                            <small class="text-muted" style="font-size: 0.68rem;">TTD: {{ \Carbon\Carbon::parse($doc->date_signed)->format('d M Y') }}</small>
-                                                        @endif
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <span class="badge {{ $docBadge }} py-1 px-2 fw-bold" style="font-size: 0.7rem;">
-                                                            {{ $doc->status }}
-                                                        </span>
-                                                    </td>
-                                                    <td class="text-end">
-                                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'doc' => $doc->doc_id]) }}" class="btn btn-outline-dark btn-sm py-0 px-2" style="font-size: 0.68rem;" title="Kelola Alur FSM">
-                                                            <i class="bi bi-sliders me-1"></i>FSM
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="6" class="text-center py-3 text-muted">Belum ada naskah kerja sama yang tercatat untuk mitra ini.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-dark">Kota / Domisili Kantor</label>
+                                    <input type="text" name="city" id="spe_city" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-dark">Alamat Lengkap Kantor</label>
+                                    <textarea name="address" id="spe_address" class="form-control form-control-sm" rows="2"></textarea>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-dark">Nomor Telepon Kantor Resmi</label>
+                                    <input type="text" name="phone" id="spe_phone" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-dark">Email Resmi Kemitraan</label>
+                                    <input type="email" name="email" id="spe_email" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="col-12 pt-2 border-top">
+                                    <h6 class="fw-bold text-primary mb-2" style="font-size: 0.85rem;"><i class="bi bi-person-lines-fill me-1"></i> Data Penanggung Jawab (PIC Mitra)</h6>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-dark">Nama PIC Mitra</label>
+                                    <input type="text" name="pic_name" id="spe_pic_name" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-dark">Jabatan PIC</label>
+                                    <input type="text" name="pic_title" id="spe_pic_title" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-dark">No. WhatsApp / HP PIC</label>
+                                    <input type="text" name="pic_contact" id="spe_pic_contact" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold text-dark">Deskripsi Profil Lembaga Mitra</label>
+                                    <textarea name="profile_desc" id="spe_profile_desc" class="form-control form-control-sm" rows="2"></textarea>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-dark">Status Verifikasi Profil</label>
+                                    @if ($canVerifyPartner)
+                                        <select name="status_verification" id="spe_status_verification" class="form-select form-select-sm">
+                                            @foreach (\App\Models\Partner::VERIFICATION_STATUSES as $vStat)
+                                                <option value="{{ $vStat }}">{{ $vStat }}</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <input type="text" id="spe_status_verification_ro" class="form-control form-control-sm bg-light" readonly>
+                                        <div class="text-muted mt-1" style="font-size: 0.68rem;">Verifikasi dikelola oleh Role LEGAL / ADMIN / MASTER.</div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
 
                         <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between">
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-warning btn-sm fw-semibold text-dark" onclick="switchPartnerModal('partnerModal_{{ $partner->id }}', 'editPartnerModal_{{ $partner->id }}')">
-                                    <i class="bi bi-pencil-square me-1"></i> Edit Data Mitra
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-                                    <i class="bi bi-printer me-1"></i> Cetak Profil Mitra
-                                </button>
-                                <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new', 'partner_name' => $partner->name]) }}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-plus-circle me-1"></i> Ajukan Naskah Baru
-                                </a>
-                            </div>
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-warning btn-sm fw-semibold shadow-sm text-dark">
+                                <i class="bi bi-save-fill me-1"></i> Perbarui &amp; Sinkronkan Data Mitra
+                            </button>
                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- SHARED MODAL DETAIL PROFIL & RIWAYAT MITRA -->
+        <div class="modal fade" id="sharedPartnerProfileModal" tabindex="-1" aria-labelledby="sharedPartnerProfileLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-dark text-white py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="p-2 bg-light rounded text-dark"><i class="bi bi-building fs-4"></i></div>
+                            <div>
+                                <h6 class="modal-title fw-bold mb-0" id="sharedPartnerProfileLabel">-</h6>
+                                <small class="text-white-50" id="spp_subtitle">-</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body p-4" id="spp_body">
+                        <!-- Diisi dinamis oleh JS -->
+                    </div>
+
+                    <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-warning btn-sm fw-semibold text-dark" id="spp_btn_edit">
+                                <i class="bi bi-pencil-square me-1"></i> Edit Data Mitra
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                                <i class="bi bi-printer me-1"></i> Cetak Profil Mitra
+                            </button>
+                            <a href="#" id="spp_btn_new_doc" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i> Ajukan Naskah Baru
+                            </a>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
                     </div>
                 </div>
             </div>
-        @endforeach
+        </div>
 
         @push('scripts')
         <script>
-        function filterPartnersTable() {
-            const query = (document.getElementById('partnerSearchInput').value || '').toLowerCase().trim();
-            const categoryFilter = (document.getElementById('partnerCategoryFilter').value || '').toLowerCase();
-            const statusFilter = (document.getElementById('partnerStatusFilter').value || '').toLowerCase();
-            const rows = document.querySelectorAll('#partnerTable tbody tr.partner-row');
+        document.addEventListener('DOMContentLoaded', function() {
+            let partnerPayloads = {};
+            try {
+                const raw = document.getElementById('partnerModalPayloads');
+                if (raw && raw.textContent) partnerPayloads = JSON.parse(raw.textContent);
+            } catch (e) {}
+
+            function escapePartnerHtml(str) {
+                return String(str ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function getPartnerModal(el) {
+                if (!el || typeof bootstrap === 'undefined') return null;
+                return bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+            }
+
+            window.openPartnerEditModal = function(partnerId) {
+                const p = partnerPayloads[String(partnerId)];
+                const modalEl = document.getElementById('sharedPartnerEditModal');
+                if (!p || !modalEl) return;
+
+                document.getElementById('sharedPartnerEditLabel').innerText = 'Edit Data Mitra: ' + (p.name || '-');
+                document.getElementById('spe_id').value = p.id || '';
+                document.getElementById('spe_name').value = p.name || '';
+
+                const catSel = document.getElementById('spe_category');
+                if (catSel) {
+                    const targetCat = p.category || '';
+                    let found = Array.from(catSel.options).some(opt => opt.value === targetCat);
+                    if (!found && targetCat) {
+                        const legacyOpt = document.createElement('option');
+                        legacyOpt.value = targetCat;
+                        legacyOpt.text = targetCat + ' (Data Eksisting)';
+                        catSel.appendChild(legacyOpt);
+                    }
+                    catSel.value = targetCat;
+                }
+
+                const scopeSel = document.getElementById('spe_scope_coverage');
+                if (scopeSel) scopeSel.value = p.scope_coverage || 'Dalam Negeri (Nasional/Lokal)';
+
+                document.getElementById('spe_city').value = p.city || '';
+                document.getElementById('spe_address').value = p.address || '';
+                document.getElementById('spe_phone').value = p.phone || '';
+                document.getElementById('spe_email').value = p.email || '';
+                document.getElementById('spe_pic_name').value = p.pic_name || '';
+                document.getElementById('spe_pic_title').value = p.pic_title || '';
+                document.getElementById('spe_pic_contact').value = p.pic_contact || '';
+                document.getElementById('spe_profile_desc').value = p.profile_desc || '';
+
+                const verSel = document.getElementById('spe_status_verification');
+                if (verSel) verSel.value = p.status_verification || 'Belum Diverifikasi';
+                const verRo = document.getElementById('spe_status_verification_ro');
+                if (verRo) verRo.value = p.status_verification || 'Belum Diverifikasi';
+
+                const inst = getPartnerModal(modalEl);
+                if (inst) inst.show();
+            };
+
+            window.openPartnerProfileModal = function(partnerId) {
+                const p = partnerPayloads[String(partnerId)];
+                const modalEl = document.getElementById('sharedPartnerProfileModal');
+                if (!p || !modalEl) return;
+
+                document.getElementById('sharedPartnerProfileLabel').innerText = p.name || '-';
+                document.getElementById('spp_subtitle').innerText = (p.category || '-') + ' \u2022 ' + (p.scope_coverage || '-');
+                document.getElementById('spp_btn_new_doc').href = p.new_doc_url || '#';
+                document.getElementById('spp_btn_edit').onclick = function() {
+                    switchPartnerModal('sharedPartnerProfileModal', 'sharedPartnerEditModal', function() {
+                        window.openPartnerEditModal(partnerId);
+                    });
+                };
+
+                const comp = p.completeness || { filled: 0, total: 6, percent: 0, label: 'Perlu Dilengkapi', missing: [] };
+                const verBadgeCls = p.status_verification === 'Terverifikasi Sah'
+                    ? 'badge-soft-success border-success-subtle'
+                    : (p.status_verification === 'Perlu Pembaruan' ? 'badge-soft-warning border-warning-subtle' : 'badge-soft-secondary border-secondary-subtle');
+                const statusBadgeHtml = p.has_active
+                    ? '<span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Terverifikasi Sah &amp; Berjalan</span>'
+                    : (p.has_warning
+                        ? '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>Masa Berlaku Mendekati Ambang Batas</span>'
+                        : (p.docs && p.docs.length > 0
+                            ? '<span class="badge bg-info text-white"><i class="bi bi-hourglass-split me-1"></i>Dalam Proses Alur FSM</span>'
+                            : '<span class="badge bg-secondary"><i class="bi bi-journal-check me-1"></i>Mitra Terdaftar di Sistem</span>'));
+
+                const missingNote = (comp.missing && comp.missing.length > 0)
+                    ? `<div class="text-danger mt-1" style="font-size: 0.7rem;"><i class="bi bi-exclamation-circle me-1"></i>Belum lengkap: ${escapePartnerHtml(comp.missing.join(', '))}</div>`
+                    : `<div class="text-success mt-1" style="font-size: 0.7rem;"><i class="bi bi-check-circle me-1"></i>Seluruh field identitas, kontak &amp; PIC telah terisi lengkap.</div>`;
+
+                const docBadgeMap = {
+                    'DRAFT': 'badge-soft-secondary border border-secondary-subtle',
+                    'REVIEW': 'badge-soft-info border border-info-subtle',
+                    'VERIFIED': 'badge-soft-primary border border-primary-subtle',
+                    'ACTIVE': 'badge-soft-success border border-success-subtle',
+                    'WARNING': 'badge-soft-warning border border-warning-subtle',
+                    'EXPIRED': 'badge-soft-danger border border-danger-subtle',
+                    'CANCELLED': 'bg-dark text-white'
+                };
+                const docRowsHtml = (p.docs && p.docs.length > 0)
+                    ? p.docs.map(function(d) {
+                        const bCls = docBadgeMap[d.status] || 'bg-secondary text-white';
+                        return `
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">${escapePartnerHtml(d.doc_number || 'Dalam Proses')}</div>
+                                    <span class="badge bg-light text-muted border font-monospace" style="font-size: 0.65rem;">${escapePartnerHtml(d.reg_id)}</span>
+                                </td>
+                                <td><span class="badge bg-dark" style="font-size: 0.68rem;">${escapePartnerHtml(d.doc_type)}</span></td>
+                                <td>
+                                    <div class="text-secondary" style="max-width: 220px;">${escapePartnerHtml((d.scope || '-').slice(0, 80))}</div>
+                                    <div class="text-muted" style="font-size: 0.68rem;">Unit: ${escapePartnerHtml(d.unit || '-')}</div>
+                                </td>
+                                <td>
+                                    <div>${escapePartnerHtml(d.validity || 'Belum Ditetapkan')}</div>
+                                    ${d.date_signed ? `<small class="text-muted" style="font-size: 0.68rem;">TTD: ${escapePartnerHtml(d.date_signed)}</small>` : ''}
+                                </td>
+                                <td class="text-center"><span class="badge ${bCls} py-1 px-2 fw-bold" style="font-size: 0.7rem;">${escapePartnerHtml(d.status)}</span></td>
+                                <td class="text-end">
+                                    <a href="${escapePartnerHtml(d.url)}" class="btn btn-outline-dark btn-sm py-0 px-2" style="font-size: 0.68rem;" title="Kelola Alur FSM"><i class="bi bi-sliders me-1"></i>FSM</a>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')
+                    : '<tr><td colspan="6" class="text-center py-3 text-muted">Belum ada naskah kerja sama yang tercatat untuk mitra ini.</td></tr>';
+
+                document.getElementById('spp_body').innerHTML = `
+                    <div class="card bg-light border mb-3">
+                        <div class="card-header bg-white py-2 px-3 fw-bold small text-primary d-flex flex-wrap justify-content-between align-items-center gap-1">
+                            <span><i class="bi bi-info-circle-fill me-1"></i> Identitas &amp; Profil Lembaga Mitra</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge border ${escapePartnerHtml(comp.badge_class || 'badge-soft-secondary')}" style="font-size: 0.65rem;">Kelengkapan: ${comp.filled}/${comp.total} (${comp.percent}%)</span>
+                                <span class="badge border ${verBadgeCls}" style="font-size: 0.65rem;">${escapePartnerHtml(p.status_verification)}</span>
+                            </div>
+                        </div>
+                        <div class="card-body p-3 small">
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <div class="text-muted fw-bold" style="font-size: 0.72rem;">NAMA INSTANSI RESMI:</div>
+                                    <div class="fw-bold text-dark fs-6">${escapePartnerHtml(p.name)}</div>
+                                    <div class="mt-2 text-muted fw-bold" style="font-size: 0.72rem;">JENIS &amp; KATEGORI MITRA:</div>
+                                    <div><span class="badge bg-light text-dark border">${escapePartnerHtml(p.category || '-')}</span> &bull; ${escapePartnerHtml(p.scope_coverage)}</div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="text-muted fw-bold" style="font-size: 0.72rem;">ALAMAT LENGKAP KANTOR:</div>
+                                    <div class="text-dark">${escapePartnerHtml(p.address || (p.city ? ('Kota/Kab: ' + p.city) : 'Belum dilengkapi'))}</div>
+                                    <div class="mt-2 text-muted fw-bold" style="font-size: 0.72rem;">KONTAK RESMI PERUSAHAAN / INSTANSI:</div>
+                                    <div>
+                                        <i class="bi bi-telephone-fill text-primary me-1"></i> ${escapePartnerHtml(p.phone || 'Belum diisi')}<br>
+                                        <i class="bi bi-envelope-fill text-danger me-1"></i> ${p.email ? `<a href="mailto:${escapePartnerHtml(p.email)}" class="text-decoration-none">${escapePartnerHtml(p.email)}</a>` : 'Belum diisi'}
+                                    </div>
+                                </div>
+                                <div class="col-12 pt-1 border-top">
+                                    <div class="text-muted fw-bold" style="font-size: 0.72rem;">PROFIL &amp; BIDANG OPERASIONAL MITRA:</div>
+                                    <div class="text-secondary mt-1">${escapePartnerHtml(p.profile_desc || 'Belum ada deskripsi profil mitra.')}</div>
+                                    ${missingNote}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light border mb-3">
+                        <div class="card-header bg-white py-2 px-3 fw-bold small text-dark d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-person-badge-fill text-primary me-1"></i> Penanggung Jawab (PIC Mitra) &amp; Relasi Kampus</span>
+                            <span class="badge bg-primary text-white" style="font-size: 0.65rem;">PIC MITRA</span>
+                        </div>
+                        <div class="card-body p-3 small">
+                            <div class="row g-2">
+                                <div class="col-sm-6">
+                                    <div class="p-2 bg-white rounded border">
+                                        <div class="text-muted fw-bold" style="font-size: 0.7rem;">PENANGGUNG JAWAB DARI PIHAK MITRA:</div>
+                                        <div class="fw-bold text-dark fs-6 mt-1">${escapePartnerHtml(p.pic_name || 'Belum diisi')}</div>
+                                        <div class="text-muted">${escapePartnerHtml(p.pic_title || '-')}</div>
+                                        <div class="mt-2">
+                                            <span class="badge badge-soft-success border border-success-subtle">
+                                                <i class="bi bi-whatsapp me-1"></i> Kontak PIC: ${escapePartnerHtml(p.pic_contact || 'Belum diisi')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="p-2 bg-white rounded border">
+                                        <div class="text-muted fw-bold" style="font-size: 0.7rem;">UNIT PENGUSUL DI UNIPAR:</div>
+                                        <div class="fw-bold text-primary mt-1">${(p.units && p.units.length > 0) ? escapePartnerHtml(p.units.join(', ')) : 'Belum Ada Naskah Diajukan'}</div>
+                                        <div class="text-muted mt-2" style="font-size: 0.7rem;">Status Kemitraan:</div>
+                                        <div>${statusBadgeHtml}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border mb-0">
+                        <div class="card-header bg-white py-2 px-3 fw-bold small text-dark d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-clock-history text-primary me-1"></i> Riwayat Kerja Sama (${p.docs ? p.docs.length : 0} Naskah)</span>
+                            <span class="badge bg-dark rounded-pill">${(p.types && p.types.length > 0) ? escapePartnerHtml(p.types.join(', ')) : '0 Dokumen'}</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0 small" style="font-size: 0.75rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No. Registrasi &amp; Surat</th>
+                                        <th>Jenis</th>
+                                        <th>Ruang Lingkup Kegiatan</th>
+                                        <th>Masa Berlaku</th>
+                                        <th class="text-center">Status FSM</th>
+                                        <th class="text-end">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${docRowsHtml}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                const inst = getPartnerModal(modalEl);
+                if (inst) inst.show();
+            };
+
+            const partnerTbody = document.querySelector('#partnerTable tbody');
+            const partnerRows = Array.from(document.querySelectorAll('#partnerTable tbody tr.partner-row'));
+            const sortableHeaders = document.querySelectorAll('#partnerTable thead th.partner-sortable');
             const noMatchRow = document.getElementById('noPartnerMatchRow');
             const visibleBadge = document.getElementById('partnerVisibleCount');
+            const footerVisibleEl = document.getElementById('partnerFooterVisibleCount');
+            const perPageSelect = document.getElementById('partnerPerPage');
+            const paginationWrapper = document.getElementById('partnerPaginationWrapper');
+            const partnerExcelBtn = document.getElementById('btnPartnerExportExcel');
+            const partnerActiveFilterBadge = document.getElementById('partnerActiveFilterBadge');
 
-            let visibleCount = 0;
-            rows.forEach(function(row) {
-                const text = row.innerText.toLowerCase();
-                const rowCat = (row.getAttribute('data-category') || '').toLowerCase();
-                const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
+            const PARTNER_STATE_KEY = 'simkerma_partner_state_v1';
+            let partnerPage = 1;
+            let partnerSortKey = 'name';
+            let partnerSortDir = 'asc';
 
-                const matchesQuery = !query || text.includes(query);
-                const matchesCat = !categoryFilter || rowCat.includes(categoryFilter);
-                const matchesStatus = !statusFilter || rowStatus.includes(statusFilter);
+            partnerRows.forEach((r, idx) => r.dataset.origIdx = String(idx));
 
-                if (matchesQuery && matchesCat && matchesStatus) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
+            function savePartnerState() {
+                try {
+                    sessionStorage.setItem(PARTNER_STATE_KEY, JSON.stringify({
+                        q: document.getElementById('partnerSearchInput')?.value || '',
+                        cat: document.getElementById('partnerCategoryFilter')?.value || '',
+                        status: document.getElementById('partnerStatusFilter')?.value || '',
+                        perPage: perPageSelect ? perPageSelect.value : '15',
+                        sortKey: partnerSortKey,
+                        sortDir: partnerSortDir,
+                        page: partnerPage
+                    }));
+                } catch (e) {}
+            }
+
+            function restorePartnerState() {
+                try {
+                    const raw = sessionStorage.getItem(PARTNER_STATE_KEY);
+                    if (!raw) return;
+                    const st = JSON.parse(raw);
+                    if (!st || typeof st !== 'object') return;
+                    const sEl = document.getElementById('partnerSearchInput');
+                    const cEl = document.getElementById('partnerCategoryFilter');
+                    const stEl = document.getElementById('partnerStatusFilter');
+                    if (sEl && typeof st.q === 'string') sEl.value = st.q;
+                    if (cEl && typeof st.cat === 'string') cEl.value = st.cat;
+                    if (stEl && typeof st.status === 'string') stEl.value = st.status;
+                    if (perPageSelect && st.perPage) perPageSelect.value = st.perPage;
+                    if (st.sortKey) partnerSortKey = st.sortKey;
+                    if (st.sortDir) partnerSortDir = st.sortDir;
+                    if (st.page && Number.isInteger(st.page) && st.page >= 1) partnerPage = st.page;
+                } catch (e) {}
+            }
+
+            function updatePartnerSortUI() {
+                sortableHeaders.forEach(function(th) {
+                    const key = th.getAttribute('data-sort-key');
+                    const icon = th.querySelector('.partner-sort-icon');
+                    th.classList.remove('sort-active');
+                    if (icon) icon.className = 'bi partner-sort-icon bi-arrow-down-up';
+                    if (key === partnerSortKey) {
+                        th.classList.add('sort-active');
+                        th.setAttribute('data-sort-dir', partnerSortDir);
+                        if (icon) {
+                            icon.className = 'bi partner-sort-icon ' + (partnerSortDir === 'desc' ? 'bi-sort-down' : 'bi-sort-up');
+                        }
+                    } else {
+                        th.removeAttribute('data-sort-dir');
+                    }
+                });
+            }
+
+            function renderPartnerPagination(totalPages) {
+                if (!paginationWrapper) return;
+                if (totalPages <= 1) {
+                    paginationWrapper.innerHTML = '';
+                    return;
                 }
+                let html = `<button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 ${partnerPage === 1 ? 'disabled opacity-50' : ''}" data-page="${partnerPage - 1}" aria-label="Halaman sebelumnya"><i class="bi bi-chevron-left"></i></button>`;
+                for (let p = 1; p <= totalPages; p++) {
+                    if (p === 1 || p === totalPages || (p >= partnerPage - 1 && p <= partnerPage + 1)) {
+                        html += `<button type="button" class="btn btn-sm ${p === partnerPage ? 'btn-primary' : 'btn-outline-secondary'} py-1 px-2 fw-semibold" data-page="${p}" aria-label="Halaman ${p}">${p}</button>`;
+                    } else if (p === partnerPage - 2 || p === partnerPage + 2) {
+                        html += `<span class="px-1 text-muted">&hellip;</span>`;
+                    }
+                }
+                html += `<button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 ${partnerPage === totalPages ? 'disabled opacity-50' : ''}" data-page="${partnerPage + 1}" aria-label="Halaman berikutnya"><i class="bi bi-chevron-right"></i></button>`;
+                paginationWrapper.innerHTML = html;
+
+                paginationWrapper.querySelectorAll('button[data-page]').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const target = parseInt(this.getAttribute('data-page'), 10);
+                        if (!isNaN(target) && target >= 1 && target <= totalPages) {
+                            partnerPage = target;
+                            window.renderPartnersTable(false);
+                        }
+                    });
+                });
+            }
+
+            let lastMatchedPartners = partnerRows;
+
+            window.renderPartnersTable = function(resetPage = false) {
+                if (resetPage) partnerPage = 1;
+
+                const query = (document.getElementById('partnerSearchInput')?.value || '').toLowerCase().trim();
+                const categoryFilter = (document.getElementById('partnerCategoryFilter')?.value || '').toLowerCase().trim();
+                const statusFilter = (document.getElementById('partnerStatusFilter')?.value || '').trim();
+
+                const matched = partnerRows.filter(function(row) {
+                    const searchText = (row.getAttribute('data-search') || row.innerText).toLowerCase();
+                    const rowCatGroup = (row.getAttribute('data-category-group') || '').toLowerCase().trim();
+                    const rowStatus = (row.getAttribute('data-status') || '').trim();
+                    const rowVer = (row.getAttribute('data-verification') || '').trim();
+                    const rowComplete = row.getAttribute('data-complete') === '1';
+
+                    const matchesQuery = !query || searchText.includes(query);
+                    const matchesCat = !categoryFilter || rowCatGroup === categoryFilter;
+
+                    let matchesStatus = true;
+                    if (statusFilter) {
+                        if (statusFilter.startsWith('VER_')) {
+                            matchesStatus = (rowVer === statusFilter.slice(4));
+                        } else if (statusFilter === 'COMP_INCOMPLETE') {
+                            matchesStatus = !rowComplete;
+                        } else {
+                            matchesStatus = (rowStatus === statusFilter);
+                        }
+                    }
+
+                    return matchesQuery && matchesCat && matchesStatus;
+                });
+
+                matched.sort(function(a, b) {
+                    let cmp = 0;
+                    if (partnerSortKey === 'name') {
+                        const na = a.dataset.sortName || '';
+                        const nb = b.dataset.sortName || '';
+                        cmp = partnerSortDir === 'desc' ? nb.localeCompare(na, 'id') : na.localeCompare(nb, 'id');
+                    } else if (partnerSortKey === 'completeness') {
+                        const ca = parseInt(a.dataset.sortCompleteness || '0', 10);
+                        const cb = parseInt(b.dataset.sortCompleteness || '0', 10);
+                        cmp = partnerSortDir === 'desc' ? (cb - ca) : (ca - cb);
+                    } else if (partnerSortKey === 'docs') {
+                        const da = parseInt(a.dataset.sortDocs || '0', 10);
+                        const db = parseInt(b.dataset.sortDocs || '0', 10);
+                        cmp = partnerSortDir === 'desc' ? (db - da) : (da - db);
+                    } else if (partnerSortKey === 'status') {
+                        const sa = parseInt(a.dataset.sortStatus || '0', 10);
+                        const sb = parseInt(b.dataset.sortStatus || '0', 10);
+                        cmp = partnerSortDir === 'desc' ? (sb - sa) : (sa - sb);
+                    }
+                    return cmp !== 0 ? cmp : parseInt(a.dataset.origIdx, 10) - parseInt(b.dataset.origIdx, 10);
+                });
+
+                lastMatchedPartners = matched;
+                const activeFilterCount = (query ? 1 : 0) + (categoryFilter ? 1 : 0) + (statusFilter ? 1 : 0);
+                if (partnerActiveFilterBadge) {
+                    if (activeFilterCount > 0) {
+                        partnerActiveFilterBadge.textContent = String(activeFilterCount);
+                        partnerActiveFilterBadge.classList.remove('d-none');
+                    } else {
+                        partnerActiveFilterBadge.classList.add('d-none');
+                    }
+                }
+                const totalMatched = matched.length;
+                if (visibleBadge) visibleBadge.textContent = totalMatched;
+                if (footerVisibleEl) footerVisibleEl.textContent = totalMatched;
+                if (partnerExcelBtn) {
+                    const isEmpty = (totalMatched === 0);
+                    partnerExcelBtn.disabled = isEmpty;
+                    partnerExcelBtn.classList.toggle('opacity-50', isEmpty);
+                    partnerExcelBtn.title = isEmpty
+                        ? 'Tidak ada data mitra terfilter untuk diekspor'
+                        : 'Ekspor Data Mitra Terfilter ke Excel';
+                }
+
+                if (totalMatched === 0) {
+                    partnerRows.forEach(r => r.style.display = 'none');
+                    if (noMatchRow) noMatchRow.style.display = '';
+                    if (paginationWrapper) paginationWrapper.innerHTML = '';
+                    savePartnerState();
+                    return;
+                }
+
+                if (noMatchRow) noMatchRow.style.display = 'none';
+
+                if (partnerTbody) {
+                    matched.forEach(r => partnerTbody.appendChild(r));
+                    if (noMatchRow) partnerTbody.appendChild(noMatchRow);
+                }
+
+                const perPageVal = perPageSelect ? perPageSelect.value : '15';
+                const perPage = (perPageVal === 'ALL') ? totalMatched : parseInt(perPageVal, 10);
+                const totalPages = Math.ceil(totalMatched / perPage) || 1;
+                if (partnerPage > totalPages) partnerPage = totalPages;
+
+                const startIdx = (partnerPage - 1) * perPage;
+                const endIdx = startIdx + perPage;
+
+                partnerRows.forEach(r => r.style.display = 'none');
+                matched.forEach(function(row, idx) {
+                    const visible = (idx >= startIdx && idx < endIdx);
+                    row.style.display = visible ? '' : 'none';
+                    const numCell = row.querySelector('.partner-row-num');
+                    if (numCell) numCell.textContent = String(idx + 1);
+                });
+
+                renderPartnerPagination(totalPages);
+                savePartnerState();
+            };
+
+            window.filterPartnersTable = function() {
+                window.renderPartnersTable(true);
+            };
+
+            window.resetPartnerFilters = function() {
+                const searchInput = document.getElementById('partnerSearchInput');
+                const catFilter = document.getElementById('partnerCategoryFilter');
+                const statFilter = document.getElementById('partnerStatusFilter');
+
+                if (searchInput) searchInput.value = '';
+                if (catFilter) catFilter.value = '';
+                if (statFilter) statFilter.value = '';
+                partnerSortKey = 'name';
+                partnerSortDir = 'asc';
+                partnerPage = 1;
+                updatePartnerSortUI();
+                try { sessionStorage.removeItem(PARTNER_STATE_KEY); } catch (e) {}
+                window.renderPartnersTable(true);
+            };
+
+            window.exportFilteredPartnersToExcel = function() {
+                if (!lastMatchedPartners || !lastMatchedPartners.length) return;
+                const headers = [
+                    'No.',
+                    'Nama Mitra',
+                    'Kota / Domisili',
+                    'Cakupan Wilayah',
+                    'Nama PIC',
+                    'Kontak PIC',
+                    'Kategori Resmi',
+                    'Status Verifikasi',
+                    'Kelengkapan Data',
+                    'Unit Terkait UNIPAR',
+                    'Lingkup Kerja Sama',
+                    'Jumlah Naskah',
+                    'Jenis Dokumen',
+                    'Status Kemitraan'
+                ];
+                let html = '<table border="1"><thead><tr>';
+                headers.forEach(h => { html += '<th>' + escapePartnerHtml(h) + '</th>'; });
+                html += '</tr></thead><tbody>';
+
+                lastMatchedPartners.forEach(function(row, idx) {
+                    const ds = row.dataset;
+                    const cols = [
+                        String(idx + 1),
+                        ds.exportName || '-',
+                        ds.exportCity || '-',
+                        ds.exportScopeCoverage || '-',
+                        ds.exportPicName || '-',
+                        ds.exportPicContact || '-',
+                        ds.exportCategory || '-',
+                        ds.exportVerification || '-',
+                        ds.exportCompleteness || '-',
+                        ds.exportUnits || '-',
+                        ds.exportDocScope || '-',
+                        ds.exportDocCount || '0',
+                        ds.exportDocTypes || '-',
+                        ds.exportStatus || '-'
+                    ];
+                    html += '<tr>' + cols.map(c => '<td>' + escapePartnerHtml(c) + '</td>').join('') + '</tr>';
+                });
+                html += '</tbody></table>';
+
+                const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const today = new Date().toISOString().slice(0, 10);
+                a.href = url;
+                a.download = `Data_Master_Mitra_${today}.xls`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            sortableHeaders.forEach(function(th) {
+                function triggerPartnerSort() {
+                    const key = th.getAttribute('data-sort-key');
+                    if (partnerSortKey === key) {
+                        partnerSortDir = (partnerSortDir === 'desc') ? 'asc' : 'desc';
+                    } else {
+                        partnerSortKey = key;
+                        partnerSortDir = (key === 'name') ? 'asc' : 'desc';
+                    }
+                    updatePartnerSortUI();
+                    window.renderPartnersTable(true);
+                }
+                th.addEventListener('click', triggerPartnerSort);
+                th.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        triggerPartnerSort();
+                    }
+                });
             });
 
-            if (noMatchRow) {
-                noMatchRow.style.display = (visibleCount === 0) ? '' : 'none';
+            if (perPageSelect) {
+                perPageSelect.addEventListener('change', function() {
+                    window.renderPartnersTable(true);
+                });
             }
-            if (visibleBadge) {
-                visibleBadge.textContent = visibleCount;
+
+            if (partnerTbody) {
+                partnerTbody.addEventListener('click', function(e) {
+                    const profBtn = e.target.closest('.js-open-partner-profile');
+                    if (profBtn) {
+                        window.openPartnerProfileModal(profBtn.getAttribute('data-partner-id'));
+                        return;
+                    }
+                    const editBtn = e.target.closest('.js-open-partner-edit');
+                    if (editBtn) {
+                        window.openPartnerEditModal(editBtn.getAttribute('data-partner-id'));
+                    }
+                });
             }
-        }
 
-        function resetPartnerFilters() {
-            const searchInput = document.getElementById('partnerSearchInput');
-            const catFilter = document.getElementById('partnerCategoryFilter');
-            const statFilter = document.getElementById('partnerStatusFilter');
+            restorePartnerState();
+            updatePartnerSortUI();
+            window.renderPartnersTable(false);
 
-            if (searchInput) searchInput.value = '';
-            if (catFilter) catFilter.value = '';
-            if (statFilter) statFilter.value = '';
-            filterPartnersTable();
-        }
+            // Pintasan keyboard '/' untuk langsung fokus ke kotak pencarian mitra
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+                const tag = (document.activeElement?.tagName || '').toUpperCase();
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable) return;
+                const searchEl = document.getElementById('partnerSearchInput');
+                if (searchEl && searchEl.offsetParent !== null) {
+                    e.preventDefault();
+                    searchEl.focus();
+                    searchEl.select();
+                }
+            });
+        });
 
-        function switchPartnerModal(closeModalId, openModalId) {
+        function switchPartnerModal(closeModalId, openModalId, onReady) {
             const closeEl = document.getElementById(closeModalId);
             const openEl = document.getElementById(openModalId);
             if (!closeEl || !openEl) return;
@@ -962,14 +1575,14 @@
             if (closeInst) {
                 const handler = function() {
                     closeEl.removeEventListener('hidden.bs.modal', handler);
-                    const openInst = bootstrap.Modal.getInstance(openEl) || new bootstrap.Modal(openEl);
-                    openInst.show();
+                    if (typeof onReady === 'function') onReady();
+                    else (bootstrap.Modal.getInstance(openEl) || new bootstrap.Modal(openEl)).show();
                 };
                 closeEl.addEventListener('hidden.bs.modal', handler);
                 closeInst.hide();
             } else {
-                const openInst = bootstrap.Modal.getInstance(openEl) || new bootstrap.Modal(openEl);
-                openInst.show();
+                if (typeof onReady === 'function') onReady();
+                else (bootstrap.Modal.getInstance(openEl) || new bootstrap.Modal(openEl)).show();
             }
         }
         </script>
@@ -1033,12 +1646,12 @@
                         <h6 class="mb-0 fw-bold text-uppercase">
                             <i class="bi bi-file-earmark-text text-primary me-1"></i> Repositori Dokumen Resmi Kerja Sama
                         </h6>
-                        <span class="badge bg-primary text-white font-monospace" style="font-size: 0.65rem;">{{ $documents->count() }} NASKAH TERDAFTAR</span>
+                        <span class="badge bg-primary text-white font-monospace" style="font-size: 0.72rem;">{{ $documents->count() }} NASKAH TERDAFTAR</span>
                     </div>
-                    <small class="text-muted">Penyimpanan Terorganisasi Naskah MoU, MoA/PKS, IA, Proposal, Dokumen Pendukung &amp; Laporan Pelaksanaan</small>
+                    <small class="text-muted" style="font-size: 0.75rem;">Penyimpanan Terorganisasi Naskah MoU, MoA/PKS, IA, Proposal, Dokumen Pendukung &amp; Laporan Pelaksanaan</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-primary btn-sm fw-semibold shadow-sm">
+                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'new']) }}" class="btn btn-primary btn-sm fw-semibold shadow-sm repo-cta-primary">
                         <i class="bi bi-cloud-upload me-1"></i> Unggah / Ajukan Naskah Baru
                     </a>
                 </div>
@@ -1056,17 +1669,17 @@
                         </li>
                         <li class="nav-item">
                             <button class="nav-link repo-tab-btn" data-type="MoU">
-                                MoU ({{ $mouCount }})
+                                <span class="repo-type-dot" style="background-color: #5156be;"></span>MoU ({{ $mouCount }})
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link repo-tab-btn" data-type="MoA">
-                                PKS / MoA ({{ $moaCount }})
+                                <span class="repo-type-dot" style="background-color: #0d9488;"></span>PKS / MoA ({{ $moaCount }})
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link repo-tab-btn" data-type="IA">
-                                IA ({{ $iaCount }})
+                                <span class="repo-type-dot" style="background-color: #7e22ce;"></span>IA ({{ $iaCount }})
                             </button>
                         </li>
                         <li class="nav-item">
@@ -1078,18 +1691,18 @@
 
                     <!-- Pencarian & Tombol Kontrol Lanjutan (Tinggi Seragam 31px) -->
                     <div class="repo-controls d-flex align-items-center gap-2 flex-wrap">
-                        <div class="input-group input-group-sm" style="width: 255px;">
+                        <div class="input-group input-group-sm repo-search-group">
                             <span class="input-group-text bg-white border-end-0 text-muted">
                                 <i class="bi bi-search"></i>
                             </span>
-                            <input type="text" id="repoSearchInput" class="form-control border-start-0 border-end-0" placeholder="Cari nomor, mitra, judul, berkas..." autocomplete="off">
-                            <button class="btn btn-outline-secondary border-start-0 d-none" type="button" id="btnRepoClearSearch" title="Hapus Pencarian">
+                            <input type="text" id="repoSearchInput" class="form-control border-start-0 border-end-0" placeholder="Cari nomor, mitra, berkas... (Tekan /)" autocomplete="off">
+                            <button class="btn btn-outline-secondary border-start-0 d-none" type="button" id="btnRepoClearSearch" title="Hapus Pencarian" aria-label="Hapus Pencarian">
                                 <i class="bi bi-x-lg"></i>
                             </button>
                         </div>
                         <button type="button" class="btn btn-outline-secondary btn-sm btn-repo-xs d-inline-flex align-items-center gap-1 bg-white" id="btnToggleRepoAdvancedFilter" style="height: 31px;" title="Filter Lanjutan (Unit, Kategori, Tahun, Kelengkapan Berkas, Status)">
                             <i class="bi bi-funnel"></i><span>Filter</span>
-                            <span class="badge bg-primary text-white d-none" id="repoActiveFilterBadge" style="font-size: 0.62rem; padding: 2px 5px;">0</span>
+                            <span class="badge bg-primary text-white d-none" id="repoActiveFilterBadge" style="font-size: 0.72rem; padding: 2px 5px;">0</span>
                         </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm btn-repo-xs d-inline-flex align-items-center gap-1 bg-white d-none" id="btnRepoResetInline" onclick="resetRepoFilters()" style="height: 31px;" title="Reset Semua Filter">
                             <i class="bi bi-arrow-counterclockwise"></i><span>Reset</span>
@@ -1098,36 +1711,6 @@
                             <i class="bi bi-file-earmark-excel"></i><span>Excel</span>
                         </button>
                     </div>
-                </div>
-            </div>
-
-            <!-- RINGKASAN CEPAT KELENGKAPAN ARSIP (KLIK UNTUK FILTER CEPAT) -->
-            <div class="px-3 py-2 bg-white border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2 small" id="repoCompletenessStrip">
-                <div class="d-flex flex-wrap align-items-center gap-1.5">
-                    <span class="text-muted fw-semibold me-1" style="font-size: 0.72rem;">Ringkasan Arsip:</span>
-                    <button type="button" class="btn btn-light border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="HAS_SIGNED" title="Filter dokumen yang sudah memiliki Naskah Sah PDF">
-                        <span class="badge badge-soft-success py-0 px-1" id="kpiSignedCount">0</span>
-                        <span>Naskah Sah</span>
-                    </button>
-                    <button type="button" class="btn btn-light border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="DRAFT_ONLY" title="Filter dokumen yang baru memiliki berkas draf">
-                        <span class="badge badge-soft-primary py-0 px-1" id="kpiDraftCount">0</span>
-                        <span>Baru Draf</span>
-                    </button>
-                    <button type="button" class="btn btn-light border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="HAS_PROPOSAL" title="Filter dokumen yang memiliki Proposal atau Rencana Kegiatan">
-                        <span class="badge badge-soft-info py-0 px-1" id="kpiProposalCount">0</span>
-                        <span>Ada Proposal/TOR</span>
-                    </button>
-                    <button type="button" class="btn btn-light border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="HAS_REPORT" title="Filter dokumen yang memiliki Laporan Pelaksanaan">
-                        <span class="badge badge-soft-success py-0 px-1" id="kpiReportCount">0</span>
-                        <span>Ada Laporan</span>
-                    </button>
-                    <button type="button" class="btn btn-light border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="NO_MAIN_FILE" title="Filter dokumen yang belum memiliki naskah utama (PDF/DOCX)">
-                        <span class="badge badge-soft-warning py-0 px-1" id="kpiNoMainCount">0</span>
-                        <span>Tanpa Naskah Utama</span>
-                    </button>
-                </div>
-                <div class="text-muted d-none d-md-block" style="font-size: 0.7rem;">
-                    <i class="bi bi-lightning-charge text-primary"></i> Klik chip ringkasan untuk menyaring cepat
                 </div>
             </div>
 
@@ -1191,24 +1774,58 @@
                 </div>
             </div>
 
-            <!-- TABEL REPOSITORI DOKUMEN DINAMIS -->
-            <div class="table-responsive">
-                <table class="table table-wireframe table-hover table-sm align-middle mb-0 small" id="repoTable">
-                    <colgroup>
-                        <col style="width: 18%;">
-                        <col style="width: 28%;">
-                        <col style="width: 12%;">
-                        <col style="width: 17%;">
-                        <col style="width: 14%;">
-                        <col style="width: 11%;">
-                    </colgroup>
-                    <thead class="bg-light">
+            <!-- ISI UTAMA CARD (TERINSPIRASI BINGKAI CARD-BODY & TABEL KLASIK MENU 4) -->
+            <div class="card-body">
+                <!-- RINGKASAN CEPAT KELENGKAPAN ARSIP & BADGE TOTAL ALA MENU 4 -->
+                <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2 small" id="repoCompletenessStrip">
+                    <div class="d-flex flex-wrap align-items-center gap-1.5">
+                        <span class="text-muted fw-semibold me-1" style="font-size: 0.75rem;">Ringkasan Arsip:</span>
+                        <button type="button" class="btn btn-sm repo-kpi-chip border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="HAS_SIGNED" title="Filter dokumen yang sudah memiliki Naskah Sah PDF">
+                            <span class="badge badge-soft-success py-0.5 px-1.5" id="kpiSignedCount" style="font-size: 0.72rem;">0</span>
+                            <span>Naskah Sah</span>
+                        </button>
+                        <button type="button" class="btn btn-sm repo-kpi-chip border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="DRAFT_ONLY" title="Filter dokumen yang baru memiliki berkas draf">
+                            <span class="badge badge-soft-primary py-0.5 px-1.5" id="kpiDraftCount" style="font-size: 0.72rem;">0</span>
+                            <span>Baru Draf</span>
+                        </button>
+                        <button type="button" class="btn btn-sm repo-kpi-chip border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="HAS_PROPOSAL" title="Filter dokumen yang memiliki Proposal atau Rencana Kegiatan">
+                            <span class="badge badge-soft-info py-0.5 px-1.5" id="kpiProposalCount" style="font-size: 0.72rem;">0</span>
+                            <span>Ada Proposal/TOR</span>
+                        </button>
+                        <button type="button" class="btn btn-sm repo-kpi-chip border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="HAS_REPORT" title="Filter dokumen yang memiliki Laporan Pelaksanaan">
+                            <span class="badge badge-soft-success py-0.5 px-1.5" id="kpiReportCount" style="font-size: 0.72rem;">0</span>
+                            <span>Ada Laporan</span>
+                        </button>
+                        <button type="button" class="btn btn-sm repo-kpi-chip border btn-repo-xs d-inline-flex align-items-center gap-1 js-quick-file-filter" data-file-filter="NO_MAIN_FILE" title="Filter dokumen yang belum memiliki naskah utama (PDF/DOCX)">
+                            <span class="badge badge-soft-warning py-0.5 px-1.5" id="kpiNoMainCount" style="font-size: 0.72rem;">0</span>
+                            <span>Tanpa Naskah Utama</span>
+                        </button>
+                    </div>
+                    <div>
+                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                            Total: <span id="repoVisibleCountTop" class="fw-bold text-primary">{{ $documents->count() }}</span> Dokumen
+                        </span>
+                    </div>
+                </div>
+
+                <!-- TABEL REPOSITORI DOKUMEN DINAMIS -->
+                <div class="table-responsive" style="border: 0;">
+                    <table class="w-100 table table-bordered table-striped table-hover table-sm align-middle mb-0" id="repoTable">
+                        <colgroup>
+                            <col style="width: 17%;">
+                            <col style="width: 26%;">
+                            <col style="width: 14%;">
+                            <col style="width: 15%;">
+                            <col style="width: 16%;">
+                            <col style="width: 12%;">
+                        </colgroup>
+                        <thead class="table-light">
                         <tr>
-                            <th class="repo-sortable" data-sort-key="doc_number" title="Klik untuk mengurutkan berdasarkan Nomor Dokumen">Nomor &amp; Jenis <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
-                            <th class="repo-sortable" data-sort-key="title" title="Klik untuk mengurutkan berdasarkan Judul Kerja Sama (A-Z / Z-A)">Judul Kerja Sama &amp; Mitra <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
-                            <th class="repo-sortable sort-active" data-sort-key="date" data-sort-dir="desc" title="Klik untuk mengurutkan Tanggal TTD (Terbaru / Terlama)">TTD &amp; Durasi <i class="bi bi-sort-down repo-sort-icon"></i></th>
+                            <th class="repo-sortable" data-sort-key="doc_number" tabindex="0" role="button" title="Klik untuk mengurutkan berdasarkan Nomor Dokumen">Nomor &amp; Jenis <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
+                            <th class="repo-sortable" data-sort-key="title" tabindex="0" role="button" title="Klik untuk mengurutkan berdasarkan Judul Kerja Sama (A-Z / Z-A)">Judul Kerja Sama &amp; Mitra <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
+                            <th class="repo-sortable sort-active" data-sort-key="date" data-sort-dir="desc" tabindex="0" role="button" title="Klik untuk mengurutkan Tanggal TTD (Terbaru / Terlama)">TTD &amp; Durasi <i class="bi bi-sort-down repo-sort-icon"></i></th>
                             <th>Penandatangan</th>
-                            <th class="repo-sortable" data-sort-key="audit" title="Klik untuk mengurutkan berdasarkan Jumlah Riwayat">Berkas &amp; Audit <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
+                            <th class="repo-sortable" data-sort-key="audit" tabindex="0" role="button" title="Klik untuk mengurutkan berdasarkan Jumlah Riwayat">Berkas &amp; Audit <i class="bi bi-arrow-down-up repo-sort-icon"></i></th>
                             <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -1227,6 +1844,25 @@
                                 };
                                 $statusLabel = $statusMeta[0];
                                 $statusBadgeClass = $statusMeta[1];
+
+                                $docTypeUpper = strtoupper((string)$doc->doc_type);
+                                if (str_contains($docTypeUpper, 'MOU')) {
+                                    $docTypeBadgeClass = 'badge-doc-mou';
+                                    $docTypeIcon = 'bi-award-fill';
+                                    $docTypeTooltip = 'MoU — Nota Kesepahaman (Payung Institusi)';
+                                } elseif (str_contains($docTypeUpper, 'MOA') || str_contains($docTypeUpper, 'PKS')) {
+                                    $docTypeBadgeClass = 'badge-doc-moa';
+                                    $docTypeIcon = 'bi-file-earmark-ruled';
+                                    $docTypeTooltip = 'MoA / PKS — Perjanjian Kerja Sama (Turunan Unit/Fakultas)';
+                                } elseif (str_contains($docTypeUpper, 'IA')) {
+                                    $docTypeBadgeClass = 'badge-doc-ia';
+                                    $docTypeIcon = 'bi-lightning-charge-fill';
+                                    $docTypeTooltip = 'IA — Implementation Arrangement (Pelaksanaan Kegiatan)';
+                                } else {
+                                    $docTypeBadgeClass = 'bg-light text-dark border';
+                                    $docTypeIcon = 'bi-file-earmark-text';
+                                    $docTypeTooltip = $doc->doc_type;
+                                }
 
                                 // Verifikasi fisik berkas utama (signed_file -> draft_file -> docx_path)
                                 $signedInfo = $resolvePublicDocFile($doc->signed_file);
@@ -1261,6 +1897,7 @@
                                 $showPos1 = ($pos1 !== '' && stripos($signer1, $pos1) === false);
 
                                 $signer2 = trim((string)($doc->second_party_signer ?: ('Pimpinan ' . $doc->partner_name)));
+                                $isLegacyDoc = ($doc->is_legacy || stripos((string)$doc->track, 'Lampau') !== false || stripos((string)$doc->track, 'legacy') !== false);
                                 $docDateRef = $doc->date_signed ?: ($doc->date_approved ?: $doc->created_at);
                                 $docYearAttr = $docDateRef ? $docDateRef->format('Y') : '';
                                 $docSortTs = $docDateRef ? $docDateRef->timestamp : 0;
@@ -1390,53 +2027,63 @@
                                 data-export-attachments="{{ $totalAttachments }}"
                                 data-export-audit="{{ $doc->auditTrails->count() }}">
                                 <td>
-                                    <div style="font-size: 0.74rem; line-height: 1.3;">
+                                    <div style="font-size: 0.75rem; line-height: 1.35;">
                                         <span class="text-muted">I:</span>
                                         <strong class="text-dark">{{ $docNumDisplay }}</strong>
                                     </div>
-                                    <div class="text-muted mt-1" style="font-size: 0.71rem; line-height: 1.3;">
+                                    <div class="text-muted mt-1" style="font-size: 0.72rem; line-height: 1.35;">
                                         <span>II:</span>
                                         <span class="{{ $partnerNumDisplay !== '-' ? 'text-dark fw-medium' : 'text-muted' }}">{{ $partnerNumDisplay }}</span>
                                     </div>
                                     <div class="mt-1 d-flex align-items-center gap-1 flex-wrap">
-                                        <span class="badge bg-light text-dark border badge-repo-compact">{{ $doc->doc_type }}</span>
+                                        <span class="badge {{ $docTypeBadgeClass }} badge-repo-compact d-inline-flex align-items-center gap-1" title="{{ $docTypeTooltip }}">
+                                            <i class="bi {{ $docTypeIcon }}" style="font-size: 0.72rem;"></i>{{ $doc->doc_type }}
+                                        </span>
                                         <span class="badge {{ $statusBadgeClass }} badge-repo-compact" title="Status FSM: {{ $doc->status }}">{{ $statusLabel }}</span>
+                                        @if ($isLegacyDoc)
+                                            <span class="badge repo-legacy-badge badge-repo-compact" title="Dokumen Arsip Lampau (Pra-Sistem)"><i class="bi bi-archive me-1"></i>Lampau</span>
+                                        @endif
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="repo-doc-title fw-semibold text-dark text-decoration-none d-block mb-1" style="line-height: 1.35; font-size: 0.80rem;" title="Klik untuk membuka detail dokumen: {{ $doc->title ?: $doc->scope }}">
+                                    <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="repo-doc-title fw-semibold text-dark text-decoration-none d-block mb-1" style="line-height: 1.35; font-size: 0.82rem;" title="Klik untuk membuka detail dokumen: {{ $doc->title ?: $doc->scope }}">
                                         {{ Str::limit($doc->title ?: $doc->scope, 110) }}
                                     </a>
-                                    <div class="text-muted text-truncate" style="font-size: 0.74rem;" title="{{ $doc->partner_name }}">
-                                        <i class="bi bi-building me-1 text-primary"></i><strong class="text-dark">{{ $doc->partner_name }}</strong>
+                                    <div class="text-muted repo-partner-wrap" style="font-size: 0.75rem;" title="{{ $doc->partner_name }}">
+                                        <i class="bi bi-building me-1 text-secondary"></i><strong class="text-dark">{{ $doc->partner_name }}</strong>
                                     </div>
-                                    <div class="text-muted text-truncate" style="font-size: 0.70rem;" title="{{ $doc->partner_category }}{{ $doc->unit ? ' • ' . $doc->unit : '' }}">
+                                    <div class="text-muted mt-0.5" style="font-size: 0.72rem; line-height: 1.35;" title="{{ $doc->partner_category }}{{ $doc->unit ? ' • ' . $doc->unit : '' }}">
                                         <span>{{ $doc->partner_category }}</span>
                                         @if ($doc->unit)
                                             <span>&bull; {{ $doc->unit }}</span>
                                         @endif
                                     </div>
+                                    @if (!empty($doc->parent_mou) && trim((string)$doc->parent_mou) !== '-')
+                                        <div class="text-primary text-truncate mt-0.5" style="font-size: 0.72rem;" title="Dokumen Induk / Payung: {{ $doc->parent_mou }}">
+                                            <i class="bi bi-arrow-return-right me-1"></i>Induk: {{ $doc->parent_mou }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="text-center">
-                                    <div class="text-dark fw-medium" style="font-size: 0.76rem;">
+                                    <div class="text-dark fw-medium" style="font-size: 0.75rem;">
                                         {{ $dateDisplay }}
                                     </div>
-                                    <div class="text-muted" style="font-size: 0.71rem;">{{ $validityDisplay }}</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">{{ $validityDisplay }}</div>
                                     @if ($doc->end_date)
-                                        <div class="text-muted" style="font-size: 0.67rem;" title="Berakhir pada {{ $doc->end_date->translatedFormat('d F Y') }}">
+                                        <div class="text-muted" style="font-size: 0.72rem;" title="Berakhir pada {{ $doc->end_date->translatedFormat('d F Y') }}">
                                             s.d. {{ $endDateDisplay }}
                                         </div>
                                     @endif
                                 </td>
                                 <td>
-                                    <div style="font-size: 0.74rem; line-height: 1.3;">
+                                    <div style="font-size: 0.75rem; line-height: 1.35;">
                                         <span class="text-muted">UNIPAR:</span>
                                         <span class="text-dark fw-semibold">{{ $signer1 }}</span>
                                     </div>
                                     @if ($showPos1)
-                                        <div class="text-muted" style="font-size: 0.69rem; line-height: 1.25;">{{ $pos1 }}</div>
+                                        <div class="text-muted" style="font-size: 0.72rem; line-height: 1.3;">{{ $pos1 }}</div>
                                     @endif
-                                    <div class="mt-1 pt-1 border-top" style="font-size: 0.73rem; line-height: 1.3;">
+                                    <div class="mt-1 pt-1 border-top" style="font-size: 0.75rem; line-height: 1.35;">
                                         <span class="text-muted">Mitra:</span>
                                         <span class="text-dark">{{ $signer2 }}</span>
                                     </div>
@@ -1444,43 +2091,37 @@
                                 <td class="text-center">
                                     @if ($hasRealFile)
                                         <div class="d-inline-flex align-items-center justify-content-center gap-1 text-nowrap">
-                                            <a href="{{ $primaryFileInfo['url'] }}" target="_blank" class="repo-file-link d-inline-flex align-items-center text-dark fw-semibold text-decoration-none" style="font-size: 0.73rem;" title="Pratinjau / Buka: {{ $primaryFileInfo['name'] }}">
+                                            <a href="{{ $primaryFileInfo['url'] }}" target="_blank" class="repo-file-link d-inline-flex align-items-center text-dark fw-semibold text-decoration-none" style="font-size: 0.75rem;" title="Pratinjau / Buka: {{ $primaryFileInfo['name'] }}">
                                                 <i class="bi {{ $primaryFileIcon }} me-1"></i>
                                                 <span>{{ $primaryFileShort }} ({{ $primaryFileInfo['size_text'] }})</span>
                                             </a>
-                                            <a href="{{ $primaryFileInfo['url'] }}" download class="text-primary ps-1" style="font-size: 0.76rem;" title="Unduh {{ $primaryFileInfo['name'] }}">
+                                            <a href="{{ $primaryFileInfo['url'] }}" download class="text-primary ps-1 d-inline-flex align-items-center justify-content-center" style="font-size: 0.78rem; min-width: 24px; min-height: 24px;" title="Unduh {{ $primaryFileInfo['name'] }}" aria-label="Unduh {{ $primaryFileInfo['name'] }}">
                                                 <i class="bi bi-download"></i>
                                             </a>
                                         </div>
                                     @else
                                         <div>
-                                            <button type="button" class="badge badge-soft-warning text-warning-emphasis border border-warning-subtle py-0.5 px-1.5 js-open-repo-attachments" data-doc-id="{{ $doc->id }}" style="font-size: 0.65rem;" title="Belum ada naskah utama, klik untuk unggah">
-                                                <i class="bi bi-cloud-upload me-0.5"></i>Belum ada naskah
+                                            <button type="button" class="badge badge-soft-warning text-warning-emphasis border border-warning-subtle repo-inline-pill js-open-repo-attachments" data-doc-id="{{ $doc->id }}" title="Belum ada naskah utama, klik untuk unggah">
+                                                <i class="bi bi-cloud-upload"></i><span>Belum ada naskah</span>
                                             </button>
                                         </div>
                                     @endif
-                                    <div class="mt-1 d-flex justify-content-center align-items-center gap-1 flex-wrap">
-                                        <button type="button" class="badge {{ $totalAttachments > 0 ? 'badge-soft-primary border border-primary-subtle' : 'bg-light text-muted border' }} text-decoration-none py-0.5 px-1.5 js-open-repo-attachments" data-doc-id="{{ $doc->id }}" style="font-size: 0.64rem;" title="Lihat &amp; Kelola Proposal, TOR, Dokumen Pendukung &amp; Laporan">
-                                            <i class="bi bi-paperclip"></i> {{ $totalAttachments > 0 ? $totalAttachments . ' Lampiran' : '+ Lampiran' }}
+                                    <div class="mt-1 d-flex justify-content-center align-items-center gap-1.5 flex-wrap">
+                                        <button type="button" class="badge {{ $totalAttachments > 0 ? 'badge-soft-primary border border-primary-subtle' : 'bg-light text-muted border' }} text-decoration-none repo-inline-pill js-open-repo-attachments" data-doc-id="{{ $doc->id }}" title="Lihat &amp; Kelola Proposal, TOR, Dokumen Pendukung &amp; Laporan">
+                                            <i class="bi bi-paperclip"></i><span>{{ $totalAttachments > 0 ? $totalAttachments . ' Lampiran' : '+ Lampiran' }}</span>
                                         </button>
-                                        <button type="button" class="btn btn-link p-0 text-muted text-decoration-none d-inline-flex align-items-center gap-1 js-open-repo-audit" data-doc-id="{{ $doc->id }}" style="font-size: 0.67rem;" title="Lihat Riwayat Perubahan Dokumen">
-                                            <i class="bi bi-clock-history text-primary"></i><span class="text-decoration-underline">{{ $doc->auditTrails->count() }} Riwayat</span>
+                                        <button type="button" class="btn btn-light border text-muted text-decoration-none repo-inline-pill js-open-repo-audit" data-doc-id="{{ $doc->id }}" title="Lihat Riwayat Perubahan Dokumen">
+                                            <i class="bi bi-clock-history text-primary"></i><span>{{ $doc->auditTrails->count() }} Riwayat</span>
                                         </button>
                                     </div>
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap">
-                                        <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-light border btn-repo-xs text-primary" title="Lembar Verifikasi Publik">
-                                            <i class="bi bi-shield-check"></i>
+                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="btn btn-partner-profile btn-repo-xs repo-action-btn fw-semibold gap-1" title="Buka Detail Dokumen &amp; Alur FSM" aria-label="Buka Detail Dokumen {{ $docNumDisplay !== '-' ? $docNumDisplay : $doc->doc_id }}">
+                                            <i class="bi bi-folder2-open"></i><span>Detail</span>
                                         </a>
-                                        <button type="button" class="btn btn-light border btn-repo-xs text-secondary js-open-repo-attachments" data-doc-id="{{ $doc->id }}" title="Kelola Berkas, Proposal &amp; Lampiran">
-                                            <i class="bi bi-paperclip"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-light border btn-repo-xs text-info js-open-repo-audit" data-doc-id="{{ $doc->id }}" title="Riwayat Perubahan Dokumen">
-                                            <i class="bi bi-clock-history"></i>
-                                        </button>
-                                        <a href="{{ route('simkerma.index', ['menu' => 4, 'view' => 'detail', 'doc' => $doc->doc_id]) }}" class="btn btn-primary btn-repo-xs text-white" title="Buka Detail Dokumen &amp; Alur FSM">
-                                            <i class="bi bi-folder2-open"></i>
+                                        <a href="{{ route('simkerma.verify', ['reg_id' => $doc->reg_id]) }}" target="_blank" class="btn btn-outline-secondary btn-repo-xs repo-action-btn repo-action-icon text-primary bg-white" title="Lembar Verifikasi Publik" aria-label="Lembar Verifikasi Publik {{ $docNumDisplay !== '-' ? $docNumDisplay : $doc->doc_id }}">
+                                            <i class="bi bi-shield-check"></i>
                                         </a>
                                     </div>
                                 </td>
@@ -1506,6 +2147,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- CARD FOOTER DENGAN KONTROL PAGINATION -->
@@ -1515,7 +2157,7 @@
                     <span class="text-secondary">&bull;</span>
                     <div class="d-flex align-items-center gap-1">
                         <span>Tampilkan:</span>
-                        <select id="repoPerPage" class="form-select form-select-sm py-0 px-2" style="width: auto; height: 26px; font-size: 0.75rem;">
+                        <select id="repoPerPage" class="form-select form-select-sm py-0 px-2" style="width: auto; height: 30px; font-size: 0.76rem;">
                             <option value="15">15</option>
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
@@ -1599,6 +2241,7 @@
                                             <option value="proposal">Proposal Kerja Sama</option>
                                             <option value="rencana_kegiatan">Rencana Kegiatan / TOR</option>
                                             <option value="dokumen_pendukung">Dokumen Pendukung (Notula/Surat/dll)</option>
+                                            <option value="laporan_pelaksanaan">Laporan Pelaksanaan Kegiatan</option>
                                             <option value="draft">Naskah Draf Pengusul (PDF/DOCX)</option>
                                             <option value="signed">Naskah Sah Bertandatangan (PDF)</option>
                                         </select>
@@ -1616,7 +2259,7 @@
                                         <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.72rem;">Pilih File (Maks. 15 MB)</label>
                                         <div class="input-group input-group-sm">
                                             <input type="file" name="file" id="srmUploadFileInput" class="form-control form-control-sm" required accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                                            <button type="submit" id="srmUploadSubmitBtn" class="btn btn-primary fw-semibold px-2.5" title="Unggah Berkas Sekarang">
+                                            <button type="submit" id="srmUploadSubmitBtn" class="btn btn-primary fw-semibold px-2.5" title="Unggah Berkas Sekarang" aria-label="Unggah Berkas Sekarang">
                                                 <i class="bi bi-upload"></i>
                                             </button>
                                         </div>
@@ -1683,8 +2326,10 @@
             const resetInlineBtn = document.getElementById('btnRepoResetInline');
             const noMatchRow = document.getElementById('noRepoMatchRow');
             const visibleCountEl = document.getElementById('repoVisibleCount');
+            const visibleCountTopEl = document.getElementById('repoVisibleCountTop');
             const perPageSelect = document.getElementById('repoPerPage');
             const paginationWrapper = document.getElementById('repoPaginationWrapper');
+            const exportExcelBtn = document.getElementById('btnRepoExportExcel');
 
             // Payload Modal & CSRF Token
             let payloadsData = { byId: {}, byDocId: {} };
@@ -1761,6 +2406,33 @@
 
             function restoreRepoState() {
                 try {
+                    const urlObj = new URL(window.location.href);
+                    const pStatus = urlObj.searchParams.get('filter_status');
+                    const pCat = urlObj.searchParams.get('filter_category');
+                    const pUnit = urlObj.searchParams.get('filter_unit');
+                    const pType = urlObj.searchParams.get('filter_type');
+                    const pReset = urlObj.searchParams.get('reset_filters');
+
+                    if (pStatus || pCat || pUnit || pType || pReset) {
+                        tabs.forEach(b => b.classList.toggle('active', b.getAttribute('data-type') === (pType || 'ALL')));
+                        if (search) search.value = '';
+                        if (statusFilter) statusFilter.value = pStatus || 'ALL';
+                        if (categoryFilter) categoryFilter.value = pCat || 'ALL';
+                        if (unitFilter) unitFilter.value = pUnit || 'ALL';
+                        if (yearFilter) yearFilter.value = 'ALL';
+                        if (fileFilter) fileFilter.value = 'ALL';
+                        currentPage = 1;
+
+                        const hasAdvUrl = !!(pStatus || pCat || pUnit);
+                        if (hasAdvUrl && advPanel && toggleAdvBtn) {
+                            advPanel.classList.remove('d-none');
+                            toggleAdvBtn.classList.add('active');
+                        }
+                        ['filter_status', 'filter_category', 'filter_unit', 'filter_type', 'reset_filters'].forEach(k => urlObj.searchParams.delete(k));
+                        window.history.replaceState({}, document.title, urlObj.pathname + urlObj.search);
+                        return;
+                    }
+
                     const raw = sessionStorage.getItem(REPO_STATE_KEY);
                     if (!raw) return;
                     const state = JSON.parse(raw);
@@ -1902,11 +2574,14 @@
                 const f = fileFilter ? fileFilter.value : 'ALL';
                 const q = search ? search.value.trim() : '';
 
+                const quickChipFilters = new Set(['HAS_SIGNED', 'DRAFT_ONLY', 'HAS_PROPOSAL', 'HAS_REPORT', 'NO_MAIN_FILE']);
+                const isAdvFileFilter = (f !== 'ALL') && (!quickChipFilters.has(f) || (advPanel && !advPanel.classList.contains('d-none')));
+
                 let advCount = 0;
                 if (u !== 'ALL') advCount++;
                 if (c !== 'ALL') advCount++;
                 if (y !== 'ALL') advCount++;
-                if (f !== 'ALL') advCount++;
+                if (isAdvFileFilter) advCount++;
                 if (s !== 'ALL') advCount++;
 
                 if (activeBadge && toggleAdvBtn) {
@@ -1924,12 +2599,10 @@
                 quickFileButtons.forEach(function(btn) {
                     const targetFilter = btn.getAttribute('data-file-filter');
                     const isMatch = (f === targetFilter);
-                    btn.classList.toggle('border-primary', isMatch);
-                    btn.classList.toggle('bg-primary-subtle', isMatch);
-                    btn.classList.toggle('text-primary', isMatch);
+                    btn.classList.toggle('active', isMatch);
                 });
 
-                const hasAnyFilter = (t !== 'ALL' || q.length > 0 || advCount > 0);
+                const hasAnyFilter = (t !== 'ALL' || q.length > 0 || advCount > 0 || f !== 'ALL');
                 if (resetInlineBtn) {
                     resetInlineBtn.classList.toggle('d-none', !hasAnyFilter);
                 }
@@ -1937,6 +2610,11 @@
 
             function renderRepo() {
                 updateFilterIndicators();
+                const repoTableEl = document.getElementById('repoTable');
+                const activeTabType = document.querySelector('.repo-tab-btn.active')?.getAttribute('data-type') || 'ALL';
+                if (repoTableEl) {
+                    repoTableEl.classList.toggle('hide-legacy-badges', activeTabType === 'Legacy');
+                }
                 const matched = getFilteredAndSortedRows();
                 const totalMatched = matched.length;
 
@@ -1946,6 +2624,18 @@
 
                 if (visibleCountEl) {
                     visibleCountEl.innerText = totalMatched;
+                }
+                if (visibleCountTopEl) {
+                    visibleCountTopEl.innerText = totalMatched;
+                }
+
+                if (exportExcelBtn) {
+                    const isEmpty = (totalMatched === 0);
+                    exportExcelBtn.disabled = isEmpty;
+                    exportExcelBtn.classList.toggle('opacity-50', isEmpty);
+                    exportExcelBtn.title = isEmpty
+                        ? 'Tidak ada data terfilter untuk diekspor'
+                        : 'Ekspor Data Terfilter ke Excel';
                 }
 
                 if (totalMatched === 0) {
@@ -1992,17 +2682,17 @@
                 }
 
                 let html = '';
-                html += `<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 ${currentPage === 1 ? 'disabled opacity-50' : ''}" data-page="${currentPage - 1}"><i class="bi bi-chevron-left"></i></button>`;
+                html += `<button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 ${currentPage === 1 ? 'disabled opacity-50' : ''}" data-page="${currentPage - 1}" aria-label="Halaman sebelumnya"><i class="bi bi-chevron-left"></i></button>`;
 
                 for (let p = 1; p <= totalPages; p++) {
                     if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
-                        html += `<button type="button" class="btn btn-sm ${p === currentPage ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 fw-semibold" data-page="${p}">${p}</button>`;
+                        html += `<button type="button" class="btn btn-sm ${p === currentPage ? 'btn-primary' : 'btn-outline-secondary'} py-1 px-2 fw-semibold" data-page="${p}" aria-label="Halaman ${p}">${p}</button>`;
                     } else if (p === currentPage - 2 || p === currentPage + 2) {
                         html += `<span class="px-1 text-muted">&hellip;</span>`;
                     }
                 }
 
-                html += `<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 ${currentPage === totalPages ? 'disabled opacity-50' : ''}" data-page="${currentPage + 1}"><i class="bi bi-chevron-right"></i></button>`;
+                html += `<button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 ${currentPage === totalPages ? 'disabled opacity-50' : ''}" data-page="${currentPage + 1}" aria-label="Halaman berikutnya"><i class="bi bi-chevron-right"></i></button>`;
 
                 paginationWrapper.innerHTML = html;
 
@@ -2049,8 +2739,8 @@
                 if (draftFiles.length > 0) {
                     const names = draftFiles.map(f => escapeHtml(f.name) + ' (' + escapeHtml(f.size_text) + ')').join(' | ');
                     const btns = draftFiles.map(f =>
-                        `<a href="${escapeHtml(f.url)}" target="_blank" class="btn btn-outline-secondary btn-sm py-0.5 px-2" title="Lihat ${escapeHtml(f.label)}"><i class="bi bi-eye"></i></a>` +
-                        `<a href="${escapeHtml(f.url)}" download class="btn btn-secondary btn-sm py-0.5 px-2" title="Unduh ${escapeHtml(f.label)}"><i class="bi bi-download"></i></a>`
+                        `<a href="${escapeHtml(f.url)}" target="_blank" class="btn btn-outline-secondary btn-sm py-0.5 px-2" title="Lihat ${escapeHtml(f.label)}" aria-label="Lihat Naskah Draf ${escapeHtml(f.label)}"><i class="bi bi-eye"></i></a>` +
+                        `<a href="${escapeHtml(f.url)}" download class="btn btn-secondary btn-sm py-0.5 px-2" title="Unduh ${escapeHtml(f.label)}" aria-label="Unduh Naskah Draf ${escapeHtml(f.label)}"><i class="bi bi-download"></i></a>`
                     ).join('');
                     draftBox.innerHTML = `
                         <div class="text-truncate me-2">
@@ -2078,8 +2768,8 @@
                             <div class="text-muted text-truncate" style="font-size: 0.68rem;" title="${escapeHtml(doc.signed_file.name)}">${escapeHtml(doc.signed_file.name)} (${escapeHtml(doc.signed_file.size_text)})</div>
                         </div>
                         <div class="d-flex gap-1 flex-shrink-0">
-                            <a href="${escapeHtml(doc.signed_file.url)}" target="_blank" class="btn btn-outline-success btn-sm py-0.5 px-2" title="Lihat"><i class="bi bi-eye"></i></a>
-                            <a href="${escapeHtml(doc.signed_file.url)}" download class="btn btn-success btn-sm py-0.5 px-2" title="Unduh"><i class="bi bi-download"></i></a>
+                            <a href="${escapeHtml(doc.signed_file.url)}" target="_blank" class="btn btn-outline-success btn-sm py-0.5 px-2" title="Lihat Naskah Sah" aria-label="Lihat Naskah Sah"><i class="bi bi-eye"></i></a>
+                            <a href="${escapeHtml(doc.signed_file.url)}" download class="btn btn-success btn-sm py-0.5 px-2" title="Unduh Naskah Sah" aria-label="Unduh Naskah Sah"><i class="bi bi-download"></i></a>
                         </div>
                     `;
                 } else {
@@ -2118,25 +2808,25 @@
                         if (att.size_text) metaParts.push(escapeHtml(att.size_text));
                         if (att.uploaded_by) metaParts.push('oleh ' + escapeHtml(att.uploaded_by));
                         const actionLinks = att.url
-                            ? `<a href="${escapeHtml(att.url)}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5" title="Lihat"><i class="bi bi-eye"></i></a>
-                               <a href="${escapeHtml(att.url)}" download class="btn btn-light border btn-sm py-0.5 px-1.5" title="Unduh"><i class="bi bi-download"></i></a>`
-                            : `<span class="text-muted fst-italic me-1" style="font-size: 0.65rem;">Hilang</span>`;
+                            ? `<a href="${escapeHtml(att.url)}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5" title="Lihat" aria-label="Lihat ${escapeHtml(att.title)}"><i class="bi bi-eye"></i></a>
+                               <a href="${escapeHtml(att.url)}" download class="btn btn-light border btn-sm py-0.5 px-1.5" title="Unduh" aria-label="Unduh ${escapeHtml(att.title)}"><i class="bi bi-download"></i></a>`
+                            : `<span class="text-muted fst-italic me-1" style="font-size: 0.68rem;">Hilang</span>`;
 
                         rowsHtml += `
                             <tr>
-                                <td class="py-1 px-2"><span class="badge border ${bCls}" style="font-size: 0.65rem;">${escapeHtml(att.category_label)}</span></td>
+                                <td class="py-1 px-2"><span class="badge border ${bCls}" style="font-size: 0.68rem;">${escapeHtml(att.category_label)}</span></td>
                                 <td class="py-1 px-2">
                                     <div class="fw-semibold text-dark">${escapeHtml(att.title)}</div>
-                                    <div class="text-muted" style="font-size: 0.66rem;">${metaParts.join(' &bull; ')}</div>
+                                    <div class="text-muted" style="font-size: 0.68rem;">${metaParts.join(' &bull; ')}</div>
                                 </td>
                                 <td class="py-1 px-2 text-center text-nowrap">
                                     <div class="d-inline-flex align-items-center gap-1">
                                         ${actionLinks}
-                                        <form method="POST" action="${escapeHtml(deleteAttachmentUrl)}" class="d-inline m-0" onsubmit="return confirm('Hapus lampiran ini?');">
+                                        <form method="POST" action="${escapeHtml(deleteAttachmentUrl)}" class="d-inline m-0">
                                             <input type="hidden" name="_token" value="${escapeHtml(csrfToken)}">
                                             <input type="hidden" name="attachment_id" value="${escapeHtml(att.id)}">
                                             <input type="hidden" name="redirect_menu" value="3">
-                                            <button type="submit" class="btn btn-light border btn-sm py-0.5 px-1.5 text-danger" title="Hapus"><i class="bi bi-trash3"></i></button>
+                                            <button type="button" class="btn btn-light border btn-sm py-0.5 px-1.5 text-danger js-confirm-delete-att" data-armed="0" title="Hapus lampiran" aria-label="Hapus lampiran ${escapeHtml(att.title)}"><i class="bi bi-trash3"></i></button>
                                         </form>
                                     </div>
                                 </td>
@@ -2145,9 +2835,9 @@
                     });
                     repList.forEach(function(eAct) {
                         const actionLinks = eAct.url
-                            ? `<a href="${escapeHtml(eAct.url)}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5" title="Lihat"><i class="bi bi-eye"></i></a>
-                               <a href="${escapeHtml(eAct.url)}" download class="btn btn-light border btn-sm py-0.5 px-1.5" title="Unduh"><i class="bi bi-download"></i></a>`
-                            : `<span class="text-muted fst-italic" style="font-size: 0.65rem;">Arsip Teks</span>`;
+                            ? `<a href="${escapeHtml(eAct.url)}" target="_blank" class="btn btn-light border btn-sm py-0.5 px-1.5" title="Lihat" aria-label="Lihat Laporan ${escapeHtml(eAct.activity_name)}"><i class="bi bi-eye"></i></a>
+                               <a href="${escapeHtml(eAct.url)}" download class="btn btn-light border btn-sm py-0.5 px-1.5" title="Unduh" aria-label="Unduh Laporan ${escapeHtml(eAct.activity_name)}"><i class="bi bi-download"></i></a>`
+                            : `<span class="text-muted fst-italic" style="font-size: 0.68rem;">Arsip Teks</span>`;
                         rowsHtml += `
                             <tr>
                                 <td class="py-1 px-2"><span class="badge border badge-soft-success border-success-subtle" style="font-size: 0.65rem;">Laporan Pelaksanaan</span></td>
@@ -2216,8 +2906,8 @@
                     }).join('');
                     bodyEl.innerHTML = `
                         <div class="table-responsive border rounded">
-                            <table class="table table-sm table-striped align-middle mb-0" style="font-size: 0.73rem;">
-                                <thead class="table-dark">
+                            <table class="table table-sm table-striped table-audit-modal align-middle mb-0" style="font-size: 0.74rem;">
+                                <thead>
                                     <tr>
                                         <th class="py-1.5 px-2">Waktu (WITA)</th>
                                         <th class="py-1.5 px-2">Aktor &amp; Peran</th>
@@ -2324,10 +3014,10 @@
                 });
             }
 
-            // Click header tabel untuk mengurutkan (Terlama / Terbaru atau A-Z / Z-A)
+            // Click & keyboard (Enter/Space) pada header tabel untuk mengurutkan
             sortableHeaders.forEach(function(th) {
-                th.addEventListener('click', function() {
-                    const key = this.getAttribute('data-sort-key');
+                function triggerHeaderSort() {
+                    const key = th.getAttribute('data-sort-key');
                     if (currentSortKey === key) {
                         currentSortDir = (currentSortDir === 'desc') ? 'asc' : 'desc';
                     } else {
@@ -2337,8 +3027,43 @@
                     updateSortHeadersUI();
                     currentPage = 1;
                     renderRepo();
+                }
+                th.addEventListener('click', triggerHeaderSort);
+                th.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        triggerHeaderSort();
+                    }
                 });
             });
+
+            // Konfirmasi dua langkah inline untuk hapus lampiran (tanpa alert browser native)
+            const srmAttContainer = document.getElementById('srmAttTableContainer');
+            if (srmAttContainer) {
+                srmAttContainer.addEventListener('click', function(e) {
+                    const delBtn = e.target.closest('.js-confirm-delete-att');
+                    if (!delBtn) return;
+                    if (delBtn.getAttribute('data-armed') === '1') {
+                        delBtn.disabled = true;
+                        delBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                        delBtn.closest('form')?.submit();
+                        return;
+                    }
+                    delBtn.setAttribute('data-armed', '1');
+                    delBtn.classList.remove('btn-light', 'text-danger');
+                    delBtn.classList.add('btn-danger', 'text-white');
+                    delBtn.innerHTML = 'Yakin?';
+                    delBtn.setAttribute('title', 'Klik sekali lagi untuk menghapus permanen');
+                    setTimeout(function() {
+                        if (!document.body.contains(delBtn) || delBtn.disabled) return;
+                        delBtn.setAttribute('data-armed', '0');
+                        delBtn.classList.remove('btn-danger', 'text-white');
+                        delBtn.classList.add('btn-light', 'text-danger');
+                        delBtn.innerHTML = '<i class="bi bi-trash3"></i>';
+                        delBtn.setAttribute('title', 'Hapus lampiran');
+                    }, 3500);
+                });
+            }
 
             // Bind change events for all select filters
             [statusFilter, unitFilter, categoryFilter, yearFilter, fileFilter, perPageSelect].forEach(function(el) {
@@ -2437,6 +3162,18 @@
             restoreRepoState();
             updateSortHeadersUI();
             renderRepo();
+
+            // Pintasan keyboard '/' untuk fokus langsung ke pencarian repositori
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+                const tag = (document.activeElement?.tagName || '').toUpperCase();
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable) return;
+                if (search && search.offsetParent !== null) {
+                    e.preventDefault();
+                    search.focus();
+                    search.select();
+                }
+            });
 
             // Buka modal berkas otomatis pasca redirect unggah/hapus
             try {
@@ -7105,12 +7842,9 @@
                             <div class="col-md-5">
                                 <label class="form-label fw-bold text-dark">Kategori Mitra <span class="text-danger">*</span></label>
                                 <select name="category" id="quick_partner_category" class="form-select" required>
-                                    <option value="DUDI / Swasta" selected>DUDI / Swasta (Industri)</option>
-                                    <option value="Instansi Pemerintah">Instansi Pemerintah</option>
-                                    <option value="BUMN / BUMD">BUMN / BUMD</option>
-                                    <option value="Perguruan Tinggi Dalam Negeri">Perguruan Tinggi Dalam Negeri</option>
-                                    <option value="Perguruan Tinggi Luar Negeri">Perguruan Tinggi Luar Negeri</option>
-                                    <option value="Organisasi / Komunitas / Lainnya">Organisasi / Komunitas / Lainnya</option>
+                                    @foreach (\App\Models\Partner::OFFICIAL_CATEGORIES as $catVal => $catLabel)
+                                        <option value="{{ $catVal }}" {{ $catVal === 'DUDI / Swasta' ? 'selected' : '' }}>{{ $catLabel }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 

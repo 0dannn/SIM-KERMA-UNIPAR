@@ -513,21 +513,11 @@ class SimkermaController extends Controller
             ]);
 
             // Sinkronisasi otomatis ke Master Data Mitra (Menu 2)
-            Partner::firstOrCreate(
-                ['name' => $partnerName],
-                [
-                    'category' => $request->input('category', 'DUDI / Swasta'),
-                    'scope_coverage' => (stripos($partnerName, 'international') !== false || stripos($request->input('category', ''), 'luar') !== false) ? 'Internasional' : 'Dalam Negeri (Nasional/Lokal)',
-                    'city' => 'Kota Manado',
-                    'address' => 'Kawasan Bisnis & Industri Perwakilan Sulawesi Utara, Kota Manado',
-                    'phone' => '(0431) 880-1234',
-                    'email' => 'kemitraan@' . (Str::slug($partnerName) ?: 'mitra') . '.co.id',
-                    'pic_name' => $picSecondParty ?: 'Narahubung Kemitraan',
-                    'pic_title' => 'Divisi Kerja Sama',
-                    'pic_contact' => '0812-4400-5500',
-                    'profile_desc' => 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR dengan ruang lingkup: ' . $scope,
-                    'status_verification' => 'Terverifikasi Sah'
-                ]
+            Partner::syncFromDocument(
+                $partnerName,
+                $request->input('category', 'DUDI / Swasta'),
+                $picSecondParty,
+                $scope
             );
 
             return $document;
@@ -678,21 +668,11 @@ class SimkermaController extends Controller
             ]);
 
             // Sinkronisasi otomatis ke Master Data Mitra (Menu 2)
-            Partner::firstOrCreate(
-                ['name' => $partnerName],
-                [
-                    'category' => $request->input('category', 'DUDI / Swasta'),
-                    'scope_coverage' => (stripos($partnerName, 'international') !== false || stripos($request->input('category', ''), 'luar') !== false) ? 'Internasional' : 'Dalam Negeri (Nasional/Lokal)',
-                    'city' => 'Kota Manado',
-                    'address' => 'Kawasan Bisnis & Industri Perwakilan Sulawesi Utara, Kota Manado',
-                    'phone' => '(0431) 880-1234',
-                    'email' => 'kemitraan@' . (Str::slug($partnerName) ?: 'mitra') . '.co.id',
-                    'pic_name' => $picSecondParty ?: 'Narahubung Kemitraan',
-                    'pic_title' => 'Divisi Kerja Sama',
-                    'pic_contact' => '0812-4400-5500',
-                    'profile_desc' => 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR dengan ruang lingkup: ' . $topic,
-                    'status_verification' => 'Terverifikasi Sah'
-                ]
+            Partner::syncFromDocument(
+                $partnerName,
+                $request->input('category', 'DUDI / Swasta'),
+                $picSecondParty,
+                $topic
             );
 
             return $document;
@@ -1266,21 +1246,33 @@ class SimkermaController extends Controller
                 ]);
         }
 
-        $scopeCoverage = $request->input('scope_coverage') ?: ((stripos($name, 'international') !== false || stripos($category, 'luar') !== false) ? 'Internasional' : 'Dalam Negeri (Nasional/Lokal)');
+        $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'ADMIN');
+        $canVerify = in_array($activeRole, ['MASTER', 'ADMIN', 'LEGAL'], true);
+        $cleanOrNull = fn(string $key): ?string => trim((string)$request->input($key, '')) !== '' ? trim((string)$request->input($key)) : null;
+
+        $scopeCoverage = $cleanOrNull('scope_coverage')
+            ?: ((stripos($name, 'international') !== false || stripos($category, 'luar') !== false)
+                ? 'Internasional'
+                : 'Dalam Negeri (Nasional/Lokal)');
+
+        $requestedVerification = $cleanOrNull('status_verification');
+        $statusVerification = ($canVerify && in_array($requestedVerification, Partner::VERIFICATION_STATUSES, true))
+            ? $requestedVerification
+            : 'Belum Diverifikasi';
 
         $partner = Partner::create([
             'name' => $name,
             'category' => $category,
             'scope_coverage' => $scopeCoverage,
-            'city' => $request->input('city') ?: 'Kota Manado',
-            'address' => $request->input('address') ?: 'Kawasan Bisnis & Industri Perwakilan Sulawesi Utara, Kota Manado',
-            'phone' => $request->input('phone') ?: '(0431) 880-1234',
-            'email' => $request->input('email') ?: ('kemitraan@' . (Str::slug($name) ?: 'mitra') . '.co.id'),
-            'pic_name' => $request->input('pic_name') ?: 'Bpk/Ibu Narahubung Kemitraan',
-            'pic_title' => $request->input('pic_title') ?: 'Divisi Kerja Sama & Hubungan Eksternal',
-            'pic_contact' => $request->input('pic_contact') ?: '0812-4400-5500',
-            'profile_desc' => $request->input('profile_desc') ?: ('Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR bidang: ' . $category),
-            'status_verification' => 'Terverifikasi Sah',
+            'city' => $cleanOrNull('city'),
+            'address' => $cleanOrNull('address'),
+            'phone' => $cleanOrNull('phone'),
+            'email' => $cleanOrNull('email'),
+            'pic_name' => $cleanOrNull('pic_name'),
+            'pic_title' => $cleanOrNull('pic_title'),
+            'pic_contact' => $cleanOrNull('pic_contact'),
+            'profile_desc' => $cleanOrNull('profile_desc'),
+            'status_verification' => $statusVerification,
         ]);
 
         if ($isAjax) {
@@ -1308,25 +1300,35 @@ class SimkermaController extends Controller
             'id' => 'required|exists:partners,id',
             'name' => 'required|string|max:255',
             'category' => 'required|string',
+            'email' => 'nullable|email|max:255',
+            'status_verification' => 'nullable|string|in:' . implode(',', Partner::VERIFICATION_STATUSES),
         ]);
 
+        $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'ADMIN');
         $partner = Partner::findOrFail($request->input('id'));
         $oldName = $partner->name;
-        $newName = trim($request->input('name'));
-        $newCategory = $request->input('category');
+        $newName = trim((string)$request->input('name'));
+        $newCategory = trim((string)$request->input('category'));
+        $cleanOrNull = fn(string $key): ?string => trim((string)$request->input($key, '')) !== '' ? trim((string)$request->input($key)) : null;
+
+        $nextVerification = $partner->status_verification ?: 'Belum Diverifikasi';
+        if ($request->filled('status_verification') && in_array($activeRole, ['MASTER', 'ADMIN', 'LEGAL'], true)) {
+            $nextVerification = $request->input('status_verification');
+        }
 
         $partner->update([
             'name' => $newName,
             'category' => $newCategory,
-            'scope_coverage' => $request->input('scope_coverage', $partner->scope_coverage),
-            'city' => $request->input('city', $partner->city),
-            'address' => $request->input('address', $partner->address),
-            'phone' => $request->input('phone', $partner->phone),
-            'email' => $request->input('email', $partner->email),
-            'pic_name' => $request->input('pic_name', $partner->pic_name),
-            'pic_title' => $request->input('pic_title', $partner->pic_title),
-            'pic_contact' => $request->input('pic_contact', $partner->pic_contact),
-            'profile_desc' => $request->input('profile_desc', $partner->profile_desc),
+            'scope_coverage' => $cleanOrNull('scope_coverage') ?: $partner->scope_coverage,
+            'city' => $request->has('city') ? $cleanOrNull('city') : $partner->city,
+            'address' => $request->has('address') ? $cleanOrNull('address') : $partner->address,
+            'phone' => $request->has('phone') ? $cleanOrNull('phone') : $partner->phone,
+            'email' => $request->has('email') ? $cleanOrNull('email') : $partner->email,
+            'pic_name' => $request->has('pic_name') ? $cleanOrNull('pic_name') : $partner->pic_name,
+            'pic_title' => $request->has('pic_title') ? $cleanOrNull('pic_title') : $partner->pic_title,
+            'pic_contact' => $request->has('pic_contact') ? $cleanOrNull('pic_contact') : $partner->pic_contact,
+            'profile_desc' => $request->has('profile_desc') ? $cleanOrNull('profile_desc') : $partner->profile_desc,
+            'status_verification' => $nextVerification,
         ]);
 
         // Sinkronisasi ke seluruh dokumen di MySQL jika nama atau kategori mitra berubah
@@ -1370,6 +1372,15 @@ class SimkermaController extends Controller
      */
     public function deletePartner(Request $request)
     {
+        $activeRole = session('active_role', auth()->check() ? auth()->user()->role : 'ADMIN');
+        if (!in_array($activeRole, ['MASTER', 'ADMIN'], true)) {
+            return redirect()->route('simkerma.index', ['menu' => 2])
+                ->with('flash', [
+                    'type' => 'danger',
+                    'msg' => 'Akses Ditolak! Hanya Role MASTER atau Administrator yang diizinkan menghapus data mitra.'
+                ]);
+        }
+
         $request->validate([
             'id' => 'required|exists:partners,id',
         ]);
@@ -1520,13 +1531,13 @@ class SimkermaController extends Controller
     }
 
     /**
-     * Unggah Berkas Dokumen (Draf, Naskah Asli, Proposal, Rencana Kegiatan, atau Dokumen Pendukung)
+     * Unggah Berkas Dokumen (Draf, Naskah Asli, Proposal, Rencana Kegiatan, Pendukung, atau Laporan Pelaksanaan)
      */
     public function uploadDocumentFile(Request $request)
     {
         $request->validate([
             'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:15360',
-            'file_type' => 'required|in:draft,signed,proposal,rencana_kegiatan,dokumen_pendukung',
+            'file_type' => 'required|in:draft,signed,proposal,rencana_kegiatan,dokumen_pendukung,laporan_pelaksanaan',
         ], [
             'file.required' => 'Silakan pilih berkas yang akan diunggah.',
             'file.mimes' => 'Format berkas diperbolehkan: PDF, Word, Excel, atau JPG/PNG.',
@@ -1569,6 +1580,7 @@ class SimkermaController extends Controller
                 'proposal' => ['PROPOSAL', 'Proposal Kerja Sama'],
                 'rencana_kegiatan' => ['RENCANA_KEGIATAN', 'Rencana Kegiatan / TOR'],
                 'dokumen_pendukung' => ['DOKUMEN_PENDUKUNG', 'Dokumen Pendukung'],
+                'laporan_pelaksanaan' => ['LAPORAN_PELAKSANAAN', 'Laporan Pelaksanaan'],
             ];
             [$categoryEnum, $typeLabel] = $categoryMap[$fileType] ?? ['DOKUMEN_PENDUKUNG', 'Dokumen Pendukung'];
             $customTitle = trim((string)$request->input('attachment_title', ''));
@@ -1860,21 +1872,11 @@ class SimkermaController extends Controller
             ]);
 
             // Sinkronisasi otomatis ke Master Data Mitra (Menu 2)
-            Partner::firstOrCreate(
-                ['name' => $partnerName],
-                [
-                    'category' => $category,
-                    'scope_coverage' => (stripos($partnerName, 'international') !== false || stripos($category, 'luar') !== false) ? 'Internasional' : 'Dalam Negeri (Nasional/Lokal)',
-                    'city' => 'Kota Manado',
-                    'address' => 'Kawasan Bisnis & Industri Perwakilan Sulawesi Utara, Kota Manado',
-                    'phone' => '(0431) 880-1234',
-                    'email' => 'kemitraan@' . (\Illuminate\Support\Str::slug($partnerName) ?: 'mitra') . '.co.id',
-                    'pic_name' => $request->input('pic_second_party') ?: 'Narahubung Kemitraan',
-                    'pic_title' => 'Divisi Kerja Sama',
-                    'pic_contact' => '0812-4400-5500',
-                    'profile_desc' => 'Mitra institusi terdaftar pada basis data SIMKERMA UNIPAR dengan ruang lingkup: ' . $scope,
-                    'status_verification' => 'Terverifikasi Sah'
-                ]
+            Partner::syncFromDocument(
+                $partnerName,
+                $category,
+                $request->input('pic_second_party'),
+                $scope
             );
 
             return $document;
